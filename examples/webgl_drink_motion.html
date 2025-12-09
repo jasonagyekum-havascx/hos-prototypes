@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>three.js webgl - drink motion</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<link type="text/css" rel="stylesheet" href="example.css">
+	</head>
+	<body>
+
+		<div id="info">
+			<a href="https://threejs.org/" target="_blank" rel="noopener" class="logo-link"></a>
+
+			<div class="title-wrapper">
+				<a href="https://threejs.org/" target="_blank" rel="noopener">three.js</a>
+				<span>Drink Swirl (Accelerometer)</span>
+			</div>
+
+			<small>
+				Tilt your phone to swirl the drink. Tap to enable motion or drag to disturb.
+			</small>
+		</div>
+
+		<div id="overlay" aria-live="polite">
+			<p>Tap to enable motion controls or keep using touch.</p>
+			<button id="enableMotionButton" aria-label="Enable motion controls">Enable motion</button>
+		</div>
+
+		<script type="importmap">
+			{
+				"imports": {
+					"three": "../build/three.module.js",
+					"three/addons/": "./jsm/"
+				}
+			}
+		</script>
+
+		<script type="module">
+
+			import * as THREE from 'three';
+			import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+			let renderer, scene, camera, controls;
+			let liquidSurface, liquidBody;
+			let liquidUniforms;
+			let raycaster;
+			let waterPlane;
+			let glassOuter, glassInner;
+			const mouse = new THREE.Vector2();
+			let motionOverlay = null;
+			let enableMotionButton = null;
+
+			const motionState = {
+				enabled: false,
+				available: false,
+				tilt: new THREE.Vector2(),
+				targetTilt: new THREE.Vector2(),
+				ripplePos: new THREE.Vector2( 10000, 10000 ),
+				rippleStrength: 0,
+				lastUpdate: 0,
+			};
+
+			// Liquid configuration
+			const LIQUID_RADIUS = 1.1;
+			const LIQUID_HEIGHT = 1.6;
+			const LIQUID_BASE_Y = 0.1;
+			const LIQUID_SURFACE_Y = LIQUID_BASE_Y + LIQUID_HEIGHT;
+			const LIQUID_COLOR = 0x4db8ff;
+
+			init();
+
+			function init() {
+
+				renderer = new THREE.WebGLRenderer( { antialias: true } );
+				renderer.setPixelRatio( window.devicePixelRatio );
+				renderer.setSize( window.innerWidth, window.innerHeight );
+				renderer.outputColorSpace = THREE.SRGBColorSpace;
+				renderer.toneMapping = THREE.ACESFilmicToneMapping;
+				renderer.toneMappingExposure = 1.0;
+				document.body.appendChild( renderer.domElement );
+
+				scene = new THREE.Scene();
+				scene.background = new THREE.Color( 0x1b2233 );
+
+				camera = new THREE.PerspectiveCamera( 55, window.innerWidth / window.innerHeight, 0.1, 100 );
+				camera.position.set( 0, 2.5, 3.5 );
+				camera.lookAt( 0, 1, 0 );
+
+				const ambient = new THREE.AmbientLight( 0xffffff, 1.2 );
+				scene.add( ambient );
+
+				const hemi = new THREE.HemisphereLight( 0xdde7ff, 0x1e2230, 0.8 );
+				scene.add( hemi );
+
+				const dir = new THREE.DirectionalLight( 0xffffff, 2.0 );
+				dir.position.set( 2, 4, 1.2 );
+				dir.castShadow = false;
+				scene.add( dir );
+
+				const backLight = new THREE.DirectionalLight( 0x88aaff, 0.5 );
+				backLight.position.set( - 2, 2, - 2 );
+				scene.add( backLight );
+
+				const floor = new THREE.Mesh(
+					new THREE.CircleGeometry( 6, 64 ),
+					new THREE.MeshStandardMaterial( { color: 0x242a3a, roughness: 0.65, metalness: 0.08 } )
+				);
+				floor.rotation.x = - Math.PI * 0.5;
+				floor.receiveShadow = true;
+				scene.add( floor );
+
+				buildLiquid();
+				buildGlass();
+
+				controls = new OrbitControls( camera, renderer.domElement );
+				controls.enableDamping = true;
+				controls.target.set( 0, 1, 0 );
+
+				raycaster = new THREE.Raycaster();
+				renderer.domElement.addEventListener( 'pointermove', onPointerMove );
+				renderer.domElement.addEventListener( 'pointerdown', onPointerDown );
+
+				window.addEventListener( 'resize', onWindowResize );
+
+				setupMotionOverlay();
+
+				renderer.setAnimationLoop( animate );
+
+			}
+
+			function buildGlass() {
+
+				const glassHeight = 2;
+				const glassRadius = 1.2;
+				const thickness = 0.05;
+
+				const outer = new THREE.CylinderGeometry( glassRadius, glassRadius, glassHeight, 64, 1, true );
+				const inner = new THREE.CylinderGeometry( glassRadius - thickness, glassRadius - thickness, glassHeight, 64, 1, true );
+
+				inner.computeVertexNormals();
+
+				const glassMaterialOuter = new THREE.MeshPhysicalMaterial( {
+					color: 0xffffff,
+					metalness: 0,
+					roughness: 0.02,
+					transmission: 0.98,
+					opacity: 1,
+					transparent: true,
+					thickness: 0.1,
+					clearcoat: 1.0,
+					ior: 1.5,
+					envMapIntensity: 1.0,
+					depthWrite: false,
+				} );
+
+				const glassMaterialInner = new THREE.MeshPhysicalMaterial( {
+					color: 0xffffff,
+					metalness: 0,
+					roughness: 0.02,
+					transmission: 0.98,
+					opacity: 1,
+					transparent: true,
+					thickness: 0.1,
+					clearcoat: 1.0,
+					ior: 1.5,
+					side: THREE.BackSide,
+					depthWrite: false,
+				} );
+
+				glassOuter = new THREE.Mesh( outer, glassMaterialOuter );
+				glassInner = new THREE.Mesh( inner, glassMaterialInner );
+
+				glassOuter.position.y = 1;
+				glassInner.position.y = 1;
+
+				glassOuter.renderOrder = 10;
+				glassInner.renderOrder = 9;
+
+				scene.add( glassOuter );
+				scene.add( glassInner );
+
+				const base = new THREE.Mesh(
+					new THREE.CylinderGeometry( glassRadius, glassRadius, 0.08, 48 ),
+					new THREE.MeshPhysicalMaterial( {
+						color: 0xffffff,
+						metalness: 0,
+						roughness: 0.05,
+						transmission: 0.9,
+						transparent: true,
+						thickness: 0.08,
+						ior: 1.5,
+						depthWrite: false,
+					} )
+				);
+				base.position.y = 0.04;
+				base.renderOrder = 8;
+				scene.add( base );
+
+			}
+
+			function buildLiquid() {
+
+				liquidUniforms = {
+					uTime: { value: 0 },
+					uTilt: { value: new THREE.Vector2() },
+					uRippleCenter: { value: new THREE.Vector2( 10000, 10000 ) },
+					uRippleStrength: { value: 0 },
+					uLiquidHeight: { value: LIQUID_HEIGHT },
+					uSurfaceY: { value: LIQUID_SURFACE_Y },
+				};
+
+				// Liquid surface (top) - animated waves
+				const surfaceSegments = 64;
+				const surfaceGeometry = new THREE.CircleGeometry( LIQUID_RADIUS, surfaceSegments );
+				surfaceGeometry.rotateX( - Math.PI * 0.5 );
+				surfaceGeometry.translate( 0, LIQUID_SURFACE_Y, 0 );
+
+				const surfaceMaterial = new THREE.MeshStandardMaterial( {
+					color: LIQUID_COLOR,
+					metalness: 0.1,
+					roughness: 0.1,
+					transparent: true,
+					opacity: 0.85,
+					emissive: 0x0a3366,
+					emissiveIntensity: 0.15,
+					side: THREE.DoubleSide,
+					depthWrite: true,
+				} );
+
+				surfaceMaterial.onBeforeCompile = ( shader ) => {
+
+					shader.uniforms.uTime = liquidUniforms.uTime;
+					shader.uniforms.uTilt = liquidUniforms.uTilt;
+					shader.uniforms.uRippleCenter = liquidUniforms.uRippleCenter;
+					shader.uniforms.uRippleStrength = liquidUniforms.uRippleStrength;
+
+					shader.vertexShader = shader.vertexShader.replace(
+						'#include <common>',
+						`#include <common>
+						uniform float uTime;
+						uniform vec2 uTilt;
+						uniform vec2 uRippleCenter;
+						uniform float uRippleStrength;
+						varying float vWaveHeight;`
+					);
+
+					shader.vertexShader = shader.vertexShader.replace(
+						'#include <begin_vertex>',
+						`vec3 transformed = vec3( position );
+						float tilt = dot( transformed.xz, uTilt ) * 0.25;
+						float wave = sin( transformed.x * 3.0 + uTime * 1.2 ) * 0.015 
+						           + sin( transformed.z * 3.5 + uTime * 0.9 ) * 0.015
+						           + sin( ( transformed.x + transformed.z ) * 2.0 + uTime * 1.5 ) * 0.01;
+						float dist = length( transformed.xz - uRippleCenter );
+						float ripple = uRippleStrength * exp( - dist * 2.5 ) * sin( 10.0 * dist - uTime * 4.0 );
+						float totalWave = tilt + wave + ripple;
+						transformed.y += totalWave;
+						vWaveHeight = totalWave;`
+					);
+
+					shader.fragmentShader = shader.fragmentShader.replace(
+						'#include <common>',
+						`#include <common>
+						varying float vWaveHeight;`
+					);
+
+					surfaceMaterial.userData.shader = shader;
+
+				};
+
+				liquidSurface = new THREE.Mesh( surfaceGeometry, surfaceMaterial );
+				liquidSurface.renderOrder = 2;
+				scene.add( liquidSurface );
+
+				// Liquid body (cylinder sides + bottom)
+				const bodyGeometry = new THREE.CylinderGeometry( 
+					LIQUID_RADIUS, 
+					LIQUID_RADIUS, 
+					LIQUID_HEIGHT, 
+					64, 
+					1, 
+					true 
+				);
+				bodyGeometry.translate( 0, LIQUID_BASE_Y + LIQUID_HEIGHT * 0.5, 0 );
+
+				const bodyMaterial = new THREE.MeshStandardMaterial( {
+					color: LIQUID_COLOR,
+					metalness: 0.05,
+					roughness: 0.15,
+					transparent: true,
+					opacity: 0.7,
+					emissive: 0x0a3366,
+					emissiveIntensity: 0.1,
+					side: THREE.DoubleSide,
+					depthWrite: false,
+				} );
+
+				liquidBody = new THREE.Mesh( bodyGeometry, bodyMaterial );
+				liquidBody.renderOrder = 1;
+				scene.add( liquidBody );
+
+				// Liquid bottom cap
+				const bottomGeometry = new THREE.CircleGeometry( LIQUID_RADIUS, 64 );
+				bottomGeometry.rotateX( Math.PI * 0.5 );
+				bottomGeometry.translate( 0, LIQUID_BASE_Y, 0 );
+
+				const bottomMaterial = new THREE.MeshStandardMaterial( {
+					color: LIQUID_COLOR,
+					metalness: 0.05,
+					roughness: 0.2,
+					transparent: true,
+					opacity: 0.6,
+					emissive: 0x0a3366,
+					emissiveIntensity: 0.08,
+					side: THREE.DoubleSide,
+					depthWrite: false,
+				} );
+
+				const liquidBottom = new THREE.Mesh( bottomGeometry, bottomMaterial );
+				liquidBottom.renderOrder = 0;
+				scene.add( liquidBottom );
+
+				// Invisible plane for raycasting
+				waterPlane = new THREE.Mesh(
+					new THREE.PlaneGeometry( LIQUID_RADIUS * 2, LIQUID_RADIUS * 2 ),
+					new THREE.MeshBasicMaterial( { visible: false } )
+				);
+				waterPlane.rotation.x = - Math.PI * 0.5;
+				waterPlane.position.y = LIQUID_SURFACE_Y;
+				scene.add( waterPlane );
+
+			}
+
+			function onPointerMove( event ) {
+
+				setMouseFromEvent( event );
+
+			}
+
+			function onPointerDown( event ) {
+
+				setMouseFromEvent( event );
+				triggerRipple();
+
+			}
+
+			function setMouseFromEvent( event ) {
+
+				const rect = renderer.domElement.getBoundingClientRect();
+				mouse.set(
+					( ( event.clientX - rect.left ) / rect.width ) * 2 - 1,
+					- ( ( event.clientY - rect.top ) / rect.height ) * 2 + 1
+				);
+
+			}
+
+			function triggerRipple() {
+
+				raycaster.setFromCamera( mouse, camera );
+				const hit = raycaster.intersectObject( waterPlane );
+				if ( hit.length === 0 ) return;
+
+				const point = hit[ 0 ].point;
+				liquidUniforms.uRippleCenter.value.set( point.x, point.z );
+				liquidUniforms.uRippleStrength.value = Math.min( liquidUniforms.uRippleStrength.value + 0.5, 1.5 );
+
+			}
+
+			function setupMotionOverlay() {
+
+				motionOverlay = document.getElementById( 'overlay' );
+				enableMotionButton = document.getElementById( 'enableMotionButton' );
+
+				if ( ! enableMotionButton ) return;
+
+				enableMotionButton.addEventListener( 'click', () => {
+
+					if ( motionOverlay ) motionOverlay.style.display = 'none';
+					requestMotionAccess();
+
+				}, { once: true } );
+
+			}
+
+			async function requestMotionAccess() {
+
+				const granted = await askForMotionPermission();
+				if ( ! granted ) return;
+
+				motionState.enabled = true;
+				startMotionListeners();
+
+			}
+
+			async function askForMotionPermission() {
+
+				const tryPermission = async ( ctor ) => {
+
+					if ( typeof ctor === 'undefined' || typeof ctor.requestPermission !== 'function' ) return true;
+					try {
+
+						const response = await ctor.requestPermission();
+						return response === 'granted';
+
+					} catch ( err ) {
+
+						console.warn( 'Motion permission request failed', err );
+						return false;
+
+					}
+
+				};
+
+				const motionGranted = await tryPermission( window.DeviceMotionEvent );
+				const orientationGranted = await tryPermission( window.DeviceOrientationEvent );
+				return motionGranted || orientationGranted;
+
+			}
+
+			function startMotionListeners() {
+
+				if ( motionState.available ) return;
+
+				window.addEventListener( 'deviceorientation', handleOrientation, true );
+				window.addEventListener( 'devicemotion', handleMotion, true );
+				motionState.available = true;
+
+			}
+
+			function handleOrientation( event ) {
+
+				if ( ! motionState.enabled ) return;
+
+				const gamma = event.gamma ?? 0;
+				const beta = event.beta ?? 0;
+
+				const normX = THREE.MathUtils.clamp( gamma / 45, - 1, 1 );
+				const normY = THREE.MathUtils.clamp( beta / 45, - 1, 1 );
+
+				motionState.targetTilt.set( normX, normY );
+				motionState.lastUpdate = performance.now();
+
+			}
+
+			function handleMotion( event ) {
+
+				if ( ! motionState.enabled ) return;
+				if ( ! event.accelerationIncludingGravity ) return;
+
+				const { x = 0, y = 0, z = 0 } = event.accelerationIncludingGravity;
+				const magnitude = Math.sqrt( x * x + y * y + z * z );
+				const impulse = THREE.MathUtils.clamp( Math.abs( magnitude - 9.8 ) / 12, 0, 1 );
+				motionState.rippleStrength = Math.max( motionState.rippleStrength, impulse * 0.5 );
+				motionState.lastUpdate = performance.now();
+
+			}
+
+			function applyMotion() {
+
+				const now = performance.now();
+				const fresh = now - motionState.lastUpdate < 600;
+
+				if ( motionState.enabled && fresh ) {
+
+					motionState.tilt.lerp( motionState.targetTilt, 0.12 );
+					liquidUniforms.uTilt.value.lerp( motionState.tilt, 0.2 );
+
+					if ( motionState.rippleStrength > 0.02 ) {
+
+						liquidUniforms.uRippleStrength.value = Math.min( liquidUniforms.uRippleStrength.value + motionState.rippleStrength, 1.3 );
+						motionState.rippleStrength *= 0.9;
+
+					} else {
+
+						motionState.rippleStrength *= 0.8;
+
+					}
+
+				} else {
+
+					motionState.tilt.lerp( new THREE.Vector2(), 0.05 );
+					liquidUniforms.uTilt.value.lerp( motionState.tilt, 0.2 );
+
+				}
+
+				liquidUniforms.uRippleStrength.value *= 0.96;
+
+			}
+
+			function animate() {
+
+				liquidUniforms.uTime.value += 0.016;
+				applyMotion();
+
+				controls.update();
+				renderer.render( scene, camera );
+
+			}
+
+			function onWindowResize() {
+
+				camera.aspect = window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
+				renderer.setSize( window.innerWidth, window.innerHeight );
+
+			}
+
+		</script>
+	</body>
+</html>
+
