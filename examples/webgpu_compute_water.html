@@ -21,6 +21,11 @@
 			</small>
 		</div>
 
+		<div id="overlay" aria-live="polite">
+			<p>Tap to enable motion controls or keep using touch.</p>
+			<button id="enableMotionButton" aria-label="Enable motion controls">Enable motion</button>
+		</div>
+
 		<script type="importmap">
 			{
 				"imports": {
@@ -67,6 +72,17 @@
 			const mouseCoords = new THREE.Vector2();
 			const raycaster = new THREE.Raycaster();
 			let frame = 0;
+			const motionState = {
+				enabled: false,
+				available: false,
+				target: new THREE.Vector2(),
+				current: new THREE.Vector2(),
+				prev: new THREE.Vector2(),
+				lastUpdate: 0,
+				strength: 0,
+			};
+			let motionOverlay = null;
+			let enableMotionButton = null;
 
 			const effectController = {
 				mousePos: uniform( new THREE.Vector2() ).setName( 'mousePos' ),
@@ -472,6 +488,8 @@
 
 				//
 
+				setupMotionOverlay();
+
 				container.style.touchAction = 'none';
 				container.addEventListener( 'pointermove', onPointerMove );
 				container.addEventListener( 'pointerdown', onPointerDown );
@@ -591,7 +609,15 @@
 
 					updateOriginMouseDown = true;
 
-					effectController.mouseSpeed.value.set( 0, 0 );
+					if ( motionState.enabled ) {
+
+						applyMotionInput();
+
+					} else {
+
+						effectController.mouseSpeed.value.set( 0, 0 );
+
+					}
 
 				}
 
@@ -631,6 +657,132 @@
 				}
 
 				renderer.render( scene, camera );
+
+			}
+
+			function setupMotionOverlay() {
+
+				motionOverlay = document.getElementById( 'overlay' );
+				enableMotionButton = document.getElementById( 'enableMotionButton' );
+
+				if ( enableMotionButton ) {
+
+					enableMotionButton.addEventListener( 'click', () => {
+
+						if ( motionOverlay ) motionOverlay.style.display = 'none';
+						requestMotionAccess();
+
+					}, { once: true } );
+
+				}
+
+			}
+
+			async function requestMotionAccess() {
+
+				const granted = await askForMotionPermission();
+
+				if ( ! granted ) {
+
+					console.warn( 'Motion permissions denied or unavailable; continuing with touch/mouse only.' );
+					return;
+
+				}
+
+				motionState.enabled = true;
+				startMotionListeners();
+
+			}
+
+			async function askForMotionPermission() {
+
+				const tryPermission = async ( ctor ) => {
+
+					if ( typeof ctor === 'undefined' || typeof ctor.requestPermission !== 'function' ) return true;
+					try {
+
+						const response = await ctor.requestPermission();
+						return response === 'granted';
+
+					} catch ( err ) {
+
+						console.warn( 'Motion permission request failed', err );
+						return false;
+
+					}
+
+				};
+
+				const motionGranted = await tryPermission( window.DeviceMotionEvent );
+				const orientationGranted = await tryPermission( window.DeviceOrientationEvent );
+
+				return motionGranted || orientationGranted;
+
+			}
+
+			function startMotionListeners() {
+
+				if ( motionState.available ) return;
+
+				window.addEventListener( 'deviceorientation', handleOrientation, true );
+				window.addEventListener( 'devicemotion', handleMotion, true );
+				motionState.available = true;
+
+			}
+
+			function handleOrientation( event ) {
+
+				if ( ! motionState.enabled ) return;
+
+				const gamma = event.gamma ?? 0; // left/right tilt
+				const beta = event.beta ?? 0; // front/back tilt
+
+				const normX = THREE.MathUtils.clamp( gamma / 45, - 1, 1 );
+				const normY = THREE.MathUtils.clamp( beta / 45, - 1, 1 );
+
+				motionState.target.set( normX * BOUNDS_HALF * 0.7, normY * BOUNDS_HALF * 0.7 );
+				motionState.strength = Math.max( motionState.strength * 0.9, Math.min( Math.abs( normX ) + Math.abs( normY ), 1 ) );
+				motionState.lastUpdate = performance.now();
+
+			}
+
+			function handleMotion( event ) {
+
+				if ( ! motionState.enabled ) return;
+				if ( ! event.accelerationIncludingGravity ) return;
+
+				const { x = 0, y = 0, z = 0 } = event.accelerationIncludingGravity;
+				const magnitude = Math.sqrt( x * x + y * y + z * z );
+				const norm = THREE.MathUtils.clamp( Math.abs( magnitude - 9.8 ) / 12, 0, 1 );
+
+				motionState.strength = Math.max( motionState.strength, norm );
+				motionState.lastUpdate = performance.now();
+
+			}
+
+			function applyMotionInput() {
+
+				const now = performance.now();
+				const fresh = now - motionState.lastUpdate < 600;
+
+				if ( ! fresh || motionState.strength < 0.01 ) {
+
+					motionState.strength *= 0.9;
+					effectController.mouseSpeed.value.set( 0, 0 );
+					return;
+
+				}
+
+				motionState.current.lerp( motionState.target, 0.12 );
+
+				effectController.mousePos.value.set( motionState.current.x, motionState.current.y );
+
+				const deltaX = motionState.current.x - motionState.prev.x;
+				const deltaY = motionState.current.y - motionState.prev.y;
+				effectController.mouseSpeed.value.set( deltaX, deltaY );
+				motionState.prev.copy( motionState.current );
+
+				motionState.strength *= 0.92;
 
 			}
 

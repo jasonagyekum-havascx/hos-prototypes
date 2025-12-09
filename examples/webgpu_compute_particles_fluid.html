@@ -18,6 +18,11 @@
 			<small>MLS-MPM particle simulation running in compute shaders.</small>
 		</div>
 
+		<div id="overlay" aria-live="polite">
+			<p>Tap to enable motion controls or keep using touch.</p>
+			<button id="enableMotionButton" aria-label="Enable motion controls">Enable motion</button>
+		</div>
+
 		<script type="importmap">
 			{
 				"imports": {
@@ -60,6 +65,19 @@
 			const mouseCoord = new THREE.Vector3();
 			const prevMouseCoord = new THREE.Vector3();
 			let mouseRayOriginUniform, mouseRayDirectionUniform, mouseForceUniform;
+			let raycaster = null;
+			let raycastPlane = null;
+			const motionState = {
+				enabled: false,
+				available: false,
+				target: new THREE.Vector2(),
+				current: new THREE.Vector2(),
+				lastUpdate: 0,
+				strength: 0,
+				firstApplied: false,
+			};
+			let motionOverlay = null;
+			let enableMotionButton = null;
 
 			if ( WebGPU.isAvailable() === false ) {
 
@@ -103,6 +121,8 @@
 				scene.background = hdrTexture;
 				scene.backgroundBlurriness = 0.5;
 				scene.environment = hdrTexture;
+
+				setupMotionOverlay();
 
 				setupParticles();
 
@@ -525,23 +545,31 @@
 
 			function setupMouse() {
 
-				const raycaster = new THREE.Raycaster();
-				const raycastPlane = new THREE.Plane( new THREE.Vector3( 0, 1, 0 ) );
+				raycaster = new THREE.Raycaster();
+				raycastPlane = new THREE.Plane( new THREE.Vector3( 0, 1, 0 ) );
 
 				const onMove = ( event ) => {
 
 					const pointer = new THREE.Vector2( ( event.clientX / window.innerWidth ) * 2 - 1, - ( event.clientY / window.innerHeight ) * 2 + 1 );
-					raycaster.setFromCamera( pointer, camera );
-					raycaster.ray.origin.x += 0.5;
-					raycaster.ray.origin.z += 0.5;
-					mouseRayOriginUniform.value.copy( raycaster.ray.origin );
-					mouseRayDirectionUniform.value.copy( raycaster.ray.direction );
-
-					raycaster.ray.intersectPlane( raycastPlane, mouseCoord );
+					updateRayFromPointer( pointer );
 
 				};
 
 				renderer.domElement.addEventListener( 'pointermove', onMove );
+
+			}
+
+			function updateRayFromPointer( pointer ) {
+
+				if ( ! raycaster || ! raycastPlane ) return;
+
+				raycaster.setFromCamera( pointer, camera );
+				raycaster.ray.origin.x += 0.5;
+				raycaster.ray.origin.z += 0.5;
+				mouseRayOriginUniform.value.copy( raycaster.ray.origin );
+				mouseRayDirectionUniform.value.copy( raycaster.ray.direction );
+
+				raycaster.ray.intersectPlane( raycastPlane, mouseCoord );
 
 			}
 
@@ -567,6 +595,8 @@
 
 			async function render() {
 
+				applyMotionInput();
+
 				const deltaTime = THREE.MathUtils.clamp( clock.getDelta(), 0.00001, 1 / 60 ); // don't advance the time too far, for example when the window is out of focus
 				dtUniform.value = deltaTime;
 
@@ -590,6 +620,140 @@
 				renderer.compute( g2pKernel, g2pKernelWorkgroupBuffer );
 
 				renderer.render( scene, camera );
+
+			}
+
+			function setupMotionOverlay() {
+
+				motionOverlay = document.getElementById( 'overlay' );
+				enableMotionButton = document.getElementById( 'enableMotionButton' );
+
+				if ( enableMotionButton ) {
+
+					enableMotionButton.addEventListener( 'click', () => {
+
+						if ( motionOverlay ) motionOverlay.style.display = 'none';
+						requestMotionAccess();
+
+					}, { once: true } );
+
+				}
+
+			}
+
+			async function requestMotionAccess() {
+
+				const granted = await askForMotionPermission();
+
+				if ( ! granted ) {
+
+					console.warn( 'Motion permissions denied or unavailable; continuing with touch/mouse only.' );
+					return;
+
+				}
+
+				motionState.enabled = true;
+				startMotionListeners();
+
+			}
+
+			async function askForMotionPermission() {
+
+				const tryPermission = async ( ctor ) => {
+
+					if ( typeof ctor === 'undefined' || typeof ctor.requestPermission !== 'function' ) return true;
+					try {
+
+						const response = await ctor.requestPermission();
+						return response === 'granted';
+
+					} catch ( err ) {
+
+						console.warn( 'Motion permission request failed', err );
+						return false;
+
+					}
+
+				};
+
+				const motionGranted = await tryPermission( window.DeviceMotionEvent );
+				const orientationGranted = await tryPermission( window.DeviceOrientationEvent );
+
+				return motionGranted || orientationGranted;
+
+			}
+
+			function startMotionListeners() {
+
+				if ( motionState.available ) return;
+
+				window.addEventListener( 'deviceorientation', handleOrientation, true );
+				window.addEventListener( 'devicemotion', handleMotion, true );
+				motionState.available = true;
+
+			}
+
+			function handleOrientation( event ) {
+
+				if ( ! motionState.enabled ) return;
+
+				const gamma = event.gamma ?? 0; // left/right tilt
+				const beta = event.beta ?? 0; // front/back tilt
+
+				const normX = THREE.MathUtils.clamp( gamma / 45, - 1, 1 );
+				const normY = THREE.MathUtils.clamp( beta / 45, - 1, 1 );
+
+				motionState.target.set( normX, normY );
+				motionState.strength = Math.max( motionState.strength * 0.9, Math.min( Math.abs( normX ) + Math.abs( normY ), 1 ) );
+				motionState.lastUpdate = performance.now();
+
+			}
+
+			function handleMotion( event ) {
+
+				if ( ! motionState.enabled ) return;
+				if ( ! event.accelerationIncludingGravity ) return;
+
+				const { x = 0, y = 0, z = 0 } = event.accelerationIncludingGravity;
+				const magnitude = Math.sqrt( x * x + y * y + z * z );
+				const norm = THREE.MathUtils.clamp( Math.abs( magnitude - 9.8 ) / 12, 0, 1 );
+
+				motionState.strength = Math.max( motionState.strength, norm );
+				motionState.lastUpdate = performance.now();
+
+			}
+
+			function applyMotionInput() {
+
+				if ( ! motionState.enabled ) return;
+
+				const now = performance.now();
+				const fresh = now - motionState.lastUpdate < 600;
+
+				if ( ! fresh || motionState.strength < 0.01 ) {
+
+					motionState.strength *= 0.9;
+					return;
+
+				}
+
+				motionState.current.lerp( motionState.target, 0.12 );
+
+				const pointer = new THREE.Vector2(
+					THREE.MathUtils.clamp( motionState.current.x, - 0.9, 0.9 ),
+					THREE.MathUtils.clamp( - motionState.current.y, - 0.9, 0.9 )
+				);
+
+				updateRayFromPointer( pointer );
+
+				if ( ! motionState.firstApplied ) {
+
+					prevMouseCoord.copy( mouseCoord );
+					motionState.firstApplied = true;
+
+				}
+
+				motionState.strength *= 0.92;
 
 			}
 
