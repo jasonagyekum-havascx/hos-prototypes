@@ -142,6 +142,198 @@ Released under the MIT license
       margin-bottom: 4px;
     }
     
+    .slider-container {
+      margin: 15px 0;
+      padding: 12px;
+      background: rgba(0,0,0,0.03);
+      border-radius: 10px;
+    }
+    
+    .slider-label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+      font-size: 0.85rem;
+      color: #34495e;
+    }
+    
+    .slider-value {
+      font-weight: 600;
+      background: #3498db;
+      color: white;
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 0.75rem;
+    }
+    
+    .opacity-slider {
+      width: 100%;
+      height: 8px;
+      border-radius: 4px;
+      background: linear-gradient(to right, rgba(52,152,219,0.2), rgba(52,152,219,1));
+      outline: none;
+      -webkit-appearance: none;
+      appearance: none;
+      cursor: pointer;
+    }
+    
+    .opacity-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #3498db;
+      cursor: pointer;
+      border: 3px solid white;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      transition: transform 0.1s ease;
+    }
+    
+    .opacity-slider::-webkit-slider-thumb:hover {
+      transform: scale(1.1);
+    }
+    
+    .opacity-slider::-moz-range-thumb {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #3498db;
+      cursor: pointer;
+      border: 3px solid white;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    }
+    
+    /* Ice Controls */
+    .ice-settings {
+      margin: 15px 0;
+      padding: 12px;
+      background: rgba(135, 206, 235, 0.15);
+      border-radius: 10px;
+      border: 1px solid rgba(135, 206, 235, 0.3);
+    }
+    
+    .ice-settings h3 {
+      font-family: 'Playfair Display', Georgia, serif;
+      font-size: 0.9rem;
+      margin: 0 0 10px 0;
+      color: #34495e;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    .ice-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    
+    .ice-row:last-child {
+      margin-bottom: 0;
+    }
+    
+    .ice-row label {
+      font-size: 0.8rem;
+      color: #34495e;
+    }
+    
+    .ice-row .controls {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    .shape-btn {
+      background: rgba(255, 255, 255, 0.8);
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      padding: 6px 10px;
+      cursor: pointer;
+      font-size: 0.7rem;
+      font-family: inherit;
+      transition: all 0.2s ease;
+    }
+    
+    .shape-btn:hover {
+      border-color: #87CEEB;
+    }
+    
+    .shape-btn.active {
+      border-color: #3498db;
+      background: rgba(52, 152, 219, 0.15);
+    }
+    
+    .qty-btn {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 2px solid #ddd;
+      background: rgba(255, 255, 255, 0.8);
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: 600;
+      color: #34495e;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+    }
+    
+    .qty-btn:hover {
+      border-color: #3498db;
+      background: rgba(52, 152, 219, 0.1);
+    }
+    
+    .qty-value {
+      min-width: 24px;
+      text-align: center;
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+    
+    .size-slider {
+      width: 80px;
+      height: 6px;
+      border-radius: 3px;
+      background: linear-gradient(to right, rgba(135,206,235,0.3), rgba(135,206,235,1));
+      outline: none;
+      -webkit-appearance: none;
+      appearance: none;
+      cursor: pointer;
+    }
+    
+    .size-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #3498db;
+      cursor: pointer;
+      border: 2px solid white;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+    
+    .size-slider::-moz-range-thumb {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #3498db;
+      cursor: pointer;
+      border: 2px solid white;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+    
+    .size-value {
+      font-size: 0.75rem;
+      color: #666;
+      min-width: 28px;
+      text-align: right;
+    }
+    
     #loading { 
       position: absolute;
       left: 0;
@@ -169,6 +361,8 @@ Released under the MIT license
       .drink-selector { grid-template-columns: repeat(2, 1fr); gap: 4px; }
       .drink-btn { padding: 6px 3px; font-size: 0.65rem; }
       .drink-btn .emoji { font-size: 1.2rem; }
+      .ice-settings { padding: 8px; }
+      .size-slider { width: 50px; }
     }
   </style>
 </head><body>
@@ -179,24 +373,64 @@ Released under the MIT license
     
     <h2>Choose Your Drink:</h2>
     <div class="drink-selector">
-      <button class="drink-btn active" data-drink="whiskey" onclick="setDrink('whiskey')">
+      <button class="drink-btn active" data-drink="whiskey" onclick="setDrink('whiskey')" aria-label="Select whiskey">
         <span class="emoji">🥃</span>Whiskey
       </button>
-      <button class="drink-btn" data-drink="water" onclick="setDrink('water')">
+      <button class="drink-btn" data-drink="water" onclick="setDrink('water')" aria-label="Select water">
         <span class="emoji">💧</span>Water
       </button>
-      <button class="drink-btn" data-drink="orange" onclick="setDrink('orange')">
+      <button class="drink-btn" data-drink="orange" onclick="setDrink('orange')" aria-label="Select orange juice">
         <span class="emoji">🍊</span>Orange
       </button>
-      <button class="drink-btn" data-drink="wine" onclick="setDrink('wine')">
+      <button class="drink-btn" data-drink="wine" onclick="setDrink('wine')" aria-label="Select wine">
         <span class="emoji">🍷</span>Wine
       </button>
-      <button class="drink-btn" data-drink="lemon" onclick="setDrink('lemon')">
+      <button class="drink-btn" data-drink="lemon" onclick="setDrink('lemon')" aria-label="Select lemonade">
         <span class="emoji">🍋</span>Lemonade
       </button>
-      <button class="drink-btn" data-drink="mint" onclick="setDrink('mint')">
+      <button class="drink-btn" data-drink="mint" onclick="setDrink('mint')" aria-label="Select mojito">
         <span class="emoji">🌿</span>Mojito
       </button>
+    </div>
+    
+    <div class="slider-container">
+      <div class="slider-label">
+        <span>Liquid Intensity</span>
+        <span class="slider-value" id="opacityValue">100%</span>
+      </div>
+      <input type="range" class="opacity-slider" id="opacitySlider" 
+             min="10" max="150" value="100" 
+             oninput="setOpacity(this.value)"
+             aria-label="Adjust liquid color intensity">
+    </div>
+    
+    <div class="ice-settings">
+      <h3>🧊 Ice Settings</h3>
+      <div class="ice-row">
+        <label>Shape</label>
+        <div class="controls">
+          <button class="shape-btn active" id="shapeSphere" onclick="setIceShape('sphere')" aria-label="Sphere ice">Sphere</button>
+          <button class="shape-btn" id="shapeCube" onclick="setIceShape('cube')" aria-label="Cube ice">Cube</button>
+        </div>
+      </div>
+      <div class="ice-row">
+        <label>Size</label>
+        <div class="controls">
+          <input type="range" class="size-slider" id="sizeSlider" 
+                 min="0.12" max="0.35" step="0.01" value="0.25"
+                 oninput="setIceSize(this.value)"
+                 aria-label="Ice size">
+          <span class="size-value" id="sizeValue">0.25</span>
+        </div>
+      </div>
+      <div class="ice-row">
+        <label>Quantity</label>
+        <div class="controls">
+          <button class="qty-btn" onclick="changeIceQuantity(-1)" aria-label="Decrease ice">−</button>
+          <span class="qty-value" id="quantityValue">1</span>
+          <button class="qty-btn" onclick="changeIceQuantity(1)" aria-label="Increase ice">+</button>
+        </div>
+      </div>
     </div>
     
     <h2>Interactions:</h2>
@@ -204,7 +438,7 @@ Released under the MIT license
       <li>Draw on drink to make ripples</li>
       <li>Drag background to rotate</li>
       <li><strong>SPACE</strong> to pause</li>
-      <li>Drag ice cube to stir</li>
+      <li>Drag ice to stir</li>
       <li><strong>G</strong> for ice physics</li>
     </ul>
     
@@ -355,6 +589,17 @@ var drinkPresets = {
 };
 
 var currentDrink = 'whiskey';
+var liquidOpacity = 1.0;
+
+// Ice configuration
+var iceConfig = {
+  shape: 'sphere',
+  size: 0.25,
+  quantity: 1,
+  minSize: 0.12,
+  maxSize: 0.35,
+  maxQuantity: 6
+};
 
 function setDrink(drinkName) {
   currentDrink = drinkName;
@@ -367,6 +612,50 @@ function setDrink(drinkName) {
   
   // Update icon
   document.getElementById('currentDrinkIcon').textContent = drinkPresets[drinkName].icon;
+}
+
+function setOpacity(value) {
+  liquidOpacity = value / 100;
+  document.getElementById('opacityValue').textContent = value + '%';
+  
+  // Update slider gradient to reflect current value
+  var slider = document.getElementById('opacitySlider');
+  var percent = (value - 10) / (150 - 10) * 100;
+  slider.style.background = 'linear-gradient(to right, rgba(52,152,219,' + (liquidOpacity * 0.3) + '), rgba(52,152,219,' + Math.min(1, liquidOpacity) + '))';
+}
+
+function setIceShape(shape) {
+  iceConfig.shape = shape;
+  
+  document.getElementById('shapeSphere').classList.toggle('active', shape === 'sphere');
+  document.getElementById('shapeCube').classList.toggle('active', shape === 'cube');
+  
+  // Rebuild ice with new shape
+  if (typeof rebuildIce === 'function') {
+    rebuildIce();
+  }
+}
+
+function setIceSize(value) {
+  iceConfig.size = parseFloat(value);
+  document.getElementById('sizeValue').textContent = parseFloat(value).toFixed(2);
+  
+  // Update existing ice sizes
+  if (typeof updateIceSizes === 'function') {
+    updateIceSizes();
+  }
+}
+
+function changeIceQuantity(delta) {
+  var newQty = Math.max(0, Math.min(iceConfig.maxQuantity, iceConfig.quantity + delta));
+  if (newQty !== iceConfig.quantity) {
+    iceConfig.quantity = newQty;
+    document.getElementById('quantityValue').textContent = newQty;
+    
+    if (typeof updateIceQuantity === 'function') {
+      updateIceQuantity();
+    }
+  }
 }
 </script>
 
@@ -408,6 +697,7 @@ var helperFunctions = '\
   uniform vec3 light;\
   uniform vec3 sphereCenter;\
   uniform float sphereRadius;\
+  uniform int iceShape;\
   uniform sampler2D causticTex;\
   uniform sampler2D water;\
   \
@@ -434,6 +724,32 @@ var helperFunctions = '\
     return 1.0e6;\
   }\
   \
+  float intersectBox(vec3 origin, vec3 ray, vec3 boxCenter, float boxSize) {\
+    vec3 boxMin = boxCenter - vec3(boxSize);\
+    vec3 boxMax = boxCenter + vec3(boxSize);\
+    vec2 t = intersectCube(origin, ray, boxMin, boxMax);\
+    if (t.x < t.y && t.x > 0.0) return t.x;\
+    return 1.0e6;\
+  }\
+  \
+  float intersectIce(vec3 origin, vec3 ray, vec3 center, float size) {\
+    if (iceShape == 1) {\
+      return intersectBox(origin, ray, center, size * 0.8);\
+    }\
+    return intersectSphere(origin, ray, center, size);\
+  }\
+  \
+  vec3 getIceNormal(vec3 point, vec3 center, float size) {\
+    if (iceShape == 1) {\
+      vec3 d = point - center;\
+      vec3 ad = abs(d);\
+      if (ad.x > ad.y && ad.x > ad.z) return vec3(sign(d.x), 0.0, 0.0);\
+      if (ad.y > ad.z) return vec3(0.0, sign(d.y), 0.0);\
+      return vec3(0.0, 0.0, sign(d.z));\
+    }\
+    return normalize(point - center);\
+  }\
+  \
   vec3 getIceColor(vec3 point) {\
     vec3 color = vec3(0.90, 0.94, 0.98);\
     \
@@ -444,9 +760,9 @@ var helperFunctions = '\
     color *= 1.0 - 0.5 / pow((1.0 + sphereRadius - abs(point.z)) / sphereRadius, 3.0);\
     color *= 1.0 - 0.5 / pow((point.y + 1.0 + sphereRadius) / sphereRadius, 3.0);\
     \
-    vec3 sphereNormal = (point - sphereCenter) / sphereRadius;\
+    vec3 iceNormal = getIceNormal(point, sphereCenter, sphereRadius);\
     vec3 refractedLight = refract(-light, vec3(0.0, 1.0, 0.0), IOR_AIR / IOR_LIQUID);\
-    float diffuse = max(0.0, dot(-refractedLight, sphereNormal)) * 0.5;\
+    float diffuse = max(0.0, dot(-refractedLight, iceNormal)) * 0.5;\
     vec4 info = texture2D(water, point.xz * 0.5 + 0.5);\
     if (point.y < info.r) {\
       vec4 caustic = texture2D(causticTex, 0.75 * (point.xz - point.y * refractedLight.xz / refractedLight.y) * 0.5 + 0.5);\
@@ -520,7 +836,7 @@ function Renderer() {
       \
       vec3 getSurfaceRayColor(vec3 origin, vec3 ray, vec3 waterColor) {\
         vec3 color;\
-        float q = intersectSphere(origin, ray, sphereCenter, sphereRadius);\
+        float q = intersectIce(origin, ray, sphereCenter, sphereRadius);\
         if (q < 1.0e6) {\
           color = getIceColor(origin + ray * q);\
         } else if (ray.y < 0.0) {\
@@ -577,7 +893,9 @@ function Renderer() {
   }
   
   this.sphereMesh = GL.Mesh.sphere({ detail: 10 });
-  this.sphereShader = new GL.Shader(helperFunctions + '\
+  this.cubeMesh = GL.Mesh.cube();
+  
+  this.iceShader = new GL.Shader(helperFunctions + '\
     varying vec3 position;\
     void main() {\
       position = sphereCenter + gl_Vertex.xyz * sphereRadius;\
@@ -594,9 +912,9 @@ function Renderer() {
     }\
   ');
   
-  this.cubeMesh = GL.Mesh.cube();
-  this.cubeMesh.triangles.splice(4, 2);
-  this.cubeMesh.compile();
+  this.wallCubeMesh = GL.Mesh.cube();
+  this.wallCubeMesh.triangles.splice(4, 2);
+  this.wallCubeMesh.compile();
   
   this.cubeShader = new GL.Shader(helperFunctions + '\
     varying vec3 position;\
@@ -618,6 +936,7 @@ function Renderer() {
   
   this.sphereCenter = new GL.Vector();
   this.sphereRadius = 0;
+  this.iceShape = 0; // 0 = sphere, 1 = cube
   
   var hasDerivatives = !!gl.getExtension('OES_standard_derivatives');
   this.causticsShader = new GL.Shader(helperFunctions + '\
@@ -678,9 +997,22 @@ function Renderer() {
 
 Renderer.prototype.getDrinkColors = function() {
   var preset = drinkPresets[currentDrink];
+  var opacity = liquidOpacity;
+  
+  // Apply opacity to color intensity
+  // Values < 1 make it more transparent/lighter
+  // Values > 1 make it more saturated/darker
   return {
-    above: preset.above,
-    under: preset.under,
+    above: [
+      preset.above[0] * opacity,
+      preset.above[1] * opacity,
+      preset.above[2] * opacity
+    ],
+    under: [
+      preset.under[0] * opacity,
+      preset.under[1] * opacity,
+      preset.under[2] * opacity
+    ],
     wall: preset.wall
   };
 };
@@ -697,6 +1029,7 @@ Renderer.prototype.updateCaustics = function(water) {
       water: 0,
       sphereCenter: this_.sphereCenter,
       sphereRadius: this_.sphereRadius,
+      iceShape: this_.iceShape,
       abovewaterColor: colors.above,
       underwaterColor: colors.under,
       wallBaseColor: colors.wall
@@ -721,6 +1054,7 @@ Renderer.prototype.renderWater = function(water, sky) {
       eye: tracer.eye,
       sphereCenter: this.sphereCenter,
       sphereRadius: this.sphereRadius,
+      iceShape: this.iceShape,
       abovewaterColor: colors.above,
       underwaterColor: colors.under,
       wallBaseColor: colors.wall
@@ -729,20 +1063,25 @@ Renderer.prototype.renderWater = function(water, sky) {
   gl.disable(gl.CULL_FACE);
 };
 
-Renderer.prototype.renderSphere = function() {
+Renderer.prototype.renderIce = function(center, radius, shape) {
   var colors = this.getDrinkColors();
   water.textureA.bind(0);
   this.causticTex.bind(1);
-  this.sphereShader.uniforms({
+  
+  var mesh = shape === 'cube' ? this.cubeMesh : this.sphereMesh;
+  var shapeInt = shape === 'cube' ? 1 : 0;
+  
+  this.iceShader.uniforms({
     light: this.lightDir,
     water: 0,
     causticTex: 1,
-    sphereCenter: this.sphereCenter,
-    sphereRadius: this.sphereRadius,
+    sphereCenter: center,
+    sphereRadius: radius,
+    iceShape: shapeInt,
     abovewaterColor: colors.above,
     underwaterColor: colors.under,
     wallBaseColor: colors.wall
-  }).draw(this.sphereMesh);
+  }).draw(mesh);
 };
 
 Renderer.prototype.renderCube = function() {
@@ -756,10 +1095,11 @@ Renderer.prototype.renderCube = function() {
     causticTex: 1,
     sphereCenter: this.sphereCenter,
     sphereRadius: this.sphereRadius,
+    iceShape: this.iceShape,
     abovewaterColor: colors.above,
     underwaterColor: colors.under,
     wallBaseColor: colors.wall
-  }).draw(this.cubeMesh);
+  }).draw(this.wallCubeMesh);
   gl.disable(gl.CULL_FACE);
 };
 </script>
@@ -935,12 +1275,169 @@ var angleX = -25;
 var angleY = -200.5;
 
 var useSpherePhysics = false;
-var center;
-var oldCenter;
-var velocity;
-var gravity;
-var radius;
 var paused = false;
+
+// Multiple ice objects system
+var iceObjects = [];
+var draggedIceIndex = -1;
+
+function createIceObject(x, y, z, radius) {
+  return {
+    center: new GL.Vector(x, y, z),
+    oldCenter: new GL.Vector(x, y, z),
+    velocity: new GL.Vector(),
+    radius: radius
+  };
+}
+
+function initIceObjects() {
+  iceObjects = [];
+  var qty = iceConfig.quantity;
+  var size = iceConfig.size;
+  
+  for (var i = 0; i < qty; i++) {
+    // Spread ice objects in different positions
+    var angle = (i / qty) * Math.PI * 2;
+    var spread = 0.3 + Math.random() * 0.2;
+    var x = Math.cos(angle) * spread;
+    var z = Math.sin(angle) * spread;
+    var y = -0.75 + Math.random() * 0.3;
+    
+    iceObjects.push(createIceObject(x, y, z, size));
+  }
+}
+
+function rebuildIce() {
+  initIceObjects();
+}
+
+function updateIceSizes() {
+  var newSize = iceConfig.size;
+  for (var i = 0; i < iceObjects.length; i++) {
+    iceObjects[i].radius = newSize;
+  }
+}
+
+function updateIceQuantity() {
+  var targetQty = iceConfig.quantity;
+  
+  while (iceObjects.length < targetQty) {
+    var angle = Math.random() * Math.PI * 2;
+    var spread = 0.2 + Math.random() * 0.3;
+    var x = Math.cos(angle) * spread;
+    var z = Math.sin(angle) * spread;
+    var y = -0.5 + Math.random() * 0.2;
+    
+    iceObjects.push(createIceObject(x, y, z, iceConfig.size));
+  }
+  
+  while (iceObjects.length > targetQty) {
+    iceObjects.pop();
+  }
+}
+
+// Collision detection and response
+function handleIceCollisions() {
+  var collisionDamping = 0.8;
+  var minDistance = 0.01;
+  
+  for (var i = 0; i < iceObjects.length; i++) {
+    for (var j = i + 1; j < iceObjects.length; j++) {
+      var ice1 = iceObjects[i];
+      var ice2 = iceObjects[j];
+      
+      var dx = ice2.center.x - ice1.center.x;
+      var dy = ice2.center.y - ice1.center.y;
+      var dz = ice2.center.z - ice1.center.z;
+      
+      var dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
+      var minDist = ice1.radius + ice2.radius;
+      
+      if (dist < minDist && dist > minDistance) {
+        // Normalize collision vector
+        var nx = dx / dist;
+        var ny = dy / dist;
+        var nz = dz / dist;
+        
+        // Separation amount
+        var overlap = (minDist - dist) * 0.5;
+        
+        // Separate the ice objects
+        ice1.center.x -= nx * overlap;
+        ice1.center.y -= ny * overlap;
+        ice1.center.z -= nz * overlap;
+        
+        ice2.center.x += nx * overlap;
+        ice2.center.y += ny * overlap;
+        ice2.center.z += nz * overlap;
+        
+        // Calculate relative velocity
+        var dvx = ice2.velocity.x - ice1.velocity.x;
+        var dvy = ice2.velocity.y - ice1.velocity.y;
+        var dvz = ice2.velocity.z - ice1.velocity.z;
+        
+        // Relative velocity in collision normal direction
+        var dvn = dvx * nx + dvy * ny + dvz * nz;
+        
+        // Only resolve if objects are approaching
+        if (dvn < 0) {
+          // Apply impulse
+          var impulse = dvn * collisionDamping;
+          
+          ice1.velocity.x += impulse * nx;
+          ice1.velocity.y += impulse * ny;
+          ice1.velocity.z += impulse * nz;
+          
+          ice2.velocity.x -= impulse * nx;
+          ice2.velocity.y -= impulse * ny;
+          ice2.velocity.z -= impulse * nz;
+        }
+      }
+    }
+  }
+}
+
+function updateIcePhysics(seconds, draggedIndex) {
+  var gravity = new GL.Vector(0, -4, 0);
+  var buoyancy = 1.3;
+  
+  for (var i = 0; i < iceObjects.length; i++) {
+    var ice = iceObjects[i];
+    
+    if (i === draggedIndex) {
+      ice.velocity = new GL.Vector();
+      continue;
+    }
+    
+    if (useSpherePhysics) {
+      var percentUnderWater = Math.max(0, Math.min(1, (ice.radius - ice.center.y) / (2 * ice.radius)));
+      
+      // Apply gravity and buoyancy
+      ice.velocity = ice.velocity.add(gravity.multiply(seconds - buoyancy * seconds * percentUnderWater));
+      
+      // Water drag
+      ice.velocity = ice.velocity.subtract(ice.velocity.unit().multiply(percentUnderWater * seconds * ice.velocity.dot(ice.velocity)));
+      
+      // Update position
+      ice.center = ice.center.add(ice.velocity.multiply(seconds));
+      
+      // Floor collision
+      if (ice.center.y < ice.radius - 1) {
+        ice.center.y = ice.radius - 1;
+        ice.velocity.y = Math.abs(ice.velocity.y) * 0.7;
+      }
+    }
+    
+    // Wall constraints
+    var wallLimit = 1 - ice.radius;
+    ice.center.x = Math.max(-wallLimit, Math.min(wallLimit, ice.center.x));
+    ice.center.z = Math.max(-wallLimit, Math.min(wallLimit, ice.center.z));
+    ice.center.y = Math.max(ice.radius - 1, Math.min(10, ice.center.y));
+  }
+  
+  // Handle collisions between ice objects
+  handleIceCollisions();
+}
 
 window.onload = function() {
   var ratio = window.devicePixelRatio || 1;
@@ -981,10 +1478,8 @@ window.onload = function() {
     throw new Error('Rendering to floating-point textures is required but not supported');
   }
 
-  center = oldCenter = new GL.Vector(-0.4, -0.75, 0.2);
-  velocity = new GL.Vector();
-  gravity = new GL.Vector(0, -4, 0);
-  radius = 0.25;
+  // Initialize ice objects
+  initIceObjects();
 
   for (var i = 0; i < 20; i++) {
     water.addDrop(Math.random() * 2 - 1, Math.random() * 2 - 1, 0.03, (i & 1) ? 0.01 : -0.01);
@@ -1027,10 +1522,23 @@ window.onload = function() {
     var tracer = new GL.Raytracer();
     var ray = tracer.getRayForPixel(x * ratio, y * ratio);
     var pointOnPlane = tracer.eye.add(ray.multiply(-tracer.eye.y / ray.y));
-    var sphereHitTest = GL.Raytracer.hitTestSphere(tracer.eye, ray, center, radius);
-    if (sphereHitTest) {
+    
+    // Check if clicking on any ice object
+    draggedIceIndex = -1;
+    var closestT = Infinity;
+    
+    for (var i = 0; i < iceObjects.length; i++) {
+      var ice = iceObjects[i];
+      var hitTest = GL.Raytracer.hitTestSphere(tracer.eye, ray, ice.center, ice.radius);
+      if (hitTest && hitTest.t < closestT) {
+        closestT = hitTest.t;
+        draggedIceIndex = i;
+        prevHit = hitTest.hit;
+      }
+    }
+    
+    if (draggedIceIndex >= 0) {
       mode = MODE_MOVE_SPHERE;
-      prevHit = sphereHitTest.hit;
       planeNormal = tracer.getRayForPixel(gl.canvas.width / 2, gl.canvas.height / 2).negative();
     } else if (Math.abs(pointOnPlane.x) < 1 && Math.abs(pointOnPlane.z) < 1) {
       mode = MODE_ADD_DROPS;
@@ -1054,16 +1562,23 @@ window.onload = function() {
         break;
       }
       case MODE_MOVE_SPHERE: {
-        var tracer = new GL.Raytracer();
-        var ray = tracer.getRayForPixel(x * ratio, y * ratio);
-        var t = -planeNormal.dot(tracer.eye.subtract(prevHit)) / planeNormal.dot(ray);
-        var nextHit = tracer.eye.add(ray.multiply(t));
-        center = center.add(nextHit.subtract(prevHit));
-        center.x = Math.max(radius - 1, Math.min(1 - radius, center.x));
-        center.y = Math.max(radius - 1, Math.min(10, center.y));
-        center.z = Math.max(radius - 1, Math.min(1 - radius, center.z));
-        prevHit = nextHit;
-        if (paused) renderer.updateCaustics(water);
+        if (draggedIceIndex >= 0 && draggedIceIndex < iceObjects.length) {
+          var ice = iceObjects[draggedIceIndex];
+          var tracer = new GL.Raytracer();
+          var ray = tracer.getRayForPixel(x * ratio, y * ratio);
+          var t = -planeNormal.dot(tracer.eye.subtract(prevHit)) / planeNormal.dot(ray);
+          var nextHit = tracer.eye.add(ray.multiply(t));
+          ice.center = ice.center.add(nextHit.subtract(prevHit));
+          
+          // Constrain to glass bounds
+          var wallLimit = 1 - ice.radius;
+          ice.center.x = Math.max(-wallLimit, Math.min(wallLimit, ice.center.x));
+          ice.center.y = Math.max(ice.radius - 1, Math.min(10, ice.center.y));
+          ice.center.z = Math.max(-wallLimit, Math.min(wallLimit, ice.center.z));
+          
+          prevHit = nextHit;
+          if (paused) renderer.updateCaustics(water);
+        }
         break;
       }
       case MODE_ORBIT_CAMERA: {
@@ -1080,6 +1595,7 @@ window.onload = function() {
 
   function stopDrag() {
     mode = -1;
+    draggedIceIndex = -1;
   }
 
   function isHelpElement(element) {
@@ -1132,23 +1648,15 @@ window.onload = function() {
     if (seconds > 1) return;
     frame += seconds * 2;
 
-    if (mode == MODE_MOVE_SPHERE) {
-      velocity = new GL.Vector();
-    } else if (useSpherePhysics) {
-      var percentUnderWater = Math.max(0, Math.min(1, (radius - center.y) / (2 * radius)));
-      var buoyancy = 1.3;
-      velocity = velocity.add(gravity.multiply(seconds - buoyancy * seconds * percentUnderWater));
-      velocity = velocity.subtract(velocity.unit().multiply(percentUnderWater * seconds * velocity.dot(velocity)));
-      center = center.add(velocity.multiply(seconds));
-
-      if (center.y < radius - 1) {
-        center.y = radius - 1;
-        velocity.y = Math.abs(velocity.y) * 0.7;
-      }
+    // Update ice physics
+    updateIcePhysics(seconds, draggedIceIndex);
+    
+    // Move water for each ice object
+    for (var i = 0; i < iceObjects.length; i++) {
+      var ice = iceObjects[i];
+      water.moveSphere(ice.oldCenter, ice.center, ice.radius);
+      ice.oldCenter = ice.center;
     }
-
-    water.moveSphere(oldCenter, center, radius);
-    oldCenter = center;
 
     water.stepSimulation();
     water.stepSimulation();
@@ -1170,11 +1678,23 @@ window.onload = function() {
     gl.translate(0, 0.5, 0);
 
     gl.enable(gl.DEPTH_TEST);
-    renderer.sphereCenter = center;
-    renderer.sphereRadius = radius;
+    
+    // Set renderer state from first ice (for caustics, water shader compatibility)
+    if (iceObjects.length > 0) {
+      renderer.sphereCenter = iceObjects[0].center;
+      renderer.sphereRadius = iceObjects[0].radius;
+    }
+    renderer.iceShape = iceConfig.shape === 'cube' ? 1 : 0;
+    
     renderer.renderCube();
     renderer.renderWater(water, cubemap);
-    renderer.renderSphere();
+    
+    // Render all ice objects
+    for (var i = 0; i < iceObjects.length; i++) {
+      var ice = iceObjects[i];
+      renderer.renderIce(ice.center, ice.radius, iceConfig.shape);
+    }
+    
     gl.disable(gl.DEPTH_TEST);
   }
 };
