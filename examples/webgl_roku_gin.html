@@ -639,6 +639,11 @@
 			const LIQUID_COLOR = 0xf2f3dc;
 			const LIQUID_DEEP_COLOR = 0xe1e2c8;
 
+			// Drink level tracking
+			let currentLiquidHeight = LIQUID_HEIGHT;
+			let clickedHotspots = new Set();
+			let pendingLiquidLevelChange = null;
+
 			const motionState = {
 				enabled: false,
 				available: false,
@@ -1038,7 +1043,8 @@
 				// Base position with subtle animation
 				const wedgeX = 0.4;
 				const wedgeZ = 0.2;
-				const wedgeY = LIQUID_SURFACE_Y + 0.01;
+				const currentSurfaceY = LIQUID_BASE_Y + currentLiquidHeight;
+				const wedgeY = currentSurfaceY + 0.01;
 				
 				lemonWedge.position.x = wedgeX + gentleSway;
 				lemonWedge.position.y = wedgeY + subtleBob;
@@ -1233,7 +1239,18 @@
 
 					if (intersects.length > 0 && intersects[0].distance < 10) {
 
-						openPanel(hotspot.userData.panelId);
+						const panelId = hotspot.userData.panelId;
+
+						// Check if this hotspot has already been clicked
+						if (!clickedHotspots.has(panelId)) {
+							// Mark as clicked and queue 25% reduction
+							clickedHotspots.add(panelId);
+							const newHeight = currentLiquidHeight * 0.75;
+							pendingLiquidLevelChange = newHeight;
+							console.log('Hotspot clicked:', panelId, 'New height:', newHeight, 'Current:', currentLiquidHeight);
+						}
+
+						openPanel(panelId);
 						return true;
 
 					}
@@ -1275,6 +1292,13 @@
 				}
 
 				hotspotOverlay.classList.remove('active');
+
+				// Check if there's a pending liquid level change
+				if (pendingLiquidLevelChange !== null) {
+					console.log('Updating liquid level to:', pendingLiquidLevelChange);
+					updateLiquidLevel(pendingLiquidLevelChange);
+					pendingLiquidLevelChange = null;
+				}
 
 			}
 
@@ -1414,7 +1438,8 @@
 
 					bubble.life += deltaTime;
 
-					if (bubble.life > bubble.maxLife || bubble.position.y > LIQUID_SURFACE_Y) {
+					const currentSurfaceY = LIQUID_BASE_Y + currentLiquidHeight;
+					if (bubble.life > bubble.maxLife || bubble.position.y > currentSurfaceY) {
 
 						bubble.active = false;
 						scale.set(0, 0, 0);
@@ -1860,6 +1885,76 @@
 				waterPlane.rotation.x = -Math.PI * 0.5;
 				waterPlane.position.y = LIQUID_SURFACE_Y;
 				scene.add(waterPlane);
+
+			}
+
+			function updateLiquidLevel(newHeight) {
+
+				console.log('updateLiquidLevel called with:', newHeight);
+				
+				// Update current liquid height
+				currentLiquidHeight = newHeight;
+				const newSurfaceY = LIQUID_BASE_Y + currentLiquidHeight;
+				
+				console.log('New surface Y:', newSurfaceY, 'Old was:', LIQUID_BASE_Y + LIQUID_HEIGHT);
+
+				// Update liquid surface position
+				if (liquidSurface) {
+					// Dispose old geometry
+					liquidSurface.geometry.dispose();
+					
+					// Create new surface geometry at new height
+					const surfaceSegments = 64;
+					const surfaceGeometry = new THREE.CircleGeometry(LIQUID_RADIUS, surfaceSegments);
+					surfaceGeometry.rotateX(-Math.PI * 0.5);
+					surfaceGeometry.translate(0, newSurfaceY, 0);
+					surfaceGeometry.computeBoundingBox();
+					surfaceGeometry.computeBoundingSphere();
+					
+					liquidSurface.geometry = surfaceGeometry;
+					// Ensure mesh position is at origin since geometry is translated
+					liquidSurface.position.set(0, 0, 0);
+					console.log('Updated liquid surface to Y:', newSurfaceY);
+				}
+
+				// Update liquid body (cylinder)
+				if (liquidBody) {
+					// Dispose old geometry
+					liquidBody.geometry.dispose();
+					
+					// Create new geometry with updated height
+					const bodyGeometry = new THREE.CylinderGeometry(
+						LIQUID_RADIUS,
+						LIQUID_RADIUS,
+						currentLiquidHeight,
+						64,
+						1,
+						true
+					);
+					bodyGeometry.translate(0, LIQUID_BASE_Y + currentLiquidHeight * 0.5, 0);
+					bodyGeometry.computeBoundingBox();
+					bodyGeometry.computeBoundingSphere();
+					
+					liquidBody.geometry = bodyGeometry;
+					// Ensure mesh position is at origin since geometry is translated
+					liquidBody.position.set(0, 0, 0);
+					console.log('Updated liquid body height to:', currentLiquidHeight);
+				}
+
+				// Update water plane position for raycasting
+				if (waterPlane) {
+					waterPlane.position.y = newSurfaceY;
+				}
+
+				// Update lemon wedge position to float on new surface
+				if (lemonWedge) {
+					const wedgeX = lemonWedge.position.x;
+					const wedgeZ = lemonWedge.position.z;
+					const wedgeY = newSurfaceY + 0.01; // Just above surface
+					lemonWedge.position.set(wedgeX, wedgeY, wedgeZ);
+				}
+
+				// Ice cubes remain at original positions (no movement needed)
 
 			}
 
