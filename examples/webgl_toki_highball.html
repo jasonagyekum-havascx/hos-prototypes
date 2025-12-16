@@ -48,6 +48,25 @@
 				backdrop-filter: blur(12px);
 				z-index: 100;
 				min-width: 220px;
+				display: none;
+			}
+
+			#audioControls {
+				position: fixed;
+				top: 20px;
+				right: 20px;
+				background: rgba(20, 40, 60, 0.92);
+				border: 1px solid rgba(100, 160, 200, 0.3);
+				border-radius: 16px;
+				padding: 16px 20px;
+				color: #e8f4fc;
+				font-family: 'Noto Sans JP', sans-serif;
+				font-size: 13px;
+				backdrop-filter: blur(12px);
+				z-index: 100;
+				display: flex;
+				align-items: center;
+				gap: 12px;
 			}
 
 			#drinkControls h3 {
@@ -150,6 +169,61 @@
 				border: none;
 				border-radius: 50%;
 				cursor: pointer;
+			}
+
+			.audio-toggle {
+				background: rgba(126, 200, 232, 0.15);
+				border: 1px solid rgba(126, 200, 232, 0.4);
+				color: #7ec8e8;
+				width: 36px;
+				height: 36px;
+				border-radius: 50%;
+				cursor: pointer;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				transition: all 0.2s ease;
+				padding: 0;
+				flex-shrink: 0;
+			}
+
+			.audio-toggle:hover {
+				background: rgba(126, 200, 232, 0.25);
+				border-color: rgba(126, 200, 232, 0.6);
+				transform: scale(1.05);
+			}
+
+			.audio-toggle:active {
+				transform: scale(0.95);
+			}
+
+			.audio-toggle.active {
+				background: rgba(126, 200, 232, 0.35);
+				border-color: #7ec8e8;
+			}
+
+			.audio-toggle svg {
+				width: 16px;
+				height: 16px;
+				stroke: #7ec8e8;
+			}
+
+			#audioControls .volume-controls {
+				display: flex;
+				align-items: center;
+				gap: 8px;
+			}
+
+			#audioControls .slider-control {
+				width: 80px;
+			}
+
+			#audioControls #volumeValue {
+				min-width: 35px;
+				text-align: center;
+				font-weight: 500;
+				color: #ffffff;
+				font-size: 12px;
 			}
 
 			#brandLabel {
@@ -347,6 +421,27 @@
 				</div>
 			</div>
 		</div>
+
+		<div id="audioControls" role="region" aria-label="Audio controls">
+			<button id="audioToggle" class="audio-toggle" aria-label="Toggle background music" tabindex="0">
+				<svg id="playIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+					<polygon points="5 3 19 12 5 21 5 3"></polygon>
+				</svg>
+				<svg id="pauseIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display: none;">
+					<rect x="6" y="4" width="4" height="16"></rect>
+					<rect x="14" y="4" width="4" height="16"></rect>
+				</svg>
+			</button>
+			<div class="volume-controls">
+				<input type="range" id="volumeSlider" class="slider-control" min="0" max="100" step="1" value="30" aria-label="Volume">
+				<span id="volumeValue">30%</span>
+			</div>
+		</div>
+
+		<!-- Background Audio -->
+		<audio id="backgroundAudio" loop preload="auto">
+			<source src="audio/japa-jazz.mp3" type="audio/mpeg">
+		</audio>
 
 		<div id="brandLabel">TOKI</div>
 
@@ -1485,6 +1580,24 @@
 				setupControls();
 				setupPanelControls();
 
+				// Attempt to start background audio (may be blocked by browser autoplay policy)
+				const audioElement = document.getElementById('backgroundAudio');
+				const playPromise = audioElement.play();
+				if (playPromise !== undefined) {
+					playPromise.then(() => {
+						// Autoplay succeeded - update button state
+						const audioToggle = document.getElementById('audioToggle');
+						const playIcon = document.getElementById('playIcon');
+						const pauseIcon = document.getElementById('pauseIcon');
+						audioToggle.classList.add('active');
+						playIcon.style.display = 'none';
+						pauseIcon.style.display = 'block';
+					}).catch((error) => {
+						// Autoplay was prevented - user will need to click play button
+						console.log('Autoplay prevented. User can click play button to start audio.');
+					});
+				}
+
 				renderer.setAnimationLoop(animate);
 
 			}
@@ -1732,6 +1845,97 @@
 				};
 
 				fizzSlider.addEventListener('input', handleFizzChange);
+
+				// Audio controls
+				const audioElement = document.getElementById('backgroundAudio');
+				const audioToggle = document.getElementById('audioToggle');
+				const playIcon = document.getElementById('playIcon');
+				const pauseIcon = document.getElementById('pauseIcon');
+				const volumeSlider = document.getElementById('volumeSlider');
+				const volumeValue = document.getElementById('volumeValue');
+
+				let isPlaying = false;
+
+				// Set initial volume
+				audioElement.volume = volumeSlider.value / 100;
+
+				const handleToggleAudio = () => {
+
+					if (isPlaying) {
+
+						audioElement.pause();
+						isPlaying = false;
+						audioToggle.classList.remove('active');
+						playIcon.style.display = 'block';
+						pauseIcon.style.display = 'none';
+
+					} else {
+
+						audioElement.play().catch((error) => {
+
+							console.error('Error playing audio:', error);
+
+						});
+						isPlaying = true;
+						audioToggle.classList.add('active');
+						playIcon.style.display = 'none';
+						pauseIcon.style.display = 'block';
+
+					}
+
+				};
+
+				const handleVolumeChange = () => {
+
+					const volume = parseFloat(volumeSlider.value) / 100;
+					audioElement.volume = volume;
+					volumeValue.textContent = volumeSlider.value + '%';
+
+				};
+
+				audioToggle.addEventListener('click', handleToggleAudio);
+				audioToggle.addEventListener('keydown', (e) => {
+
+					if (e.key === 'Enter' || e.key === ' ') {
+
+						e.preventDefault();
+						handleToggleAudio();
+
+					}
+
+				});
+
+				volumeSlider.addEventListener('input', handleVolumeChange);
+
+				// Handle audio ended (for looping)
+				audioElement.addEventListener('ended', () => {
+
+					if (isPlaying) {
+
+						audioElement.play();
+
+					}
+
+				});
+
+				// Handle audio play/pause events
+				audioElement.addEventListener('play', () => {
+
+					isPlaying = true;
+					audioToggle.classList.add('active');
+					playIcon.style.display = 'none';
+					pauseIcon.style.display = 'block';
+
+				});
+
+				audioElement.addEventListener('pause', () => {
+
+					isPlaying = false;
+					audioToggle.classList.remove('active');
+					playIcon.style.display = 'block';
+					pauseIcon.style.display = 'none';
+
+				});
 
 			}
 
