@@ -1,0 +1,1165 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>three.js webgl - Toki Japanese Highball</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<link type="text/css" rel="stylesheet" href="example.css">
+		<style>
+			@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500&family=Cormorant+Garamond:wght@400;500&display=swap');
+
+			body {
+				font-family: 'Noto Sans JP', sans-serif;
+				background: linear-gradient(180deg, #0d1117 0%, #161b22 50%, #1a1f29 100%);
+			}
+
+			#info {
+				background: rgba(13, 17, 23, 0.85);
+				border: 1px solid rgba(201, 165, 99, 0.3);
+				backdrop-filter: blur(12px);
+			}
+
+			#info .title-wrapper span {
+				color: #c9a563;
+				font-family: 'Cormorant Garamond', serif;
+				font-weight: 500;
+				letter-spacing: 1px;
+			}
+
+			#info small {
+				color: rgba(255, 255, 255, 0.6);
+			}
+
+			#drinkControls {
+				position: fixed;
+				bottom: 20px;
+				left: 20px;
+				background: rgba(13, 17, 23, 0.92);
+				border: 1px solid rgba(201, 165, 99, 0.25);
+				border-radius: 16px;
+				padding: 20px 24px;
+				color: #fff;
+				font-family: 'Noto Sans JP', sans-serif;
+				font-size: 13px;
+				backdrop-filter: blur(12px);
+				z-index: 100;
+				min-width: 200px;
+			}
+
+			#drinkControls h3 {
+				margin: 0 0 16px 0;
+				font-size: 15px;
+				font-weight: 500;
+				color: #c9a563;
+				letter-spacing: 1px;
+				font-family: 'Cormorant Garamond', serif;
+				text-transform: uppercase;
+			}
+
+			.control-row {
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+				margin-bottom: 14px;
+			}
+
+			.control-row:last-child {
+				margin-bottom: 0;
+			}
+
+			.control-row label {
+				color: rgba(255, 255, 255, 0.7);
+				font-size: 12px;
+				min-width: 70px;
+			}
+
+			.control-row .controls {
+				display: flex;
+				align-items: center;
+				gap: 8px;
+			}
+
+			#drinkControls button {
+				background: rgba(201, 165, 99, 0.15);
+				border: 1px solid rgba(201, 165, 99, 0.4);
+				color: #c9a563;
+				padding: 6px 12px;
+				border-radius: 8px;
+				cursor: pointer;
+				font-size: 12px;
+				font-weight: 500;
+				transition: all 0.2s ease;
+				font-family: inherit;
+			}
+
+			#drinkControls button:hover {
+				background: rgba(201, 165, 99, 0.25);
+				border-color: rgba(201, 165, 99, 0.6);
+			}
+
+			#drinkControls button:active {
+				transform: scale(0.96);
+			}
+
+			#drinkControls button.active {
+				background: rgba(201, 165, 99, 0.4);
+				border-color: #c9a563;
+			}
+
+			.qty-btn {
+				width: 30px;
+				height: 30px;
+				padding: 0 !important;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				font-size: 16px !important;
+				font-weight: 600 !important;
+				border-radius: 50% !important;
+			}
+
+			#iceQuantityValue, #fizzValue {
+				min-width: 24px;
+				text-align: center;
+				font-weight: 500;
+				color: #fff;
+			}
+
+			.slider-control {
+				width: 100px;
+				height: 4px;
+				-webkit-appearance: none;
+				appearance: none;
+				background: rgba(201, 165, 99, 0.2);
+				border-radius: 2px;
+				outline: none;
+				cursor: pointer;
+			}
+
+			.slider-control::-webkit-slider-thumb {
+				-webkit-appearance: none;
+				appearance: none;
+				width: 14px;
+				height: 14px;
+				background: #c9a563;
+				border-radius: 50%;
+				cursor: pointer;
+				transition: transform 0.15s ease;
+			}
+
+			.slider-control::-webkit-slider-thumb:hover {
+				transform: scale(1.15);
+			}
+
+			.slider-control::-moz-range-thumb {
+				width: 14px;
+				height: 14px;
+				background: #c9a563;
+				border: none;
+				border-radius: 50%;
+				cursor: pointer;
+			}
+
+			#brandLabel {
+				position: fixed;
+				bottom: 20px;
+				right: 20px;
+				font-family: 'Cormorant Garamond', serif;
+				font-size: 24px;
+				color: rgba(201, 165, 99, 0.4);
+				letter-spacing: 3px;
+				text-transform: uppercase;
+				writing-mode: vertical-rl;
+				text-orientation: mixed;
+				z-index: 100;
+			}
+		</style>
+	</head>
+	<body>
+
+		<div id="info">
+			<a href="https://threejs.org/" target="_blank" rel="noopener" class="logo-link"></a>
+
+			<div class="title-wrapper">
+				<a href="https://threejs.org/" target="_blank" rel="noopener">three.js</a>
+				<span>Toki Japanese Highball</span>
+			</div>
+
+			<small>
+				Tap to disturb the surface. Drag to orbit.
+			</small>
+		</div>
+
+		<div id="drinkControls" role="region" aria-label="Drink controls">
+			<h3>Highball Settings</h3>
+			<div class="control-row">
+				<label id="iceLabel">Ice Cubes</label>
+				<div class="controls">
+					<button id="iceMinus" class="qty-btn" aria-label="Decrease ice" aria-describedby="iceLabel">−</button>
+					<span id="iceQuantityValue" aria-live="polite">3</span>
+					<button id="icePlus" class="qty-btn" aria-label="Increase ice" aria-describedby="iceLabel">+</button>
+				</div>
+			</div>
+			<div class="control-row">
+				<label for="fizzSlider">Carbonation</label>
+				<div class="controls">
+					<input type="range" id="fizzSlider" class="slider-control" min="0" max="100" step="5" value="70" aria-label="Fizz intensity">
+					<span id="fizzValue">70%</span>
+				</div>
+			</div>
+			<div class="control-row">
+				<label id="sliceLabel">Orange Slice</label>
+				<div class="controls">
+					<button id="sliceToggle" class="active" aria-pressed="true" aria-describedby="sliceLabel">Visible</button>
+				</div>
+			</div>
+		</div>
+
+		<div id="brandLabel">TOKI</div>
+
+		<script type="importmap">
+			{
+				"imports": {
+					"three": "../build/three.module.js",
+					"three/addons/": "./jsm/"
+				}
+			}
+		</script>
+
+		<script type="module">
+
+			import * as THREE from 'three';
+			import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+			let renderer, scene, camera, controls;
+			let liquidSurface, liquidBody;
+			let liquidUniforms;
+			let raycaster;
+			let waterPlane;
+			let glassOuter, glassInner;
+			const mouse = new THREE.Vector2();
+
+			// Bubble system
+			let bubbleGeometry, bubbleMaterial;
+			let bubbleInstances = [];
+			const MAX_BUBBLES = 500;
+			let bubbleMesh;
+
+			// Orange slice
+			let orangeSlice;
+			let orangeSliceVisible = true;
+
+			// Ice cubes (simple floating objects)
+			const iceObjects = [];
+			const iceConfig = {
+				quantity: 3,
+				maxQuantity: 6,
+				size: 0.12,
+			};
+
+			// Fizz configuration
+			let fizzIntensity = 0.7;
+
+			// Time tracking
+			let elapsedTime = 0;
+
+			// Highball glass dimensions (taller and slender)
+			const GLASS_RADIUS = 0.85;
+			const GLASS_HEIGHT = 2.8;
+			const GLASS_THICKNESS = 0.04;
+
+			// Liquid configuration
+			const LIQUID_RADIUS = GLASS_RADIUS - GLASS_THICKNESS - 0.02;
+			const LIQUID_HEIGHT = 2.2;
+			const LIQUID_BASE_Y = 0.1;
+			const LIQUID_SURFACE_Y = LIQUID_BASE_Y + LIQUID_HEIGHT;
+
+			// Toki Highball golden amber color
+			const LIQUID_COLOR = 0xdbb85c;
+			const LIQUID_DEEP_COLOR = 0xc9a040;
+
+			init();
+
+			function createIceMaterial() {
+
+				return new THREE.MeshPhysicalMaterial({
+					color: 0xe8f4ff,
+					metalness: 0,
+					roughness: 0.1,
+					transmission: 0.92,
+					opacity: 1,
+					transparent: true,
+					thickness: 0.4,
+					clearcoat: 0.4,
+					clearcoatRoughness: 0.15,
+					ior: 1.31,
+					envMapIntensity: 1.0,
+				});
+
+			}
+
+			function createIceMesh(size) {
+
+				// Rectangular ice cube typical for highballs
+				const geometry = new THREE.BoxGeometry(size * 1.8, size * 2.2, size * 1.8);
+				const material = createIceMaterial();
+				const mesh = new THREE.Mesh(geometry, material);
+				mesh.renderOrder = 5;
+
+				return mesh;
+
+			}
+
+			function spawnIce() {
+
+				if (iceObjects.length >= iceConfig.maxQuantity) return;
+
+				const angle = Math.random() * Math.PI * 2;
+				const radius = Math.random() * (LIQUID_RADIUS - iceConfig.size * 2 - 0.15);
+
+				const mesh = createIceMesh(iceConfig.size);
+
+				// Each ice cube gets unique animation parameters
+				const iceData = {
+					mesh,
+					baseX: Math.cos(angle) * radius,
+					baseZ: Math.sin(angle) * radius,
+					phaseX: Math.random() * Math.PI * 2,
+					phaseZ: Math.random() * Math.PI * 2,
+					phaseY: Math.random() * Math.PI * 2,
+					rotationSpeed: (Math.random() - 0.5) * 0.3,
+					bobSpeed: 0.8 + Math.random() * 0.4,
+					bobAmount: 0.015 + Math.random() * 0.01,
+					driftAmount: 0.02 + Math.random() * 0.02,
+				};
+
+				mesh.position.set(
+					iceData.baseX,
+					LIQUID_SURFACE_Y - iceConfig.size * 0.8,
+					iceData.baseZ
+				);
+
+				mesh.rotation.set(
+					Math.random() * 0.3,
+					Math.random() * Math.PI * 2,
+					Math.random() * 0.3
+				);
+
+				scene.add(mesh);
+				iceObjects.push(iceData);
+
+			}
+
+			function removeIce() {
+
+				if (iceObjects.length === 0) return;
+
+				const ice = iceObjects.pop();
+				scene.remove(ice.mesh);
+				ice.mesh.geometry.dispose();
+				ice.mesh.material.dispose();
+
+			}
+
+			function setIceQuantity(quantity) {
+
+				const targetQuantity = Math.max(0, Math.min(quantity, iceConfig.maxQuantity));
+				iceConfig.quantity = targetQuantity;
+
+				while (iceObjects.length < targetQuantity) {
+
+					spawnIce();
+
+				}
+
+				while (iceObjects.length > targetQuantity) {
+
+					removeIce();
+
+				}
+
+				updateQuantityDisplay();
+
+			}
+
+			function updateQuantityDisplay() {
+
+				const quantityValue = document.getElementById('iceQuantityValue');
+				if (quantityValue) {
+
+					quantityValue.textContent = iceObjects.length;
+
+				}
+
+			}
+
+			function updateIceAnimation(time) {
+
+				for (const ice of iceObjects) {
+
+					// Gentle bobbing motion
+					const bobY = Math.sin(time * ice.bobSpeed + ice.phaseY) * ice.bobAmount;
+
+					// Slight drift in X and Z
+					const driftX = Math.sin(time * 0.3 + ice.phaseX) * ice.driftAmount;
+					const driftZ = Math.cos(time * 0.25 + ice.phaseZ) * ice.driftAmount;
+
+					// Keep within bounds
+					let newX = ice.baseX + driftX;
+					let newZ = ice.baseZ + driftZ;
+					const dist = Math.sqrt(newX * newX + newZ * newZ);
+
+					if (dist > LIQUID_RADIUS - iceConfig.size * 2) {
+
+						const scale = (LIQUID_RADIUS - iceConfig.size * 2) / dist;
+						newX *= scale;
+						newZ *= scale;
+
+					}
+
+					ice.mesh.position.x = newX;
+					ice.mesh.position.y = LIQUID_SURFACE_Y - iceConfig.size * 0.8 + bobY;
+					ice.mesh.position.z = newZ;
+
+					// Gentle rotation
+					ice.mesh.rotation.y += ice.rotationSpeed * 0.016;
+					ice.mesh.rotation.x = Math.sin(time * 0.5 + ice.phaseX) * 0.1;
+					ice.mesh.rotation.z = Math.cos(time * 0.4 + ice.phaseZ) * 0.1;
+
+				}
+
+			}
+
+			// Orange slice creation
+			function createOrangeSlice() {
+
+				const group = new THREE.Group();
+
+				const sliceRadius = 0.35;
+				const sliceThickness = 0.08;
+
+				// Orange flesh
+				const fleshGeometry = new THREE.CylinderGeometry(
+					sliceRadius,
+					sliceRadius,
+					sliceThickness,
+					32,
+					1,
+					false,
+					0,
+					Math.PI
+				);
+				const fleshMaterial = new THREE.MeshStandardMaterial({
+					color: 0xff9f43,
+					metalness: 0.0,
+					roughness: 0.6,
+					transparent: true,
+					opacity: 0.95,
+				});
+				const flesh = new THREE.Mesh(fleshGeometry, fleshMaterial);
+				flesh.rotation.z = Math.PI / 2;
+				group.add(flesh);
+
+				// Orange rind (outer edge)
+				const rindGeometry = new THREE.TorusGeometry(
+					sliceRadius,
+					sliceThickness * 0.6,
+					8,
+					16,
+					Math.PI
+				);
+				const rindMaterial = new THREE.MeshStandardMaterial({
+					color: 0xff6b35,
+					metalness: 0.0,
+					roughness: 0.7,
+				});
+				const rind = new THREE.Mesh(rindGeometry, rindMaterial);
+				rind.rotation.x = Math.PI / 2;
+				rind.position.y = 0;
+				group.add(rind);
+
+				// Segment lines on the flesh
+				const segmentCount = 8;
+				const segmentMaterial = new THREE.MeshStandardMaterial({
+					color: 0xffeaa7,
+					metalness: 0.0,
+					roughness: 0.8,
+				});
+
+				for (let i = 1; i < segmentCount; i++) {
+
+					const angle = (i / segmentCount) * Math.PI;
+					const lineGeometry = new THREE.BoxGeometry(
+						sliceRadius * 0.9,
+						sliceThickness * 0.3,
+						0.01
+					);
+					const line = new THREE.Mesh(lineGeometry, segmentMaterial);
+
+					line.position.x = Math.cos(angle) * sliceRadius * 0.45;
+					line.position.z = Math.sin(angle) * sliceRadius * 0.45;
+					line.rotation.y = -angle + Math.PI / 2;
+
+					group.add(line);
+
+				}
+
+				// Center pith
+				const pithGeometry = new THREE.CylinderGeometry(
+					sliceRadius * 0.15,
+					sliceRadius * 0.15,
+					sliceThickness * 1.1,
+					16
+				);
+				const pithMaterial = new THREE.MeshStandardMaterial({
+					color: 0xffeaa7,
+					metalness: 0.0,
+					roughness: 0.9,
+				});
+				const pith = new THREE.Mesh(pithGeometry, pithMaterial);
+				pith.rotation.z = Math.PI / 2;
+				group.add(pith);
+
+				group.rotation.x = Math.PI * 0.15;
+				group.rotation.z = Math.PI * 0.1;
+
+				return group;
+
+			}
+
+			function spawnOrangeSlice() {
+
+				orangeSlice = createOrangeSlice();
+				orangeSlice.position.set(0.25, LIQUID_SURFACE_Y + 0.02, 0.15);
+				orangeSlice.renderOrder = 6;
+				scene.add(orangeSlice);
+
+			}
+
+			function updateOrangeSliceAnimation(time) {
+
+				if (!orangeSlice || !orangeSliceVisible) return;
+
+				// Gentle floating motion
+				const bobY = Math.sin(time * 0.7) * 0.01;
+				const driftX = Math.sin(time * 0.2) * 0.03;
+				const driftZ = Math.cos(time * 0.18) * 0.03;
+
+				orangeSlice.position.y = LIQUID_SURFACE_Y + 0.02 + bobY;
+				orangeSlice.position.x = 0.25 + driftX;
+				orangeSlice.position.z = 0.15 + driftZ;
+
+				// Gentle rotation
+				orangeSlice.rotation.y = Math.sin(time * 0.15) * 0.2;
+
+			}
+
+			function toggleOrangeSlice(visible) {
+
+				orangeSliceVisible = visible;
+
+				if (orangeSlice) {
+
+					orangeSlice.visible = visible;
+
+				}
+
+			}
+
+			// Bubble system
+			function initBubbleSystem() {
+
+				bubbleGeometry = new THREE.SphereGeometry(0.015, 8, 8);
+				bubbleMaterial = new THREE.MeshStandardMaterial({
+					color: 0xffffff,
+					metalness: 0.0,
+					roughness: 0.2,
+					transparent: true,
+					opacity: 0.6,
+					emissive: 0xffeedd,
+					emissiveIntensity: 0.1,
+				});
+
+				bubbleMesh = new THREE.InstancedMesh(bubbleGeometry, bubbleMaterial, MAX_BUBBLES);
+				bubbleMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+				bubbleMesh.renderOrder = 4;
+				scene.add(bubbleMesh);
+
+				for (let i = 0; i < MAX_BUBBLES; i++) {
+
+					bubbleInstances.push({
+						active: false,
+						position: new THREE.Vector3(),
+						velocity: new THREE.Vector3(),
+						size: 1,
+						life: 0,
+						maxLife: 0,
+					});
+
+				}
+
+				const matrix = new THREE.Matrix4();
+				matrix.makeScale(0, 0, 0);
+				for (let i = 0; i < MAX_BUBBLES; i++) {
+
+					bubbleMesh.setMatrixAt(i, matrix);
+
+				}
+				bubbleMesh.instanceMatrix.needsUpdate = true;
+
+			}
+
+			function spawnBubble() {
+
+				const bubble = bubbleInstances.find(b => !b.active);
+				if (!bubble) return;
+
+				const angle = Math.random() * Math.PI * 2;
+				const radius = Math.random() * (LIQUID_RADIUS - 0.1);
+
+				bubble.position.set(
+					Math.cos(angle) * radius,
+					LIQUID_BASE_Y + 0.05,
+					Math.sin(angle) * radius
+				);
+
+				bubble.velocity.set(
+					(Math.random() - 0.5) * 0.02,
+					0.3 + Math.random() * 0.4,
+					(Math.random() - 0.5) * 0.02
+				);
+
+				bubble.size = 0.5 + Math.random() * 1.0;
+				bubble.life = 0;
+				bubble.maxLife = 2 + Math.random() * 3;
+				bubble.active = true;
+
+			}
+
+			function updateBubbles(deltaTime) {
+
+				const spawnRate = fizzIntensity * 15;
+				const spawnChance = spawnRate * deltaTime;
+
+				if (Math.random() < spawnChance) {
+
+					spawnBubble();
+
+				}
+
+				const matrix = new THREE.Matrix4();
+				const position = new THREE.Vector3();
+				const quaternion = new THREE.Quaternion();
+				const scale = new THREE.Vector3();
+
+				for (let i = 0; i < bubbleInstances.length; i++) {
+
+					const bubble = bubbleInstances[i];
+
+					if (!bubble.active) {
+
+						scale.set(0, 0, 0);
+						matrix.compose(bubble.position, quaternion, scale);
+						bubbleMesh.setMatrixAt(i, matrix);
+						continue;
+
+					}
+
+					bubble.life += deltaTime;
+
+					if (bubble.life > bubble.maxLife || bubble.position.y > LIQUID_SURFACE_Y) {
+
+						bubble.active = false;
+						scale.set(0, 0, 0);
+						matrix.compose(bubble.position, quaternion, scale);
+						bubbleMesh.setMatrixAt(i, matrix);
+						continue;
+
+					}
+
+					// Add slight wobble
+					bubble.velocity.x += (Math.random() - 0.5) * 0.05;
+					bubble.velocity.z += (Math.random() - 0.5) * 0.05;
+
+					bubble.position.x += bubble.velocity.x * deltaTime;
+					bubble.position.y += bubble.velocity.y * deltaTime;
+					bubble.position.z += bubble.velocity.z * deltaTime;
+
+					const dist = Math.sqrt(
+						bubble.position.x * bubble.position.x +
+						bubble.position.z * bubble.position.z
+					);
+
+					if (dist > LIQUID_RADIUS - 0.05) {
+
+						bubble.position.x *= (LIQUID_RADIUS - 0.05) / dist;
+						bubble.position.z *= (LIQUID_RADIUS - 0.05) / dist;
+
+					}
+
+					const lifeRatio = bubble.life / bubble.maxLife;
+					let sizeMultiplier = 1;
+
+					if (lifeRatio < 0.1) {
+
+						sizeMultiplier = lifeRatio / 0.1;
+
+					} else if (lifeRatio > 0.9) {
+
+						sizeMultiplier = (1 - lifeRatio) / 0.1;
+
+					}
+
+					const finalSize = bubble.size * sizeMultiplier;
+					scale.set(finalSize, finalSize, finalSize);
+					matrix.compose(bubble.position, quaternion, scale);
+					bubbleMesh.setMatrixAt(i, matrix);
+
+				}
+
+				bubbleMesh.instanceMatrix.needsUpdate = true;
+
+			}
+
+			function init() {
+
+				renderer = new THREE.WebGLRenderer({ antialias: true });
+				renderer.setPixelRatio(window.devicePixelRatio);
+				renderer.setSize(window.innerWidth, window.innerHeight);
+				renderer.outputColorSpace = THREE.SRGBColorSpace;
+				renderer.toneMapping = THREE.ACESFilmicToneMapping;
+				renderer.toneMappingExposure = 0.9;
+				document.body.appendChild(renderer.domElement);
+
+				scene = new THREE.Scene();
+				scene.background = new THREE.Color(0x0d1117);
+
+				camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 100);
+				camera.position.set(0, 2.0, 4.5);
+				camera.lookAt(0, 1.2, 0);
+
+				// Warm ambient lighting
+				const ambient = new THREE.AmbientLight(0xfff5e6, 0.8);
+				scene.add(ambient);
+
+				const hemi = new THREE.HemisphereLight(0xffeedd, 0x1a1f29, 0.6);
+				scene.add(hemi);
+
+				// Key light (warm)
+				const keyLight = new THREE.DirectionalLight(0xfff0dd, 2.5);
+				keyLight.position.set(3, 5, 2);
+				scene.add(keyLight);
+
+				// Fill light (cooler)
+				const fillLight = new THREE.DirectionalLight(0xddeeff, 1.0);
+				fillLight.position.set(-3, 3, -2);
+				scene.add(fillLight);
+
+				// Rim light (golden)
+				const rimLight = new THREE.DirectionalLight(0xc9a563, 1.5);
+				rimLight.position.set(0, 2, -4);
+				scene.add(rimLight);
+
+				// Bar surface
+				const barGeometry = new THREE.CylinderGeometry(8, 8, 0.3, 64);
+				const barMaterial = new THREE.MeshStandardMaterial({
+					color: 0x1a1512,
+					roughness: 0.3,
+					metalness: 0.2,
+				});
+				const bar = new THREE.Mesh(barGeometry, barMaterial);
+				bar.position.y = -0.15;
+				scene.add(bar);
+
+				buildLiquid();
+				buildGlass();
+				initBubbleSystem();
+
+				// Spawn initial ice
+				for (let i = 0; i < iceConfig.quantity; i++) {
+
+					spawnIce();
+
+				}
+
+				// Spawn orange slice
+				spawnOrangeSlice();
+
+				controls = new OrbitControls(camera, renderer.domElement);
+				controls.enableDamping = true;
+				controls.dampingFactor = 0.05;
+				controls.target.set(0, 1.2, 0);
+				controls.minDistance = 2.5;
+				controls.maxDistance = 8;
+				controls.maxPolarAngle = Math.PI * 0.85;
+
+				raycaster = new THREE.Raycaster();
+				renderer.domElement.addEventListener('pointermove', onPointerMove);
+				renderer.domElement.addEventListener('pointerdown', onPointerDown);
+
+				window.addEventListener('resize', onWindowResize);
+
+				setupControls();
+
+				renderer.setAnimationLoop(animate);
+
+			}
+
+			function buildGlass() {
+
+				// Outer glass cylinder
+				const outerGeometry = new THREE.CylinderGeometry(
+					GLASS_RADIUS,
+					GLASS_RADIUS * 0.92,
+					GLASS_HEIGHT,
+					64,
+					1,
+					true
+				);
+
+				const glassMaterialOuter = new THREE.MeshPhysicalMaterial({
+					color: 0xffffff,
+					metalness: 0,
+					roughness: 0.02,
+					transmission: 0.97,
+					opacity: 1,
+					transparent: true,
+					thickness: 0.08,
+					clearcoat: 1.0,
+					ior: 1.52,
+					envMapIntensity: 1.2,
+					depthWrite: false,
+				});
+
+				glassOuter = new THREE.Mesh(outerGeometry, glassMaterialOuter);
+				glassOuter.position.y = GLASS_HEIGHT / 2 + 0.1;
+				glassOuter.renderOrder = 10;
+				scene.add(glassOuter);
+
+				// Inner glass surface
+				const innerGeometry = new THREE.CylinderGeometry(
+					GLASS_RADIUS - GLASS_THICKNESS,
+					(GLASS_RADIUS * 0.92) - GLASS_THICKNESS,
+					GLASS_HEIGHT,
+					64,
+					1,
+					true
+				);
+
+				const glassMaterialInner = new THREE.MeshPhysicalMaterial({
+					color: 0xffffff,
+					metalness: 0,
+					roughness: 0.02,
+					transmission: 0.97,
+					opacity: 1,
+					transparent: true,
+					thickness: 0.08,
+					clearcoat: 1.0,
+					ior: 1.52,
+					side: THREE.BackSide,
+					depthWrite: false,
+				});
+
+				glassInner = new THREE.Mesh(innerGeometry, glassMaterialInner);
+				glassInner.position.y = GLASS_HEIGHT / 2 + 0.1;
+				glassInner.renderOrder = 9;
+				scene.add(glassInner);
+
+				// Glass bottom
+				const bottomGeometry = new THREE.CylinderGeometry(
+					GLASS_RADIUS * 0.92,
+					GLASS_RADIUS * 0.92,
+					0.12,
+					64
+				);
+				const bottomMaterial = new THREE.MeshPhysicalMaterial({
+					color: 0xffffff,
+					metalness: 0,
+					roughness: 0.05,
+					transmission: 0.9,
+					transparent: true,
+					thickness: 0.12,
+					ior: 1.52,
+					depthWrite: false,
+				});
+
+				const bottom = new THREE.Mesh(bottomGeometry, bottomMaterial);
+				bottom.position.y = 0.06;
+				bottom.renderOrder = 8;
+				scene.add(bottom);
+
+			}
+
+			function buildLiquid() {
+
+				liquidUniforms = {
+					uTime: { value: 0 },
+					uTilt: { value: new THREE.Vector2() },
+					uRippleCenter: { value: new THREE.Vector2(10000, 10000) },
+					uRippleStrength: { value: 0 },
+					uFizz: { value: fizzIntensity },
+				};
+
+				const surfaceSegments = 64;
+				const surfaceGeometry = new THREE.CircleGeometry(LIQUID_RADIUS, surfaceSegments);
+				surfaceGeometry.rotateX(-Math.PI * 0.5);
+				surfaceGeometry.translate(0, LIQUID_SURFACE_Y, 0);
+
+				const surfaceMaterial = new THREE.MeshStandardMaterial({
+					color: LIQUID_COLOR,
+					metalness: 0.15,
+					roughness: 0.08,
+					transparent: true,
+					opacity: 0.88,
+					emissive: LIQUID_DEEP_COLOR,
+					emissiveIntensity: 0.08,
+					side: THREE.DoubleSide,
+					depthWrite: true,
+				});
+
+				surfaceMaterial.onBeforeCompile = (shader) => {
+
+					shader.uniforms.uTime = liquidUniforms.uTime;
+					shader.uniforms.uTilt = liquidUniforms.uTilt;
+					shader.uniforms.uRippleCenter = liquidUniforms.uRippleCenter;
+					shader.uniforms.uRippleStrength = liquidUniforms.uRippleStrength;
+					shader.uniforms.uFizz = liquidUniforms.uFizz;
+
+					shader.vertexShader = shader.vertexShader.replace(
+						'#include <common>',
+						`#include <common>
+						uniform float uTime;
+						uniform vec2 uTilt;
+						uniform vec2 uRippleCenter;
+						uniform float uRippleStrength;
+						uniform float uFizz;
+						varying float vWaveHeight;`
+					);
+
+					shader.vertexShader = shader.vertexShader.replace(
+						'#include <begin_vertex>',
+						`vec3 transformed = vec3(position);
+						
+						// Tilt effect
+						float tilt = dot(transformed.xz, uTilt) * 0.2;
+						
+						// Gentle waves
+						float wave = sin(transformed.x * 4.0 + uTime * 1.5) * 0.012
+						           + sin(transformed.z * 4.5 + uTime * 1.1) * 0.012
+						           + sin((transformed.x + transformed.z) * 3.0 + uTime * 1.8) * 0.008;
+						
+						// Fizz surface disturbance
+						float fizz = sin(transformed.x * 20.0 + uTime * 5.0) * 0.003 * uFizz
+						           + sin(transformed.z * 22.0 + uTime * 6.0) * 0.003 * uFizz;
+						
+						// Ripple from touch
+						float dist = length(transformed.xz - uRippleCenter);
+						float ripple = uRippleStrength * exp(-dist * 3.0) * sin(12.0 * dist - uTime * 5.0);
+						
+						float totalWave = tilt + wave + fizz + ripple;
+						transformed.y += totalWave;
+						vWaveHeight = totalWave;`
+					);
+
+					shader.fragmentShader = shader.fragmentShader.replace(
+						'#include <common>',
+						`#include <common>
+						varying float vWaveHeight;`
+					);
+
+					surfaceMaterial.userData.shader = shader;
+
+				};
+
+				liquidSurface = new THREE.Mesh(surfaceGeometry, surfaceMaterial);
+				liquidSurface.renderOrder = 2;
+				scene.add(liquidSurface);
+
+				// Liquid body (cylinder)
+				const bodyGeometry = new THREE.CylinderGeometry(
+					LIQUID_RADIUS,
+					LIQUID_RADIUS,
+					LIQUID_HEIGHT,
+					64,
+					1,
+					true
+				);
+				bodyGeometry.translate(0, LIQUID_BASE_Y + LIQUID_HEIGHT * 0.5, 0);
+
+				const bodyMaterial = new THREE.MeshStandardMaterial({
+					color: LIQUID_COLOR,
+					metalness: 0.1,
+					roughness: 0.12,
+					transparent: true,
+					opacity: 0.75,
+					emissive: LIQUID_DEEP_COLOR,
+					emissiveIntensity: 0.05,
+					side: THREE.DoubleSide,
+					depthWrite: false,
+				});
+
+				liquidBody = new THREE.Mesh(bodyGeometry, bodyMaterial);
+				liquidBody.renderOrder = 1;
+				scene.add(liquidBody);
+
+				// Liquid bottom
+				const bottomGeometry = new THREE.CircleGeometry(LIQUID_RADIUS, 64);
+				bottomGeometry.rotateX(Math.PI * 0.5);
+				bottomGeometry.translate(0, LIQUID_BASE_Y, 0);
+
+				const bottomMaterial = new THREE.MeshStandardMaterial({
+					color: LIQUID_DEEP_COLOR,
+					metalness: 0.1,
+					roughness: 0.2,
+					transparent: true,
+					opacity: 0.7,
+					emissive: 0x8b6914,
+					emissiveIntensity: 0.03,
+					side: THREE.DoubleSide,
+					depthWrite: false,
+				});
+
+				const liquidBottom = new THREE.Mesh(bottomGeometry, bottomMaterial);
+				liquidBottom.renderOrder = 0;
+				scene.add(liquidBottom);
+
+				// Invisible raycast plane
+				waterPlane = new THREE.Mesh(
+					new THREE.PlaneGeometry(LIQUID_RADIUS * 2, LIQUID_RADIUS * 2),
+					new THREE.MeshBasicMaterial({ visible: false })
+				);
+				waterPlane.rotation.x = -Math.PI * 0.5;
+				waterPlane.position.y = LIQUID_SURFACE_Y;
+				scene.add(waterPlane);
+
+			}
+
+			function setupControls() {
+
+				const iceMinus = document.getElementById('iceMinus');
+				const icePlus = document.getElementById('icePlus');
+				const fizzSlider = document.getElementById('fizzSlider');
+				const fizzValue = document.getElementById('fizzValue');
+				const sliceToggle = document.getElementById('sliceToggle');
+
+				const handleIceMinus = () => {
+
+					setIceQuantity(iceConfig.quantity - 1);
+
+				};
+
+				const handleIcePlus = () => {
+
+					setIceQuantity(iceConfig.quantity + 1);
+
+				};
+
+				const handleFizzChange = () => {
+
+					fizzIntensity = parseFloat(fizzSlider.value) / 100;
+					fizzValue.textContent = fizzSlider.value + '%';
+					liquidUniforms.uFizz.value = fizzIntensity;
+
+				};
+
+				const handleSliceToggle = () => {
+
+					orangeSliceVisible = !orangeSliceVisible;
+					toggleOrangeSlice(orangeSliceVisible);
+					sliceToggle.textContent = orangeSliceVisible ? 'Visible' : 'Hidden';
+					sliceToggle.classList.toggle('active', orangeSliceVisible);
+					sliceToggle.setAttribute('aria-pressed', orangeSliceVisible);
+
+				};
+
+				iceMinus.addEventListener('click', handleIceMinus);
+				icePlus.addEventListener('click', handleIcePlus);
+				fizzSlider.addEventListener('input', handleFizzChange);
+				sliceToggle.addEventListener('click', handleSliceToggle);
+
+				// Keyboard support
+				iceMinus.addEventListener('keydown', (e) => {
+
+					if (e.key === 'Enter' || e.key === ' ') handleIceMinus();
+
+				});
+				icePlus.addEventListener('keydown', (e) => {
+
+					if (e.key === 'Enter' || e.key === ' ') handleIcePlus();
+
+				});
+				sliceToggle.addEventListener('keydown', (e) => {
+
+					if (e.key === 'Enter' || e.key === ' ') handleSliceToggle();
+
+				});
+
+			}
+
+			function onPointerMove(event) {
+
+				setMouseFromEvent(event);
+
+			}
+
+			function onPointerDown(event) {
+
+				setMouseFromEvent(event);
+				triggerRipple();
+
+			}
+
+			function setMouseFromEvent(event) {
+
+				const rect = renderer.domElement.getBoundingClientRect();
+				mouse.set(
+					((event.clientX - rect.left) / rect.width) * 2 - 1,
+					-((event.clientY - rect.top) / rect.height) * 2 + 1
+				);
+
+			}
+
+			function triggerRipple() {
+
+				raycaster.setFromCamera(mouse, camera);
+				const hit = raycaster.intersectObject(waterPlane);
+				if (hit.length === 0) return;
+
+				const point = hit[0].point;
+				liquidUniforms.uRippleCenter.value.set(point.x, point.z);
+				liquidUniforms.uRippleStrength.value = Math.min(
+					liquidUniforms.uRippleStrength.value + 0.4,
+					1.2
+				);
+
+			}
+
+			function animate() {
+
+				const deltaTime = 1 / 60;
+				elapsedTime += deltaTime;
+
+				liquidUniforms.uTime.value += 0.016;
+				liquidUniforms.uRippleStrength.value *= 0.95;
+
+				// Update animations
+				updateBubbles(deltaTime);
+				updateIceAnimation(elapsedTime);
+				updateOrangeSliceAnimation(elapsedTime);
+
+				controls.update();
+				renderer.render(scene, camera);
+
+			}
+
+			function onWindowResize() {
+
+				camera.aspect = window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
+				renderer.setSize(window.innerWidth, window.innerHeight);
+
+			}
+
+		</script>
+	</body>
+</html>
