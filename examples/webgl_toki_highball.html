@@ -326,26 +326,24 @@
 	</head>
 	<body>
 
-		<div id="info">
-			<a href="https://threejs.org/" target="_blank" rel="noopener" class="logo-link"></a>
+			<!-- <div id="info">
 
 			<div class="title-wrapper">
-				<a href="https://threejs.org/" target="_blank" rel="noopener">three.js</a>
 				<span>Toki Japanese Highball</span>
 			</div>
 
 			<small>
 				Tap hotspots to learn more. Drag to orbit.
 			</small>
-		</div>
+		</div> -->
 
 		<div id="drinkControls" role="region" aria-label="Drink controls">
 			<h3>Highball Settings</h3>
 			<div class="control-row">
 				<label for="fizzSlider">Carbonation</label>
 				<div class="controls">
-					<input type="range" id="fizzSlider" class="slider-control" min="0" max="300" step="10" value="300" aria-label="Fizz intensity">
-					<span id="fizzValue">300%</span>
+					<input type="range" id="fizzSlider" class="slider-control" min="0" max="600" step="10" value="600" aria-label="Fizz intensity">
+					<span id="fizzValue">600%</span>
 				</div>
 			</div>
 		</div>
@@ -471,7 +469,7 @@
 			};
 
 			// Fizz configuration
-			let fizzIntensity = 3.0;
+			let fizzIntensity = 6.0;
 
 			// Time tracking
 			let elapsedTime = 0;
@@ -1373,7 +1371,7 @@
 				// Load background image texture
 				const textureLoader = new THREE.TextureLoader();
 				textureLoader.load(
-					'images/wallpaper.jpg',
+					'images/wallpaper-2.jpeg',
 					(texture) => {
 						backgroundTexture = texture;
 						backgroundTexture.colorSpace = THREE.SRGBColorSpace;
