@@ -10,47 +10,51 @@
 
 			body {
 				font-family: 'Noto Sans JP', sans-serif;
-				background: linear-gradient(180deg, #0d1117 0%, #161b22 50%, #1a1f29 100%);
+				background: linear-gradient(180deg, #87CEEB 0%, #B0E0E6 50%, #E0F4FF 100%);
 			}
 
 			#info {
-				background: rgba(13, 17, 23, 0.85);
-				border: 1px solid rgba(201, 165, 99, 0.3);
+				background: rgba(20, 40, 60, 0.9);
+				border: 1px solid rgba(100, 160, 200, 0.4);
 				backdrop-filter: blur(12px);
 			}
 
 			#info .title-wrapper span {
-				color: #c9a563;
+				color: #7ec8e8;
 				font-family: 'Cormorant Garamond', serif;
 				font-weight: 500;
 				letter-spacing: 1px;
 			}
 
+			#info .title-wrapper a {
+				color: #ffffff;
+			}
+
 			#info small {
-				color: rgba(255, 255, 255, 0.6);
+				color: rgba(255, 255, 255, 0.7);
 			}
 
 			#drinkControls {
 				position: fixed;
 				bottom: 20px;
 				left: 20px;
-				background: rgba(13, 17, 23, 0.92);
-				border: 1px solid rgba(201, 165, 99, 0.25);
+				background: rgba(20, 40, 60, 0.92);
+				border: 1px solid rgba(100, 160, 200, 0.3);
 				border-radius: 16px;
 				padding: 20px 24px;
-				color: #fff;
+				color: #e8f4fc;
 				font-family: 'Noto Sans JP', sans-serif;
 				font-size: 13px;
 				backdrop-filter: blur(12px);
 				z-index: 100;
-				min-width: 200px;
+				min-width: 220px;
 			}
 
 			#drinkControls h3 {
 				margin: 0 0 16px 0;
 				font-size: 15px;
 				font-weight: 500;
-				color: #c9a563;
+				color: #7ec8e8;
 				letter-spacing: 1px;
 				font-family: 'Cormorant Garamond', serif;
 				text-transform: uppercase;
@@ -68,7 +72,7 @@
 			}
 
 			.control-row label {
-				color: rgba(255, 255, 255, 0.7);
+				color: rgba(255, 255, 255, 0.8);
 				font-size: 12px;
 				min-width: 70px;
 			}
@@ -80,9 +84,9 @@
 			}
 
 			#drinkControls button {
-				background: rgba(201, 165, 99, 0.15);
-				border: 1px solid rgba(201, 165, 99, 0.4);
-				color: #c9a563;
+				background: rgba(126, 200, 232, 0.15);
+				border: 1px solid rgba(126, 200, 232, 0.4);
+				color: #7ec8e8;
 				padding: 6px 12px;
 				border-radius: 8px;
 				cursor: pointer;
@@ -93,8 +97,8 @@
 			}
 
 			#drinkControls button:hover {
-				background: rgba(201, 165, 99, 0.25);
-				border-color: rgba(201, 165, 99, 0.6);
+				background: rgba(126, 200, 232, 0.25);
+				border-color: rgba(126, 200, 232, 0.6);
 			}
 
 			#drinkControls button:active {
@@ -102,8 +106,8 @@
 			}
 
 			#drinkControls button.active {
-				background: rgba(201, 165, 99, 0.4);
-				border-color: #c9a563;
+				background: rgba(126, 200, 232, 0.35);
+				border-color: #7ec8e8;
 			}
 
 			.qty-btn {
@@ -118,19 +122,19 @@
 				border-radius: 50% !important;
 			}
 
-			#iceQuantityValue, #fizzValue {
-				min-width: 24px;
+			#iceQuantityValue, #fizzValue, #iceSizeValue {
+				min-width: 32px;
 				text-align: center;
 				font-weight: 500;
-				color: #fff;
+				color: #ffffff;
 			}
 
 			.slider-control {
-				width: 100px;
+				width: 70px;
 				height: 4px;
 				-webkit-appearance: none;
 				appearance: none;
-				background: rgba(201, 165, 99, 0.2);
+				background: rgba(126, 200, 232, 0.25);
 				border-radius: 2px;
 				outline: none;
 				cursor: pointer;
@@ -141,7 +145,7 @@
 				appearance: none;
 				width: 14px;
 				height: 14px;
-				background: #c9a563;
+				background: #7ec8e8;
 				border-radius: 50%;
 				cursor: pointer;
 				transition: transform 0.15s ease;
@@ -154,7 +158,7 @@
 			.slider-control::-moz-range-thumb {
 				width: 14px;
 				height: 14px;
-				background: #c9a563;
+				background: #7ec8e8;
 				border: none;
 				border-radius: 50%;
 				cursor: pointer;
@@ -166,7 +170,7 @@
 				right: 20px;
 				font-family: 'Cormorant Garamond', serif;
 				font-size: 24px;
-				color: rgba(201, 165, 99, 0.4);
+				color: rgba(20, 60, 90, 0.5);
 				letter-spacing: 3px;
 				text-transform: uppercase;
 				writing-mode: vertical-rl;
@@ -198,6 +202,13 @@
 					<button id="iceMinus" class="qty-btn" aria-label="Decrease ice" aria-describedby="iceLabel">−</button>
 					<span id="iceQuantityValue" aria-live="polite">3</span>
 					<button id="icePlus" class="qty-btn" aria-label="Increase ice" aria-describedby="iceLabel">+</button>
+				</div>
+			</div>
+			<div class="control-row">
+				<label for="iceSizeSlider">Ice Size</label>
+				<div class="controls">
+					<input type="range" id="iceSizeSlider" class="slider-control" min="50" max="300" step="25" value="100" aria-label="Ice cube size">
+					<span id="iceSizeValue">100%</span>
 				</div>
 			</div>
 			<div class="control-row">
@@ -254,7 +265,8 @@
 			const iceConfig = {
 				quantity: 3,
 				maxQuantity: 6,
-				size: 0.12,
+				baseSize: 0.12,
+				sizeMultiplier: 1.0,
 			};
 
 			// Fizz configuration
@@ -283,17 +295,20 @@
 			function createIceMaterial() {
 
 				return new THREE.MeshPhysicalMaterial({
-					color: 0xe8f4ff,
-					metalness: 0,
-					roughness: 0.1,
-					transmission: 0.92,
+					color: 0xd8dde3,
+					metalness: 0.0,
+					roughness: 0.08,
+					transmission: 0.75,
 					opacity: 1,
 					transparent: true,
-					thickness: 0.4,
-					clearcoat: 0.4,
+					thickness: 0.6,
+					clearcoat: 0.8,
 					clearcoatRoughness: 0.15,
 					ior: 1.31,
-					envMapIntensity: 1.0,
+					envMapIntensity: 1.5,
+					reflectivity: 0.3,
+					attenuationColor: new THREE.Color(0x9eaab8),
+					attenuationDistance: 0.4,
 				});
 
 			}
@@ -305,8 +320,28 @@
 				const material = createIceMaterial();
 				const mesh = new THREE.Mesh(geometry, material);
 				mesh.renderOrder = 5;
+				mesh.userData.baseSize = size;
 
 				return mesh;
+
+			}
+
+			function getCurrentIceSize() {
+
+				return iceConfig.baseSize * iceConfig.sizeMultiplier;
+
+			}
+
+			function updateAllIceSizes() {
+
+				const newSize = getCurrentIceSize();
+
+				for (const ice of iceObjects) {
+
+					const scale = newSize / ice.mesh.userData.baseSize;
+					ice.mesh.scale.set(scale, scale, scale);
+
+				}
 
 			}
 
@@ -314,10 +349,11 @@
 
 				if (iceObjects.length >= iceConfig.maxQuantity) return;
 
+				const size = getCurrentIceSize();
 				const angle = Math.random() * Math.PI * 2;
-				const radius = Math.random() * (LIQUID_RADIUS - iceConfig.size * 2 - 0.15);
+				const radius = Math.random() * (LIQUID_RADIUS - size * 2 - 0.15);
 
-				const mesh = createIceMesh(iceConfig.size);
+				const mesh = createIceMesh(size);
 
 				// Each ice cube gets unique animation parameters
 				const iceData = {
@@ -335,7 +371,7 @@
 
 				mesh.position.set(
 					iceData.baseX,
-					LIQUID_SURFACE_Y - iceConfig.size * 0.8,
+					LIQUID_SURFACE_Y - size * 0.8,
 					iceData.baseZ
 				);
 
@@ -395,6 +431,8 @@
 
 			function updateIceAnimation(time) {
 
+				const size = getCurrentIceSize();
+
 				for (const ice of iceObjects) {
 
 					// Gentle bobbing motion
@@ -409,16 +447,16 @@
 					let newZ = ice.baseZ + driftZ;
 					const dist = Math.sqrt(newX * newX + newZ * newZ);
 
-					if (dist > LIQUID_RADIUS - iceConfig.size * 2) {
+					if (dist > LIQUID_RADIUS - size * 2) {
 
-						const scale = (LIQUID_RADIUS - iceConfig.size * 2) / dist;
-						newX *= scale;
-						newZ *= scale;
+						const boundsScale = (LIQUID_RADIUS - size * 2) / dist;
+						newX *= boundsScale;
+						newZ *= boundsScale;
 
 					}
 
 					ice.mesh.position.x = newX;
-					ice.mesh.position.y = LIQUID_SURFACE_Y - iceConfig.size * 0.8 + bobY;
+					ice.mesh.position.y = LIQUID_SURFACE_Y - size * 0.8 + bobY;
 					ice.mesh.position.z = newZ;
 
 					// Gentle rotation
@@ -638,7 +676,7 @@
 
 			function updateBubbles(deltaTime) {
 
-				const spawnRate = fizzIntensity * 15;
+				const spawnRate = fizzIntensity * 30;
 				const spawnChance = spawnRate * deltaTime;
 
 				if (Math.random() < spawnChance) {
@@ -728,44 +766,62 @@
 				renderer.setSize(window.innerWidth, window.innerHeight);
 				renderer.outputColorSpace = THREE.SRGBColorSpace;
 				renderer.toneMapping = THREE.ACESFilmicToneMapping;
-				renderer.toneMappingExposure = 0.9;
+				renderer.toneMappingExposure = 1.1;
 				document.body.appendChild(renderer.domElement);
 
 				scene = new THREE.Scene();
-				scene.background = new THREE.Color(0x0d1117);
+				scene.background = new THREE.Color(0x87CEEB);
+
+				// Create simple environment for reflections on ice
+				const pmremGenerator = new THREE.PMREMGenerator(renderer);
+				const envScene = new THREE.Scene();
+				envScene.background = new THREE.Color(0xaaddff);
+				
+				// Add gradient sphere for soft environment lighting
+				const envGeo = new THREE.SphereGeometry(50, 32, 32);
+				const envMat = new THREE.MeshBasicMaterial({
+					color: 0xeef6ff,
+					side: THREE.BackSide,
+				});
+				const envMesh = new THREE.Mesh(envGeo, envMat);
+				envScene.add(envMesh);
+				
+				const envMap = pmremGenerator.fromScene(envScene).texture;
+				scene.environment = envMap;
+				pmremGenerator.dispose();
 
 				camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 100);
 				camera.position.set(0, 2.0, 4.5);
 				camera.lookAt(0, 1.2, 0);
 
-				// Warm ambient lighting
-				const ambient = new THREE.AmbientLight(0xfff5e6, 0.8);
+				// Bright ambient lighting for light scene
+				const ambient = new THREE.AmbientLight(0xffffff, 1.0);
 				scene.add(ambient);
 
-				const hemi = new THREE.HemisphereLight(0xffeedd, 0x1a1f29, 0.6);
+				const hemi = new THREE.HemisphereLight(0x87CEEB, 0xffffff, 0.8);
 				scene.add(hemi);
 
-				// Key light (warm)
-				const keyLight = new THREE.DirectionalLight(0xfff0dd, 2.5);
+				// Key light (bright white/warm)
+				const keyLight = new THREE.DirectionalLight(0xffffff, 2.0);
 				keyLight.position.set(3, 5, 2);
 				scene.add(keyLight);
 
-				// Fill light (cooler)
-				const fillLight = new THREE.DirectionalLight(0xddeeff, 1.0);
+				// Fill light (soft blue from sky)
+				const fillLight = new THREE.DirectionalLight(0xaaddff, 1.2);
 				fillLight.position.set(-3, 3, -2);
 				scene.add(fillLight);
 
-				// Rim light (golden)
-				const rimLight = new THREE.DirectionalLight(0xc9a563, 1.5);
+				// Rim light (warm accent)
+				const rimLight = new THREE.DirectionalLight(0xffeedd, 1.0);
 				rimLight.position.set(0, 2, -4);
 				scene.add(rimLight);
 
-				// Bar surface
+				// Bar surface - rich wood brown
 				const barGeometry = new THREE.CylinderGeometry(8, 8, 0.3, 64);
 				const barMaterial = new THREE.MeshStandardMaterial({
-					color: 0x1a1512,
-					roughness: 0.3,
-					metalness: 0.2,
+					color: 0x5c3d2e,
+					roughness: 0.6,
+					metalness: 0.1,
 				});
 				const bar = new THREE.Mesh(barGeometry, barMaterial);
 				bar.position.y = -0.15;
@@ -1038,6 +1094,8 @@
 
 				const iceMinus = document.getElementById('iceMinus');
 				const icePlus = document.getElementById('icePlus');
+				const iceSizeSlider = document.getElementById('iceSizeSlider');
+				const iceSizeValue = document.getElementById('iceSizeValue');
 				const fizzSlider = document.getElementById('fizzSlider');
 				const fizzValue = document.getElementById('fizzValue');
 				const sliceToggle = document.getElementById('sliceToggle');
@@ -1051,6 +1109,14 @@
 				const handleIcePlus = () => {
 
 					setIceQuantity(iceConfig.quantity + 1);
+
+				};
+
+				const handleIceSizeChange = () => {
+
+					iceConfig.sizeMultiplier = parseFloat(iceSizeSlider.value) / 100;
+					iceSizeValue.textContent = iceSizeSlider.value + '%';
+					updateAllIceSizes();
 
 				};
 
@@ -1074,6 +1140,7 @@
 
 				iceMinus.addEventListener('click', handleIceMinus);
 				icePlus.addEventListener('click', handleIcePlus);
+				iceSizeSlider.addEventListener('input', handleIceSizeChange);
 				fizzSlider.addEventListener('input', handleFizzChange);
 				sliceToggle.addEventListener('click', handleSliceToggle);
 
