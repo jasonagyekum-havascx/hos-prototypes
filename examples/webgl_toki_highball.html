@@ -10,7 +10,7 @@
 
 			body {
 				font-family: 'Noto Sans JP', sans-serif;
-				background: linear-gradient(180deg, #87CEEB 0%, #B0E0E6 50%, #E0F4FF 100%);
+				background: #87CEEB;
 			}
 
 			#info {
@@ -20,7 +20,7 @@
 			}
 
 			#info .title-wrapper span {
-				color: #7ec8e8;
+				color: #000000;
 				font-family: 'Cormorant Garamond', serif;
 				font-weight: 500;
 				letter-spacing: 1px;
@@ -348,12 +348,6 @@
 					<span id="fizzValue">300%</span>
 				</div>
 			</div>
-			<div class="control-row">
-				<label id="sliceLabel">Orange Peel</label>
-				<div class="controls">
-					<button id="sliceToggle" aria-pressed="false" aria-describedby="sliceLabel">Hidden</button>
-				</div>
-			</div>
 		</div>
 
 		<div id="brandLabel">TOKI</div>
@@ -449,6 +443,7 @@
 			let waterPlane;
 			let glassOuter, glassInner;
 			const mouse = new THREE.Vector2();
+			let backgroundTexture = null;
 
 			// Hotspot system
 			const hotspots = [];
@@ -464,7 +459,7 @@
 
 			// Orange slice
 			let orangeSlice;
-			let orangeSliceVisible = false;
+			let orangeSliceVisible = true;
 
 			// Ice cubes (simple floating objects)
 			const iceObjects = [];
@@ -481,7 +476,7 @@
 			// Time tracking
 			let elapsedTime = 0;
 
-			// Highball glass dimensions (taller and slender)
+			// Highball glass dimensio.ns (taller and slender)
 			const GLASS_RADIUS = 0.85;
 			const GLASS_HEIGHT = 2.8;
 			const GLASS_THICKNESS = 0.04;
@@ -495,6 +490,41 @@
 			// Toki Highball golden amber color (20% darker)
 			const LIQUID_COLOR = 0xaf934a;
 			const LIQUID_DEEP_COLOR = 0xa18033;
+
+			// Background image cover scaling function
+			function updateBackgroundCover() {
+
+				if (!backgroundTexture || !backgroundTexture.image) return;
+
+				const canvasAspect = window.innerWidth / window.innerHeight;
+				const imageAspect = backgroundTexture.image.width / backgroundTexture.image.height;
+
+				// Calculate scale to cover (image fills viewport, maintaining aspect ratio)
+				let scaleX = 1;
+				let scaleY = 1;
+				let offsetX = 0;
+				let offsetY = 0;
+
+				if (canvasAspect > imageAspect) {
+					// Canvas is wider than image - scale image up to fill canvas height, crop sides
+					scaleX = canvasAspect / imageAspect;
+					scaleY = 1;
+					offsetX = (1 - scaleX) / 2;
+					offsetY = 0;
+				} else {
+					// Canvas is taller than image - scale image up to fill canvas width, crop top/bottom
+					scaleX = 1;
+					scaleY = imageAspect / canvasAspect;
+					offsetX = 0;
+					offsetY = (1 - scaleY) / 2;
+				}
+
+				backgroundTexture.matrixAutoUpdate = false;
+				backgroundTexture.matrix.setUvTransform(offsetX, offsetY, scaleX, scaleY, 0, 0.5, 0.5);
+				backgroundTexture.needsUpdate = true;
+
+			}
+
 
 			init();
 
@@ -868,7 +898,7 @@
 				
 				// Position inside glass at top, vertical orientation
 				// Leaning slightly against the inner glass wall
-				const peelX = 0.45;  // Near the inner edge of glass
+				const peelX = -0.5;  // Near the inner edge of glass
 				const peelZ = 0.3;
 				const peelY = LIQUID_SURFACE_Y - 0.5;  // Bottom in liquid, top sticks out
 				
@@ -877,7 +907,7 @@
 				// Rotate to be vertical with slight lean toward glass edge
 				orangeSlice.rotation.x = 0;  // Upright
 				orangeSlice.rotation.y = -Math.PI * 0.3;  // Angled view
-				orangeSlice.rotation.z = Math.PI * 0.12;  // Slight lean against glass
+				orangeSlice.rotation.z = Math.PI * 0.75;  // Slight lean against glass
 				
 				orangeSlice.renderOrder = 6;
 				orangeSlice.visible = orangeSliceVisible;
@@ -894,7 +924,7 @@
 				const subtleBob = Math.sin(time * 0.6) * 0.008;
 
 				// Base position with subtle animation
-				const peelX = 0.45;
+				const peelX = -0.5;
 				const peelZ = 0.3;
 				const peelY = LIQUID_SURFACE_Y - 0.5;
 				
@@ -925,8 +955,8 @@
 				const group = new THREE.Group();
 				group.position.copy(position);
 
-				// Inner pulsing dot
-				const dotGeometry = new THREE.SphereGeometry(0.06, 16, 16);
+				// Inner pulsing dot - larger for easier clicking
+				const dotGeometry = new THREE.SphereGeometry(0.08, 16, 16);
 				const dotMaterial = new THREE.MeshBasicMaterial({
 					color: color,
 					transparent: true,
@@ -935,8 +965,8 @@
 				const dot = new THREE.Mesh(dotGeometry, dotMaterial);
 				group.add(dot);
 
-				// Outer ring
-				const ringGeometry = new THREE.RingGeometry(0.1, 0.14, 32);
+				// Outer ring - larger for better visibility
+				const ringGeometry = new THREE.RingGeometry(0.14, 0.2, 32);
 				const ringMaterial = new THREE.MeshBasicMaterial({
 					color: color,
 					transparent: true,
@@ -947,8 +977,8 @@
 				ring.lookAt(camera.position);
 				group.add(ring);
 
-				// Pulse ring (animated)
-				const pulseGeometry = new THREE.RingGeometry(0.08, 0.1, 32);
+				// Pulse ring (animated) - larger for better visibility
+				const pulseGeometry = new THREE.RingGeometry(0.12, 0.16, 32);
 				const pulseMaterial = new THREE.MeshBasicMaterial({
 					color: color,
 					transparent: true,
@@ -978,33 +1008,34 @@
 
 			function initHotspots() {
 
-				// Whisky hotspot - at the liquid level
+				// Push hotspots further out from glass (GLASS_RADIUS = 0.85, so we'll place them at ~1.3-1.5)
+				// Whisky hotspot - at the liquid level, pushed out to the right
 				createHotspot(
-					new THREE.Vector3(0.9, 1.5, 0.4),
+					new THREE.Vector3(1.4, 1.5, 0.2),
 					'About Toki Whisky',
 					'panelWhisky',
 					0xdbb85c
 				);
 
-				// Ice hotspot - near the ice cubes
+				// Ice hotspot - near the ice cubes, pushed out to the left-front
 				createHotspot(
-					new THREE.Vector3(-0.5, 2.2, 0.7),
+					new THREE.Vector3(-1.2, 2.2, 1.0),
 					'The Perfect Ice',
 					'panelIce',
 					0xaaddff
 				);
 
-				// Glass hotspot - on the glass rim
+				// Glass hotspot - on the glass rim, pushed out to the right-back
 				createHotspot(
-					new THREE.Vector3(0.6, 2.8, -0.5),
+					new THREE.Vector3(1.1, 2.8, -1.0),
 					'Highball Glass',
 					'panelGlass',
 					0x7ec8e8
 				);
 
-				// Video hotspot - near the base
+				// Video hotspot - near the base, pushed out to the left-back
 				createHotspot(
-					new THREE.Vector3(-0.8, 0.6, -0.6),
+					new THREE.Vector3(-1.3, 0.6, -1.0),
 					'Watch the Ritual',
 					'panelVideo',
 					0xff9f43
@@ -1179,7 +1210,7 @@
 					metalness: 0.0,
 					roughness: 0.2,
 					transparent: true,
-					opacity: 0.6,
+					opacity: 0.5,
 					emissive: 0xffeedd,
 					emissiveIntensity: 0.1,
 				});
@@ -1242,7 +1273,7 @@
 
 			function updateBubbles(deltaTime) {
 
-				const spawnRate = fizzIntensity * 30;
+				const spawnRate = fizzIntensity * 120;
 				const spawnChance = spawnRate * deltaTime;
 
 				if (Math.random() < spawnChance) {
@@ -1336,7 +1367,34 @@
 				document.body.appendChild(renderer.domElement);
 
 				scene = new THREE.Scene();
+				// Fallback color if image fails to load
 				scene.background = new THREE.Color(0x87CEEB);
+
+				// Load background image texture
+				const textureLoader = new THREE.TextureLoader();
+				textureLoader.load(
+					'images/wallpaper.jpg',
+					(texture) => {
+						backgroundTexture = texture;
+						backgroundTexture.colorSpace = THREE.SRGBColorSpace;
+						backgroundTexture.flipY = true;
+						updateBackgroundCover();
+						scene.background = backgroundTexture;
+						console.log('Background image loaded successfully', {
+							width: texture.image.width,
+							height: texture.image.height,
+							aspect: texture.image.width / texture.image.height
+						});
+					},
+					(progress) => {
+						// Progress callback (optional)
+					},
+					(error) => {
+						console.error('Failed to load background image:', error);
+						console.error('Attempted path: images/wallpaper.jpg');
+						// Keep fallback color
+					}
+				);
 
 				// Create simple environment for reflections on ice
 				const pmremGenerator = new THREE.PMREMGenerator(renderer);
@@ -1665,7 +1723,6 @@
 
 				const fizzSlider = document.getElementById('fizzSlider');
 				const fizzValue = document.getElementById('fizzValue');
-				const sliceToggle = document.getElementById('sliceToggle');
 
 				const handleFizzChange = () => {
 
@@ -1675,25 +1732,7 @@
 
 				};
 
-				const handleSliceToggle = () => {
-
-					orangeSliceVisible = !orangeSliceVisible;
-					toggleOrangeSlice(orangeSliceVisible);
-					sliceToggle.textContent = orangeSliceVisible ? 'Visible' : 'Hidden';
-					sliceToggle.classList.toggle('active', orangeSliceVisible);
-					sliceToggle.setAttribute('aria-pressed', orangeSliceVisible);
-
-				};
-
 				fizzSlider.addEventListener('input', handleFizzChange);
-				sliceToggle.addEventListener('click', handleSliceToggle);
-
-				// Keyboard support
-				sliceToggle.addEventListener('keydown', (e) => {
-
-					if (e.key === 'Enter' || e.key === ' ') handleSliceToggle();
-
-				});
 
 			}
 
@@ -1764,6 +1803,7 @@
 				camera.aspect = window.innerWidth / window.innerHeight;
 				camera.updateProjectionMatrix();
 				renderer.setSize(window.innerWidth, window.innerHeight);
+				updateBackgroundCover();
 
 			}
 
