@@ -110,19 +110,7 @@
 				border-color: #7ec8e8;
 			}
 
-			.qty-btn {
-				width: 30px;
-				height: 30px;
-				padding: 0 !important;
-				display: flex;
-				align-items: center;
-				justify-content: center;
-				font-size: 16px !important;
-				font-weight: 600 !important;
-				border-radius: 50% !important;
-			}
-
-			#iceQuantityValue, #fizzValue {
+			#fizzValue {
 				min-width: 32px;
 				text-align: center;
 				font-weight: 500;
@@ -354,22 +342,14 @@
 		<div id="drinkControls" role="region" aria-label="Drink controls">
 			<h3>Highball Settings</h3>
 			<div class="control-row">
-				<label id="iceLabel">Ice Cubes</label>
-				<div class="controls">
-					<button id="iceMinus" class="qty-btn" aria-label="Decrease ice" aria-describedby="iceLabel">−</button>
-					<span id="iceQuantityValue" aria-live="polite">3</span>
-					<button id="icePlus" class="qty-btn" aria-label="Increase ice" aria-describedby="iceLabel">+</button>
-				</div>
-			</div>
-			<div class="control-row">
 				<label for="fizzSlider">Carbonation</label>
 				<div class="controls">
-					<input type="range" id="fizzSlider" class="slider-control" min="0" max="200" step="10" value="200" aria-label="Fizz intensity">
-					<span id="fizzValue">200%</span>
+					<input type="range" id="fizzSlider" class="slider-control" min="0" max="300" step="10" value="300" aria-label="Fizz intensity">
+					<span id="fizzValue">300%</span>
 				</div>
 			</div>
 			<div class="control-row">
-				<label id="sliceLabel">Orange Slice</label>
+				<label id="sliceLabel">Orange Peel</label>
 				<div class="controls">
 					<button id="sliceToggle" aria-pressed="false" aria-describedby="sliceLabel">Hidden</button>
 				</div>
@@ -489,14 +469,14 @@
 			// Ice cubes (simple floating objects)
 			const iceObjects = [];
 			const iceConfig = {
-				quantity: 3,
-				maxQuantity: 6,
+				quantity: 2,
+				maxQuantity: 4,
 				baseSize: 0.12,
-				sizeMultiplier: 2.0,
+				sizeMultiplier: 3.75,
 			};
 
 			// Fizz configuration
-			let fizzIntensity = 2.0;
+			let fizzIntensity = 3.0;
 
 			// Time tracking
 			let elapsedTime = 0;
@@ -592,73 +572,33 @@
 
 			function findNonOverlappingPosition(size, iceIndex) {
 
-				const collisionRadiusXZ = size * 1.8 * 0.5;
-				const collisionRadiusY = size * 2.2 * 0.5;
-				const maxAttempts = 100;
-				const boundsRadius = LIQUID_RADIUS - size * 1.2;
 				const iceHeight = size * 2.2;
 				
-				// First ice cube breaks the surface, others submerge
-				const isFirstIce = iceIndex === 0;
-				const baseFloatY = isFirstIce 
-					? LIQUID_SURFACE_Y - iceHeight * 0.3  // 30% submerged - breaks surface
-					: LIQUID_SURFACE_Y - iceHeight * 0.7; // 70% submerged
+				// For 2 stacked ice cubes - deterministic positioning
+				if (iceIndex === 0) {
 
-				for (let attempt = 0; attempt < maxAttempts; attempt++) {
-
-					const angle = Math.random() * Math.PI * 2;
-					const radius = Math.random() * boundsRadius * 0.8;
-					const testX = Math.cos(angle) * radius;
-					const testZ = Math.sin(angle) * radius;
-					let testY = baseFloatY;
-
-					let hasCollision = false;
-
-					// Check against existing ice cubes
-					for (const existingIce of iceObjects) {
-
-						const existingRadiusXZ = getIceCollisionRadius(existingIce);
-						const existingRadiusY = getIceHeight(existingIce);
-						
-						const dx = testX - existingIce.baseX;
-						const dz = testZ - existingIce.baseZ;
-						const dy = testY - existingIce.baseY;
-						const distXZ = Math.sqrt(dx * dx + dz * dz);
-						const minDistXZ = collisionRadiusXZ + existingRadiusXZ;
-						const minDistY = collisionRadiusY + existingRadiusY;
-
-						// Check for 3D overlap
-						if (distXZ < minDistXZ && Math.abs(dy) < minDistY) {
-
-							hasCollision = true;
-							break;
-
-						}
-
-					}
-
-					if (!hasCollision) {
-
-						return { x: testX, z: testZ, y: testY };
-
-					}
-
-				}
-
-				// Fallback: stack on top of existing ice
-				if (iceObjects.length > 0) {
-
-					const baseIce = iceObjects[Math.floor(Math.random() * iceObjects.length)];
-					const stackY = baseIce.baseY + collisionRadiusY * 2 + 0.05;
+					// First (top) ice cube - breaks the surface
+					// Positioned at center, 30% submerged
 					return { 
-						x: baseIce.baseX + (Math.random() - 0.5) * 0.1, 
-						z: baseIce.baseZ + (Math.random() - 0.5) * 0.1, 
-						y: Math.min(stackY, LIQUID_SURFACE_Y + iceHeight * 0.2)
+						x: 0, 
+						z: 0, 
+						y: LIQUID_SURFACE_Y - iceHeight * 0.35
+					};
+
+				} else {
+
+					// Second (bottom) ice cube - stacked below the first
+					// Positioned directly under the first cube
+					const topIce = iceObjects[0];
+					const stackY = topIce.baseY - iceHeight - 0.02; // Stack below with small gap
+					
+					return { 
+						x: topIce.baseX + (Math.random() - 0.5) * 0.05, // Tiny offset for realism
+						z: topIce.baseZ + (Math.random() - 0.5) * 0.05, 
+						y: Math.max(stackY, LIQUID_BASE_Y + iceHeight * 0.5 + 0.1) // Don't go below glass bottom
 					};
 
 				}
-
-				return { x: 0, z: 0, y: baseFloatY };
 
 			}
 
@@ -721,37 +661,6 @@
 
 			}
 
-			function setIceQuantity(quantity) {
-
-				const targetQuantity = Math.max(0, Math.min(quantity, iceConfig.maxQuantity));
-				iceConfig.quantity = targetQuantity;
-
-				while (iceObjects.length < targetQuantity) {
-
-					spawnIce();
-
-				}
-
-				while (iceObjects.length > targetQuantity) {
-
-					removeIce();
-
-				}
-
-				updateQuantityDisplay();
-
-			}
-
-			function updateQuantityDisplay() {
-
-				const quantityValue = document.getElementById('iceQuantityValue');
-				if (quantityValue) {
-
-					quantityValue.textContent = iceObjects.length;
-
-				}
-
-			}
 
 			function getIceCollisionRadius(ice) {
 
@@ -767,87 +676,33 @@
 				const size = getCurrentIceSize();
 				const iceHeight = size * 2.2;
 				const minY = LIQUID_BASE_Y + iceHeight * 0.5 + 0.05;
-				const boundsRadius = LIQUID_RADIUS - size * 1.0;
+				const boundsRadius = LIQUID_RADIUS - size * 0.8;
 
-				// Multiple iterations for stability
-				for (let iter = 0; iter < 5; iter++) {
+				// For 2 stacked cubes - maintain vertical alignment
+				if (iceObjects.length === 2) {
 
-					for (let i = 0; i < iceObjects.length; i++) {
+					const topIce = iceObjects[0];  // First ice (floater at top)
+					const bottomIce = iceObjects[1];  // Second ice (below)
 
-						const iceA = iceObjects[i];
-						const radiusA = getIceCollisionRadius(iceA);
-						const heightA = getIceHeight(iceA);
+					// Keep top ice at surface level
+					const topTargetY = LIQUID_SURFACE_Y - iceHeight * 0.35;
+					topIce.baseY += (topTargetY - topIce.baseY) * 0.1;
 
-						for (let j = i + 1; j < iceObjects.length; j++) {
+					// Keep bottom ice stacked below top ice
+					const bottomTargetY = topIce.baseY - iceHeight - 0.02;
+					const clampedBottomY = Math.max(bottomTargetY, minY);
+					bottomIce.baseY += (clampedBottomY - bottomIce.baseY) * 0.1;
 
-							const iceB = iceObjects[j];
-							const radiusB = getIceCollisionRadius(iceB);
-							const heightB = getIceHeight(iceB);
-
-							const dx = iceB.baseX - iceA.baseX;
-							const dy = iceB.baseY - iceA.baseY;
-							const dz = iceB.baseZ - iceA.baseZ;
-							
-							const distXZ = Math.sqrt(dx * dx + dz * dz);
-							const minDistXZ = radiusA + radiusB;
-							const minDistY = heightA + heightB;
-
-							// Check for 3D overlap
-							const overlapXZ = minDistXZ - distXZ;
-							const overlapY = minDistY - Math.abs(dy);
-
-							if (overlapXZ > 0 && overlapY > 0) {
-
-								// Decide whether to push horizontally or vertically
-								// Push in the direction that requires less movement
-								if (overlapXZ < overlapY * 0.8 && distXZ > 0.01) {
-
-									// Push horizontally
-									const factor = overlapXZ * 0.5 / distXZ;
-									iceA.baseX -= dx * factor;
-									iceA.baseZ -= dz * factor;
-									iceB.baseX += dx * factor;
-									iceB.baseZ += dz * factor;
-
-								} else {
-
-									// Push vertically - stack
-									const pushAmount = overlapY * 0.5 + 0.02;
-									if (iceA.baseY < iceB.baseY) {
-
-										iceB.baseY += pushAmount;
-
-									} else {
-
-										iceA.baseY += pushAmount;
-
-									}
-
-								}
-
-							}
-
-						}
-
-					}
+					// Keep bottom ice horizontally aligned with top (slight offset for realism)
+					bottomIce.baseX += (topIce.baseX - bottomIce.baseX) * 0.05;
+					bottomIce.baseZ += (topIce.baseZ - bottomIce.baseZ) * 0.05;
 
 				}
 
-				// Apply constraints for each ice cube
-				for (let i = 0; i < iceObjects.length; i++) {
+				// Apply bounds constraints for all ice
+				for (const ice of iceObjects) {
 
-					const ice = iceObjects[i];
-
-					// Target Y based on whether it's the floater
-					const targetY = ice.isFloater 
-						? LIQUID_SURFACE_Y - iceHeight * 0.3  // Breaks surface
-						: ice.targetY;
-
-					// Gentle buoyancy towards target
-					const buoyancyStrength = ice.isFloater ? 0.08 : 0.03;
-					ice.baseY += (targetY - ice.baseY) * buoyancyStrength;
-
-					// Keep within glass bounds
+					// Keep within glass bounds horizontally
 					const currentDist = Math.sqrt(ice.baseX * ice.baseX + ice.baseZ * ice.baseZ);
 					if (currentDist > boundsRadius) {
 
@@ -857,10 +712,10 @@
 
 					}
 
-					// Clamp Y
+					// Clamp Y range
 					const maxY = ice.isFloater 
-						? LIQUID_SURFACE_Y - iceHeight * 0.2 
-						: LIQUID_SURFACE_Y - iceHeight * 0.4;
+						? LIQUID_SURFACE_Y - iceHeight * 0.25 
+						: LIQUID_SURFACE_Y - iceHeight * 0.6;
 					
 					if (ice.baseY > maxY) ice.baseY = maxY;
 					if (ice.baseY < minY) ice.baseY = minY;
@@ -914,98 +769,94 @@
 
 			}
 
-			// Orange slice creation
+			// Orange peel creation (single strip peel)
 			function createOrangeSlice() {
 
 				const group = new THREE.Group();
 
-				const sliceRadius = 0.35;
-				const sliceThickness = 0.08;
+				// Peel dimensions - shorter strip (half length)
+				const peelLength = 1.2;
+				const peelWidth = 0.18;
+				const peelThickness = 0.035;
+				const curveSegments = 16;
 
-				// Orange flesh
-				const fleshGeometry = new THREE.CylinderGeometry(
-					sliceRadius,
-					sliceRadius,
-					sliceThickness,
-					32,
-					1,
-					false,
-					0,
-					Math.PI
-				);
-				const fleshMaterial = new THREE.MeshStandardMaterial({
-					color: 0xff9f43,
-					metalness: 0.0,
-					roughness: 0.6,
-					transparent: true,
-					opacity: 0.95,
-				});
-				const flesh = new THREE.Mesh(fleshGeometry, fleshMaterial);
-				flesh.rotation.z = Math.PI / 2;
-				group.add(flesh);
+				// Create a curved path for the peel - gentle S-curve
+				const curve = new THREE.CatmullRomCurve3([
+					new THREE.Vector3(0, 0, 0),
+					new THREE.Vector3(0.06, peelLength * 0.3, 0.03),
+					new THREE.Vector3(-0.04, peelLength * 0.6, 0.05),
+					new THREE.Vector3(0.02, peelLength, 0),
+				]);
 
-				// Orange rind (outer edge)
-				const rindGeometry = new THREE.TorusGeometry(
-					sliceRadius,
-					sliceThickness * 0.6,
-					8,
-					16,
-					Math.PI
-				);
+				// Create custom peel geometry by extruding along curve
+				const peelShape = new THREE.Shape();
+				peelShape.moveTo(-peelWidth / 2, 0);
+				peelShape.lineTo(peelWidth / 2, 0);
+				peelShape.lineTo(peelWidth / 2, peelThickness);
+				peelShape.lineTo(-peelWidth / 2, peelThickness);
+				peelShape.lineTo(-peelWidth / 2, 0);
+
+				const extrudeSettings = {
+					steps: curveSegments,
+					bevelEnabled: false,
+					extrudePath: curve,
+				};
+
+				const peelGeometry = new THREE.ExtrudeGeometry(peelShape, extrudeSettings);
+
+				// Orange rind (outer surface) - vibrant orange
 				const rindMaterial = new THREE.MeshStandardMaterial({
-					color: 0xff6b35,
+					color: 0xf57c00,
+					metalness: 0.05,
+					roughness: 0.55,
+					side: THREE.FrontSide,
+				});
+
+				const peel = new THREE.Mesh(peelGeometry, rindMaterial);
+				group.add(peel);
+
+				// Inner pith layer (whitish-orange)
+				const pithGeometry = peelGeometry.clone();
+				const pithMaterial = new THREE.MeshStandardMaterial({
+					color: 0xffe4b5,
+					metalness: 0.0,
+					roughness: 0.85,
+					side: THREE.BackSide,
+				});
+
+				const pith = new THREE.Mesh(pithGeometry, pithMaterial);
+				group.add(pith);
+
+				// Add subtle texture detail with slight bumps along the peel
+				const detailCount = 6;
+				const detailMaterial = new THREE.MeshStandardMaterial({
+					color: 0xd46a00,
 					metalness: 0.0,
 					roughness: 0.7,
 				});
-				const rind = new THREE.Mesh(rindGeometry, rindMaterial);
-				rind.rotation.x = Math.PI / 2;
-				rind.position.y = 0;
-				group.add(rind);
 
-				// Segment lines on the flesh
-				const segmentCount = 8;
-				const segmentMaterial = new THREE.MeshStandardMaterial({
-					color: 0xffeaa7,
-					metalness: 0.0,
-					roughness: 0.8,
-				});
+				for (let i = 0; i < detailCount; i++) {
 
-				for (let i = 1; i < segmentCount; i++) {
+					const t = (i + 0.5) / detailCount;
+					const point = curve.getPoint(t);
 
-					const angle = (i / segmentCount) * Math.PI;
-					const lineGeometry = new THREE.BoxGeometry(
-						sliceRadius * 0.9,
-						sliceThickness * 0.3,
-						0.01
+					// Small bumps for orange peel texture
+					const bumpGeo = new THREE.SphereGeometry(0.012, 6, 6);
+					const bump = new THREE.Mesh(bumpGeo, detailMaterial);
+
+					// Offset slightly from center
+					const offsetX = (Math.random() - 0.5) * peelWidth * 0.5;
+					const offsetZ = peelThickness * 0.5;
+
+					bump.position.set(
+						point.x + offsetX,
+						point.y,
+						point.z + offsetZ
 					);
-					const line = new THREE.Mesh(lineGeometry, segmentMaterial);
 
-					line.position.x = Math.cos(angle) * sliceRadius * 0.45;
-					line.position.z = Math.sin(angle) * sliceRadius * 0.45;
-					line.rotation.y = -angle + Math.PI / 2;
-
-					group.add(line);
+					group.add(bump);
 
 				}
-
-				// Center pith
-				const pithGeometry = new THREE.CylinderGeometry(
-					sliceRadius * 0.15,
-					sliceRadius * 0.15,
-					sliceThickness * 1.1,
-					16
-				);
-				const pithMaterial = new THREE.MeshStandardMaterial({
-					color: 0xffeaa7,
-					metalness: 0.0,
-					roughness: 0.9,
-				});
-				const pith = new THREE.Mesh(pithGeometry, pithMaterial);
-				pith.rotation.z = Math.PI / 2;
-				group.add(pith);
-
-				group.rotation.x = Math.PI * 0.15;
-				group.rotation.z = Math.PI * 0.1;
 
 				return group;
 
@@ -1014,7 +865,20 @@
 			function spawnOrangeSlice() {
 
 				orangeSlice = createOrangeSlice();
-				orangeSlice.position.set(0.25, LIQUID_SURFACE_Y + 0.02, 0.15);
+				
+				// Position inside glass at top, vertical orientation
+				// Leaning slightly against the inner glass wall
+				const peelX = 0.45;  // Near the inner edge of glass
+				const peelZ = 0.3;
+				const peelY = LIQUID_SURFACE_Y - 0.5;  // Bottom in liquid, top sticks out
+				
+				orangeSlice.position.set(peelX, peelY, peelZ);
+				
+				// Rotate to be vertical with slight lean toward glass edge
+				orangeSlice.rotation.x = 0;  // Upright
+				orangeSlice.rotation.y = -Math.PI * 0.3;  // Angled view
+				orangeSlice.rotation.z = Math.PI * 0.12;  // Slight lean against glass
+				
 				orangeSlice.renderOrder = 6;
 				orangeSlice.visible = orangeSliceVisible;
 				scene.add(orangeSlice);
@@ -1025,17 +889,21 @@
 
 				if (!orangeSlice || !orangeSliceVisible) return;
 
-				// Gentle floating motion
-				const bobY = Math.sin(time * 0.7) * 0.01;
-				const driftX = Math.sin(time * 0.2) * 0.03;
-				const driftZ = Math.cos(time * 0.18) * 0.03;
+				// Very subtle movement - peel is resting against inner glass wall
+				const gentleSway = Math.sin(time * 0.4) * 0.005;
+				const subtleBob = Math.sin(time * 0.6) * 0.008;
 
-				orangeSlice.position.y = LIQUID_SURFACE_Y + 0.02 + bobY;
-				orangeSlice.position.x = 0.25 + driftX;
-				orangeSlice.position.z = 0.15 + driftZ;
+				// Base position with subtle animation
+				const peelX = 0.45;
+				const peelZ = 0.3;
+				const peelY = LIQUID_SURFACE_Y - 0.5;
+				
+				orangeSlice.position.x = peelX + gentleSway;
+				orangeSlice.position.y = peelY + subtleBob;
+				orangeSlice.position.z = peelZ + gentleSway * 0.3;
 
-				// Gentle rotation
-				orangeSlice.rotation.y = Math.sin(time * 0.15) * 0.2;
+				// Very subtle rotation sway
+				orangeSlice.rotation.z = Math.PI * 0.12 + Math.sin(time * 0.3) * 0.015;
 
 			}
 
@@ -1795,23 +1663,9 @@
 
 			function setupControls() {
 
-				const iceMinus = document.getElementById('iceMinus');
-				const icePlus = document.getElementById('icePlus');
 				const fizzSlider = document.getElementById('fizzSlider');
 				const fizzValue = document.getElementById('fizzValue');
 				const sliceToggle = document.getElementById('sliceToggle');
-
-				const handleIceMinus = () => {
-
-					setIceQuantity(iceConfig.quantity - 1);
-
-				};
-
-				const handleIcePlus = () => {
-
-					setIceQuantity(iceConfig.quantity + 1);
-
-				};
 
 				const handleFizzChange = () => {
 
@@ -1831,22 +1685,10 @@
 
 				};
 
-				iceMinus.addEventListener('click', handleIceMinus);
-				icePlus.addEventListener('click', handleIcePlus);
 				fizzSlider.addEventListener('input', handleFizzChange);
 				sliceToggle.addEventListener('click', handleSliceToggle);
 
 				// Keyboard support
-				iceMinus.addEventListener('keydown', (e) => {
-
-					if (e.key === 'Enter' || e.key === ' ') handleIceMinus();
-
-				});
-				icePlus.addEventListener('keydown', (e) => {
-
-					if (e.key === 'Enter' || e.key === ' ') handleIcePlus();
-
-				});
 				sliceToggle.addEventListener('keydown', (e) => {
 
 					if (e.key === 'Enter' || e.key === ' ') handleSliceToggle();
