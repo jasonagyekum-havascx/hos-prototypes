@@ -364,8 +364,8 @@
 			<div class="control-row">
 				<label for="fizzSlider">Carbonation</label>
 				<div class="controls">
-					<input type="range" id="fizzSlider" class="slider-control" min="0" max="100" step="5" value="70" aria-label="Fizz intensity">
-					<span id="fizzValue">70%</span>
+					<input type="range" id="fizzSlider" class="slider-control" min="0" max="200" step="10" value="200" aria-label="Fizz intensity">
+					<span id="fizzValue">200%</span>
 				</div>
 			</div>
 			<div class="control-row">
@@ -492,11 +492,11 @@
 				quantity: 3,
 				maxQuantity: 6,
 				baseSize: 0.12,
-				sizeMultiplier: 3.0,
+				sizeMultiplier: 2.0,
 			};
 
 			// Fizz configuration
-			let fizzIntensity = 0.7;
+			let fizzIntensity = 2.0;
 
 			// Time tracking
 			let elapsedTime = 0;
@@ -512,29 +512,24 @@
 			const LIQUID_BASE_Y = 0.1;
 			const LIQUID_SURFACE_Y = LIQUID_BASE_Y + LIQUID_HEIGHT;
 
-			// Toki Highball golden amber color
-			const LIQUID_COLOR = 0xdbb85c;
-			const LIQUID_DEEP_COLOR = 0xc9a040;
+			// Toki Highball golden amber color (20% darker)
+			const LIQUID_COLOR = 0xaf934a;
+			const LIQUID_DEEP_COLOR = 0xa18033;
 
 			init();
 
 			function createIceMaterial() {
 
-				return new THREE.MeshPhysicalMaterial({
-					color: 0xe8eef5,
-					metalness: 0.0,
-					roughness: 0.15,
-					transmission: 0.35,
-					opacity: 0.92,
+				// Use MeshStandardMaterial instead of transmission-based material
+				// to avoid masking/transparency sorting issues
+				return new THREE.MeshStandardMaterial({
+					color: 0xd8e4f0,
+					metalness: 0.1,
+					roughness: 0.2,
 					transparent: true,
-					thickness: 1.2,
-					clearcoat: 0.6,
-					clearcoatRoughness: 0.25,
-					ior: 1.31,
-					envMapIntensity: 1.2,
-					reflectivity: 0.4,
-					attenuationColor: new THREE.Color(0xc8d8e8),
-					attenuationDistance: 0.25,
+					opacity: 0.75,
+					envMapIntensity: 0.8,
+					side: THREE.FrontSide,
 					depthWrite: true,
 				});
 
@@ -546,8 +541,22 @@
 				const geometry = new THREE.BoxGeometry(size * 1.8, size * 2.2, size * 1.8);
 				const material = createIceMaterial();
 				const mesh = new THREE.Mesh(geometry, material);
-				mesh.renderOrder = 5;
+				mesh.renderOrder = 3;
 				mesh.userData.baseSize = size;
+
+				// Add inner frosted core for realism
+				const innerGeometry = new THREE.BoxGeometry(size * 1.4, size * 1.8, size * 1.4);
+				const innerMaterial = new THREE.MeshStandardMaterial({
+					color: 0xffffff,
+					metalness: 0.0,
+					roughness: 0.9,
+					transparent: true,
+					opacity: 0.35,
+					side: THREE.FrontSide,
+				});
+				const innerMesh = new THREE.Mesh(innerGeometry, innerMaterial);
+				innerMesh.renderOrder = 2;
+				mesh.add(innerMesh);
 
 				return mesh;
 
@@ -581,26 +590,29 @@
 
 			}
 
-			function findNonOverlappingPosition(size) {
+			function findNonOverlappingPosition(size, iceIndex) {
 
-				const collisionRadiusXZ = size * 1.8 * 0.55;
+				const collisionRadiusXZ = size * 1.8 * 0.5;
 				const collisionRadiusY = size * 2.2 * 0.5;
-				const maxAttempts = 80;
-				const boundsRadius = LIQUID_RADIUS - size * 2 - 0.1;
+				const maxAttempts = 100;
+				const boundsRadius = LIQUID_RADIUS - size * 1.2;
+				const iceHeight = size * 2.2;
 				
-				// Base Y position (floating at surface)
-				const baseFloatY = LIQUID_SURFACE_Y - size * 0.8;
+				// First ice cube breaks the surface, others submerge
+				const isFirstIce = iceIndex === 0;
+				const baseFloatY = isFirstIce 
+					? LIQUID_SURFACE_Y - iceHeight * 0.3  // 30% submerged - breaks surface
+					: LIQUID_SURFACE_Y - iceHeight * 0.7; // 70% submerged
 
 				for (let attempt = 0; attempt < maxAttempts; attempt++) {
 
 					const angle = Math.random() * Math.PI * 2;
-					const radius = Math.random() * boundsRadius;
+					const radius = Math.random() * boundsRadius * 0.8;
 					const testX = Math.cos(angle) * radius;
 					const testZ = Math.sin(angle) * radius;
 					let testY = baseFloatY;
 
-					let overlapping = false;
-					let maxStackY = baseFloatY;
+					let hasCollision = false;
 
 					// Check against existing ice cubes
 					for (const existingIce of iceObjects) {
@@ -610,25 +622,22 @@
 						
 						const dx = testX - existingIce.baseX;
 						const dz = testZ - existingIce.baseZ;
+						const dy = testY - existingIce.baseY;
 						const distXZ = Math.sqrt(dx * dx + dz * dz);
 						const minDistXZ = collisionRadiusXZ + existingRadiusXZ;
+						const minDistY = collisionRadiusY + existingRadiusY;
 
-						// If horizontally overlapping, check if we need to stack
-						if (distXZ < minDistXZ * 0.9) {
+						// Check for 3D overlap
+						if (distXZ < minDistXZ && Math.abs(dy) < minDistY) {
 
-							// Calculate the Y position needed to stack on top
-							const stackY = existingIce.baseY + existingRadiusY + collisionRadiusY + 0.02;
-							maxStackY = Math.max(maxStackY, stackY);
+							hasCollision = true;
+							break;
 
 						}
 
 					}
 
-					testY = maxStackY;
-
-					// Verify the stacked position doesn't exceed glass height
-					const maxY = LIQUID_SURFACE_Y + 0.6; // Allow some stacking above liquid
-					if (testY < maxY) {
+					if (!hasCollision) {
 
 						return { x: testX, z: testZ, y: testY };
 
@@ -636,14 +645,20 @@
 
 				}
 
-				// Fallback: return a position anyway, collision system will handle it
-				const angle = Math.random() * Math.PI * 2;
-				const radius = Math.random() * boundsRadius;
-				return { 
-					x: Math.cos(angle) * radius, 
-					z: Math.sin(angle) * radius, 
-					y: baseFloatY 
-				};
+				// Fallback: stack on top of existing ice
+				if (iceObjects.length > 0) {
+
+					const baseIce = iceObjects[Math.floor(Math.random() * iceObjects.length)];
+					const stackY = baseIce.baseY + collisionRadiusY * 2 + 0.05;
+					return { 
+						x: baseIce.baseX + (Math.random() - 0.5) * 0.1, 
+						z: baseIce.baseZ + (Math.random() - 0.5) * 0.1, 
+						y: Math.min(stackY, LIQUID_SURFACE_Y + iceHeight * 0.2)
+					};
+
+				}
+
+				return { x: 0, z: 0, y: baseFloatY };
 
 			}
 
@@ -652,9 +667,13 @@
 				if (iceObjects.length >= iceConfig.maxQuantity) return;
 
 				const size = getCurrentIceSize();
-				const position = findNonOverlappingPosition(size);
+				const iceIndex = iceObjects.length;
+				const position = findNonOverlappingPosition(size, iceIndex);
 
 				const mesh = createIceMesh(size);
+
+				// First ice cube is the "surface" ice
+				const isFirstIce = iceIndex === 0;
 
 				// Each ice cube gets unique animation parameters
 				const iceData = {
@@ -662,14 +681,16 @@
 					baseX: position.x,
 					baseY: position.y,
 					baseZ: position.z,
+					targetY: position.y,
+					isFloater: isFirstIce,
 					velocityY: 0,
 					phaseX: Math.random() * Math.PI * 2,
 					phaseZ: Math.random() * Math.PI * 2,
 					phaseY: Math.random() * Math.PI * 2,
 					rotationSpeed: (Math.random() - 0.5) * 0.3,
 					bobSpeed: 0.8 + Math.random() * 0.4,
-					bobAmount: 0.01 + Math.random() * 0.008,
-					driftAmount: 0.015 + Math.random() * 0.015,
+					bobAmount: isFirstIce ? 0.02 : 0.01,
+					driftAmount: 0.01 + Math.random() * 0.01,
 				};
 
 				mesh.position.set(
@@ -743,67 +764,64 @@
 
 			function resolveIceCollisions() {
 
-				const repulsionStrength = 0.08;
-				const minDistance = 0.01;
 				const size = getCurrentIceSize();
-				const baseFloatY = LIQUID_SURFACE_Y - size * 0.8;
+				const iceHeight = size * 2.2;
+				const minY = LIQUID_BASE_Y + iceHeight * 0.5 + 0.05;
+				const boundsRadius = LIQUID_RADIUS - size * 1.0;
 
-				for (let i = 0; i < iceObjects.length; i++) {
+				// Multiple iterations for stability
+				for (let iter = 0; iter < 5; iter++) {
 
-					const iceA = iceObjects[i];
-					const radiusA = getIceCollisionRadius(iceA);
-					const heightA = getIceHeight(iceA);
+					for (let i = 0; i < iceObjects.length; i++) {
 
-					for (let j = i + 1; j < iceObjects.length; j++) {
+						const iceA = iceObjects[i];
+						const radiusA = getIceCollisionRadius(iceA);
+						const heightA = getIceHeight(iceA);
 
-						const iceB = iceObjects[j];
-						const radiusB = getIceCollisionRadius(iceB);
-						const heightB = getIceHeight(iceB);
+						for (let j = i + 1; j < iceObjects.length; j++) {
 
-						const dx = iceB.baseX - iceA.baseX;
-						const dy = iceB.baseY - iceA.baseY;
-						const dz = iceB.baseZ - iceA.baseZ;
-						
-						const distXZ = Math.sqrt(dx * dx + dz * dz);
-						const minDistXZ = radiusA + radiusB;
-						const minDistY = heightA + heightB;
+							const iceB = iceObjects[j];
+							const radiusB = getIceCollisionRadius(iceB);
+							const heightB = getIceHeight(iceB);
 
-						// Check if cubes overlap in XZ plane
-						const overlapXZ = minDistXZ - distXZ;
-						const overlapY = minDistY - Math.abs(dy);
+							const dx = iceB.baseX - iceA.baseX;
+							const dy = iceB.baseY - iceA.baseY;
+							const dz = iceB.baseZ - iceA.baseZ;
+							
+							const distXZ = Math.sqrt(dx * dx + dz * dz);
+							const minDistXZ = radiusA + radiusB;
+							const minDistY = heightA + heightB;
 
-						// Only process if there's actual 3D overlap
-						if (overlapXZ > 0 && overlapY > 0) {
+							// Check for 3D overlap
+							const overlapXZ = minDistXZ - distXZ;
+							const overlapY = minDistY - Math.abs(dy);
 
-							// Determine if we should push horizontally or vertically
-							// Push in the direction of least resistance
-							if (overlapXZ < overlapY && distXZ > minDistance) {
+							if (overlapXZ > 0 && overlapY > 0) {
 
-								// Push horizontally
-								const pushX = (dx / distXZ) * overlapXZ * 0.5 * repulsionStrength;
-								const pushZ = (dz / distXZ) * overlapXZ * 0.5 * repulsionStrength;
+								// Decide whether to push horizontally or vertically
+								// Push in the direction that requires less movement
+								if (overlapXZ < overlapY * 0.8 && distXZ > 0.01) {
 
-								iceA.baseX -= pushX;
-								iceA.baseZ -= pushZ;
-								iceB.baseX += pushX;
-								iceB.baseZ += pushZ;
-
-							} else {
-
-								// Push vertically (stack)
-								const pushY = overlapY * 0.5 * repulsionStrength;
-								
-								if (iceA.baseY < iceB.baseY) {
-
-									// A is below B, push B up
-									iceB.baseY += pushY;
-									iceA.baseY -= pushY * 0.3;
+									// Push horizontally
+									const factor = overlapXZ * 0.5 / distXZ;
+									iceA.baseX -= dx * factor;
+									iceA.baseZ -= dz * factor;
+									iceB.baseX += dx * factor;
+									iceB.baseZ += dz * factor;
 
 								} else {
 
-									// B is below A, push A up
-									iceA.baseY += pushY;
-									iceB.baseY -= pushY * 0.3;
+									// Push vertically - stack
+									const pushAmount = overlapY * 0.5 + 0.02;
+									if (iceA.baseY < iceB.baseY) {
+
+										iceB.baseY += pushAmount;
+
+									} else {
+
+										iceA.baseY += pushAmount;
+
+									}
 
 								}
 
@@ -813,35 +831,39 @@
 
 					}
 
-					// Apply buoyancy - ice wants to float at surface level
-					const buoyancyTarget = baseFloatY;
-					const buoyancyStrength = 0.02;
-					
-					if (iceA.baseY < buoyancyTarget) {
+				}
 
-						iceA.baseY += (buoyancyTarget - iceA.baseY) * buoyancyStrength;
+				// Apply constraints for each ice cube
+				for (let i = 0; i < iceObjects.length; i++) {
 
-					}
+					const ice = iceObjects[i];
 
-					// Keep within glass bounds after collision resolution
-					const boundsRadius = LIQUID_RADIUS - size * 1.5 - 0.05;
-					const currentDist = Math.sqrt(iceA.baseX * iceA.baseX + iceA.baseZ * iceA.baseZ);
+					// Target Y based on whether it's the floater
+					const targetY = ice.isFloater 
+						? LIQUID_SURFACE_Y - iceHeight * 0.3  // Breaks surface
+						: ice.targetY;
 
+					// Gentle buoyancy towards target
+					const buoyancyStrength = ice.isFloater ? 0.08 : 0.03;
+					ice.baseY += (targetY - ice.baseY) * buoyancyStrength;
+
+					// Keep within glass bounds
+					const currentDist = Math.sqrt(ice.baseX * ice.baseX + ice.baseZ * ice.baseZ);
 					if (currentDist > boundsRadius) {
 
-						const scaleXZ = boundsRadius / currentDist;
-						iceA.baseX *= scaleXZ;
-						iceA.baseZ *= scaleXZ;
+						const scale = boundsRadius / currentDist;
+						ice.baseX *= scale;
+						ice.baseZ *= scale;
 
 					}
 
-					// Cap maximum height
-					const maxY = LIQUID_SURFACE_Y + 0.8;
-					if (iceA.baseY > maxY) {
-
-						iceA.baseY = maxY;
-
-					}
+					// Clamp Y
+					const maxY = ice.isFloater 
+						? LIQUID_SURFACE_Y - iceHeight * 0.2 
+						: LIQUID_SURFACE_Y - iceHeight * 0.4;
+					
+					if (ice.baseY > maxY) ice.baseY = maxY;
+					if (ice.baseY < minY) ice.baseY = minY;
 
 				}
 
@@ -850,20 +872,17 @@
 			function updateIceAnimation(time) {
 
 				const size = getCurrentIceSize();
+				const boundsRadius = LIQUID_RADIUS - size * 1.0;
 
-				// Resolve collisions multiple times per frame for stability
-				for (let iter = 0; iter < 3; iter++) {
-
-					resolveIceCollisions();
-
-				}
+				// Resolve collisions (iterations are inside the function)
+				resolveIceCollisions();
 
 				for (const ice of iceObjects) {
 
-					// Gentle bobbing motion (reduced for stacked ice)
+					// Gentle bobbing motion - stronger for floater
 					const bobY = Math.sin(time * ice.bobSpeed + ice.phaseY) * ice.bobAmount;
 
-					// Slight drift in X and Z (reduced to let collision handle positioning)
+					// Slight drift in X and Z
 					const driftX = Math.sin(time * 0.3 + ice.phaseX) * ice.driftAmount;
 					const driftZ = Math.cos(time * 0.25 + ice.phaseZ) * ice.driftAmount;
 
@@ -873,11 +892,10 @@
 
 					// Final boundary check
 					const dist = Math.sqrt(newX * newX + newZ * newZ);
-					const maxDist = LIQUID_RADIUS - size * 1.5 - 0.05;
 
-					if (dist > maxDist) {
+					if (dist > boundsRadius) {
 
-						const boundsScale = maxDist / dist;
+						const boundsScale = boundsRadius / dist;
 						newX *= boundsScale;
 						newZ *= boundsScale;
 
@@ -889,8 +907,8 @@
 
 					// Gentle rotation
 					ice.mesh.rotation.y += ice.rotationSpeed * 0.016;
-					ice.mesh.rotation.x = Math.sin(time * 0.5 + ice.phaseX) * 0.08;
-					ice.mesh.rotation.z = Math.cos(time * 0.4 + ice.phaseZ) * 0.08;
+					ice.mesh.rotation.x = Math.sin(time * 0.5 + ice.phaseX) * 0.06;
+					ice.mesh.rotation.z = Math.cos(time * 0.4 + ice.phaseZ) * 0.06;
 
 				}
 
@@ -1287,7 +1305,7 @@
 			// Bubble system
 			function initBubbleSystem() {
 
-				bubbleGeometry = new THREE.SphereGeometry(0.015, 8, 8);
+				bubbleGeometry = new THREE.SphereGeometry(0.012, 8, 8);
 				bubbleMaterial = new THREE.MeshStandardMaterial({
 					color: 0xffffff,
 					metalness: 0.0,
