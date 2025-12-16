@@ -8,16 +8,16 @@ export const lightConfig = {
 	ambient: {
 		enabled: true,
 		color: 0xffffff,
-		intensity: 1.0,
+		intensity: 0,
 	},
 
 	// Hemisphere light - sky/ground gradient
-	hemisphere: {
-		enabled: true,
-		skyColor: 0x87CEEB,
-		groundColor: 0xffffff,
-		intensity: 0.8,
-	},
+	// hemisphere: {
+	// 	enabled: true,
+	// 	skyColor: 0x87CEEB,
+	// 	groundColor: 0xffffff,
+	// 	intensity: 0.8,
+	// },
 
 	// Directional lights (sun-like lights)
 	directional: [
@@ -28,29 +28,29 @@ export const lightConfig = {
 		intensity: 2.0,
 		position: { x: 0, y: 2, z: 6 },  // Moved farther away
 		castShadow: false,
-		helper: true,
+		helper: false,
 		helperSize: 1,
 	},
-		{
-			name: 'fillLight',
-			enabled: true,
-			color: 0xaaddff,
-			intensity: 1.2,
-			position: { x: -3, y: 3, z: -2 },
-			castShadow: false,
-			helper: true,
-			helperSize: 1,
-		},
-		{
-			name: 'rimLight',
-			enabled: true,
-			color: 0xffeedd,
-			intensity: 1.0,
-			position: { x: 0, y: 2, z: -4 },
-			castShadow: false,
-			helper: true,
-			helperSize: 1,
-		},
+		// {
+		// 	name: 'fillLight',
+		// 	enabled: true,
+		// 	color: 0xaaddff,
+		// 	intensity: 1.2,
+		// 	position: { x: -3, y: 3, z: -2 },
+		// 	castShadow: false,
+		// 	helper: false,
+		// 	helperSize: 1,
+		// },
+		// {
+		// 	name: 'rimLight',
+		// 	enabled: true,
+		// 	color: 0xffeedd,
+		// 	intensity: 1.0,
+		// 	position: { x: 0, y: 2, z: -4 },
+		// 	castShadow: false,
+		// 	helper: false,
+		// 	helperSize: 1,
+		// },
 	],
 
 	// Point lights (omni-directional)
@@ -298,8 +298,8 @@ export function createLightGUI(gui, lights, scene, transformControls) {
 		lights.directional.forEach((light, index) => {
 			const lightFolder = dirFolder.addFolder(light.name || `Light ${index}`);
 			
-			// Visible toggle
-			lightFolder.add(light, 'visible').name('Visible');
+			// Visible toggle - bind directly to light.visible property
+			lightFolder.add(light, 'visible').name('Visible').listen();
 			
 			// Intensity
 			lightFolder.add(light, 'intensity', 0, 5, 0.1).name('Intensity');
@@ -317,12 +317,19 @@ export function createLightGUI(gui, lights, scene, transformControls) {
 			posFolder.add(light.position, 'x', -10, 10, 0.1).name('X').listen();
 			posFolder.add(light.position, 'y', -10, 10, 0.1).name('Y').listen();
 			posFolder.add(light.position, 'z', -10, 10, 0.1).name('Z').listen();
+			posFolder.close(); // Collapse by default
 			
 			// Attach gizmo button
 			lightFolder.add({
 				attachGizmo: () => settings.attachGizmo(light)
 			}, 'attachGizmo').name('🎯 Attach Gizmo');
+			
+			// Collapse individual light folders by default
+			lightFolder.close();
 		});
+		
+		// Collapse main directional lights folder by default
+		dirFolder.close();
 	}
 
 	// Point Lights
@@ -332,7 +339,7 @@ export function createLightGUI(gui, lights, scene, transformControls) {
 		lights.point.forEach((light, index) => {
 			const lightFolder = pointFolder.addFolder(light.name || `Point ${index}`);
 			
-			lightFolder.add(light, 'visible').name('Visible');
+			lightFolder.add(light, 'visible').name('Visible').listen();
 			lightFolder.add(light, 'intensity', 0, 5, 0.1).name('Intensity');
 			lightFolder.add(light, 'distance', 0, 50, 0.5).name('Distance');
 			lightFolder.add(light, 'decay', 0, 5, 0.1).name('Decay');
@@ -348,11 +355,18 @@ export function createLightGUI(gui, lights, scene, transformControls) {
 			posFolder.add(light.position, 'x', -10, 10, 0.1).name('X').listen();
 			posFolder.add(light.position, 'y', -10, 10, 0.1).name('Y').listen();
 			posFolder.add(light.position, 'z', -10, 10, 0.1).name('Z').listen();
+			posFolder.close(); // Collapse by default
 			
 			lightFolder.add({
 				attachGizmo: () => settings.attachGizmo(light)
 			}, 'attachGizmo').name('🎯 Attach Gizmo');
+			
+			// Collapse individual light folders by default
+			lightFolder.close();
 		});
+		
+		// Collapse main point lights folder by default
+		pointFolder.close();
 	}
 
 	// Spot Lights
@@ -362,7 +376,7 @@ export function createLightGUI(gui, lights, scene, transformControls) {
 		lights.spot.forEach((light, index) => {
 			const lightFolder = spotFolder.addFolder(light.name || `Spot ${index}`);
 			
-			lightFolder.add(light, 'visible').name('Visible');
+			lightFolder.add(light, 'visible').name('Visible').listen();
 			lightFolder.add(light, 'intensity', 0, 5, 0.1).name('Intensity');
 			lightFolder.add(light, 'distance', 0, 50, 0.5).name('Distance');
 			lightFolder.add(light, 'angle', 0, Math.PI / 2, 0.01).name('Angle');
@@ -380,11 +394,18 @@ export function createLightGUI(gui, lights, scene, transformControls) {
 			posFolder.add(light.position, 'x', -10, 10, 0.1).name('X').listen();
 			posFolder.add(light.position, 'y', -10, 10, 0.1).name('Y').listen();
 			posFolder.add(light.position, 'z', -10, 10, 0.1).name('Z').listen();
+			posFolder.close(); // Collapse by default
 			
 			lightFolder.add({
 				attachGizmo: () => settings.attachGizmo(light)
 			}, 'attachGizmo').name('🎯 Attach Gizmo');
+			
+			// Collapse individual light folders by default
+			lightFolder.close();
 		});
+		
+		// Collapse main spot lights folder by default
+		spotFolder.close();
 	}
 
 	// Ambient Light
