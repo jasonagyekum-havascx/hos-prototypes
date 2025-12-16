@@ -537,6 +537,9 @@
 		// Floor model
 		let floorModel;
 
+		// Ice cube GLB model (for first ice cube)
+		let iceCubeGLBModel = null;
+
 			// Ice cubes (simple floating objects)
 			const iceObjects = [];
 			const iceConfig = {
@@ -594,6 +597,7 @@
 				const mesh = new THREE.Mesh(geometry, material);
 				mesh.renderOrder = 3;
 				mesh.userData.baseSize = size;
+				mesh.userData.isProcedural = true;
 
 				// Add inner frosted core for realism
 				const innerGeometry = new THREE.BoxGeometry(size * 1.4, size * 1.8, size * 1.4);
@@ -617,6 +621,82 @@
 
 				return iceConfig.baseSize * iceConfig.sizeMultiplier;
 
+			}
+
+			// Load ice-cube.glb model
+			function loadIceCubeGLB() {
+				const dracoLoader = new DRACOLoader();
+				dracoLoader.setDecoderPath('jsm/libs/draco/gltf/');
+
+				const gltfLoader = new GLTFLoader();
+				gltfLoader.setDRACOLoader(dracoLoader);
+
+				gltfLoader.load(
+					'models/glb/ice-cube.glb',
+					(gltf) => {
+						iceCubeGLBModel = gltf.scene;
+						// Store the original model for cloning
+						console.log('Ice cube GLB model loaded successfully');
+						
+						// If ice cubes haven't been spawned yet, they'll use GLB when spawned
+						// Otherwise, replace all procedural ice cubes with GLB models
+						if (iceObjects.length > 0) {
+							// Replace all procedural ice cubes with GLB models
+							const size = getCurrentIceSize();
+							
+							iceObjects.forEach((ice, index) => {
+								if (ice.mesh.userData.isProcedural) {
+									const oldPosition = ice.mesh.position.clone();
+									const oldRotation = ice.mesh.rotation.clone();
+									
+									scene.remove(ice.mesh);
+									ice.mesh.geometry.dispose();
+									ice.mesh.material.dispose();
+									
+									// Create new GLB ice cube with same size
+									const mesh = iceCubeGLBModel.clone();
+									
+									// Calculate scale to match procedural ice cube size
+									const box = new THREE.Box3().setFromObject(mesh);
+									const glbSize = box.getSize(new THREE.Vector3());
+									const targetWidth = size * 1.8;
+									const targetHeight = size * 2.2;
+									const scaleX = targetWidth / Math.max(glbSize.x, 0.001);
+									const scaleY = targetHeight / Math.max(glbSize.y, 0.001);
+									const scaleZ = targetWidth / Math.max(glbSize.z, 0.001);
+									const avgScale = (scaleX + scaleY + scaleZ) / 3;
+									mesh.scale.set(avgScale, avgScale, avgScale);
+									
+									mesh.traverse((child) => {
+										if (child.isMesh) {
+											child.castShadow = true;
+											child.receiveShadow = true;
+											child.renderOrder = 3;
+										}
+									});
+									
+									mesh.renderOrder = 3;
+									mesh.userData.baseSize = size;
+									mesh.userData.isProcedural = false;
+									
+									// Preserve position and rotation from old ice cube
+									mesh.position.copy(oldPosition);
+									mesh.rotation.copy(oldRotation);
+									
+									scene.add(mesh);
+									ice.mesh = mesh;
+									console.log(`Replaced procedural ice cube ${index} with GLB model`);
+								}
+							});
+						}
+					},
+					(progress) => {
+						console.log('Loading ice cube:', (progress.loaded / progress.total * 100) + '%');
+					},
+					(error) => {
+						console.error('Error loading ice cube model:', error);
+					}
+				);
 			}
 
 			function updateAllIceSizes() {
@@ -681,10 +761,50 @@
 				const iceIndex = iceObjects.length;
 				const position = findNonOverlappingPosition(size, iceIndex);
 
-				const mesh = createIceMesh(size);
-
 				// First ice cube is the "surface" ice
 				const isFirstIce = iceIndex === 0;
+				
+				// Use GLB model for all ice cubes if available, otherwise use procedural mesh
+				let mesh;
+				if (iceCubeGLBModel) {
+					// Clone the GLB model for this ice cube
+					mesh = iceCubeGLBModel.clone();
+					
+					// Calculate scale to match procedural ice cube size
+					// Procedural ice cube dimensions: size * 1.8 (width/depth), size * 2.2 (height)
+					// We need to get the bounding box of the GLB model and scale accordingly
+					const box = new THREE.Box3().setFromObject(mesh);
+					const glbSize = box.getSize(new THREE.Vector3());
+					
+					// Target size for ice cube
+					const targetWidth = size * 1.8;
+					const targetHeight = size * 2.2;
+					
+					// Scale to match target dimensions (use the larger dimension to maintain aspect ratio)
+					const scaleX = targetWidth / Math.max(glbSize.x, 0.001);
+					const scaleY = targetHeight / Math.max(glbSize.y, 0.001);
+					const scaleZ = targetWidth / Math.max(glbSize.z, 0.001);
+					
+					// Use average scale to maintain proportions, or use the dominant dimension
+					const avgScale = (scaleX + scaleY + scaleZ) / 3;
+					mesh.scale.set(avgScale, avgScale, avgScale);
+					
+					// Ensure all meshes in the GLB have proper settings
+					mesh.traverse((child) => {
+						if (child.isMesh) {
+							child.castShadow = true;
+							child.receiveShadow = true;
+							child.renderOrder = 3;
+						}
+					});
+					
+					mesh.renderOrder = 3;
+					mesh.userData.baseSize = size;
+					mesh.userData.isProcedural = false;
+				} else {
+					// Use procedural mesh if GLB not loaded yet
+					mesh = createIceMesh(size);
+				}
 
 				// Each ice cube gets unique animation parameters
 				const iceData = {
@@ -1780,6 +1900,9 @@
 			// Load floor model
 			loadFloorModel();
 
+			// Load ice cube GLB model
+			loadIceCubeGLB();
+
 			// Initialize hotspots
 			initHotspots();
 
@@ -1841,7 +1964,7 @@
 					color: 0xffffff,
 					metalness: 0,
 					roughness: 0.02,
-					transmission: 0.97,
+					transmission: 1,
 					opacity: 1,
 					transparent: true,
 					thickness: 1,

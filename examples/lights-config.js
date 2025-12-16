@@ -278,15 +278,6 @@ export function createLightGUI(gui, lights, scene, transformControls) {
 		gizmoMode: 'translate',
 	};
 
-	// Gizmo controls
-	settingsFolder.add(settings, 'gizmoMode', ['translate', 'rotate', 'scale']).name('Gizmo Mode').onChange((value) => {
-		if (transformControls) {
-			transformControls.setMode(value);
-		}
-	});
-
-	settingsFolder.add(settings, 'detachGizmo').name('Detach Gizmo');
-
 	settingsFolder.add(settings, 'showHelpers').name('Show Helpers').onChange((value) => {
 		toggleHelpers(lights, value);
 	});
@@ -318,11 +309,6 @@ export function createLightGUI(gui, lights, scene, transformControls) {
 			posFolder.add(light.position, 'y', -10, 10, 0.1).name('Y').listen();
 			posFolder.add(light.position, 'z', -10, 10, 0.1).name('Z').listen();
 			posFolder.close(); // Collapse by default
-			
-			// Attach gizmo button
-			lightFolder.add({
-				attachGizmo: () => settings.attachGizmo(light)
-			}, 'attachGizmo').name('🎯 Attach Gizmo');
 			
 			// Collapse individual light folders by default
 			lightFolder.close();
