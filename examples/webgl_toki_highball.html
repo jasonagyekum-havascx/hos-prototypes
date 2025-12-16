@@ -396,6 +396,47 @@
 				opacity: 1;
 				transform: translateY(0);
 			}
+
+			#overlay {
+				position: fixed;
+				top: 50%;
+				left: 50%;
+				transform: translate(-50%, -50%);
+				background: rgba(20, 40, 60, 0.95);
+				border: 1px solid rgba(126, 200, 232, 0.4);
+				border-radius: 16px;
+				padding: 32px 40px;
+				color: #e8f4fc;
+				font-family: 'Noto Sans JP', sans-serif;
+				text-align: center;
+				backdrop-filter: blur(12px);
+				z-index: 200;
+				max-width: 400px;
+			}
+
+			#overlay p {
+				margin: 0 0 20px 0;
+				font-size: 14px;
+				color: rgba(255, 255, 255, 0.8);
+			}
+
+			#overlay button {
+				background: linear-gradient(135deg, #7ec8e8 0%, #5aa8c4 100%);
+				color: #1a3a4a;
+				border: none;
+				padding: 12px 32px;
+				border-radius: 8px;
+				font-size: 14px;
+				font-weight: 600;
+				cursor: pointer;
+				transition: all 0.2s ease;
+				font-family: inherit;
+			}
+
+			#overlay button:hover {
+				background: linear-gradient(135deg, #8dd4f0 0%, #6bb8d4 100%);
+				transform: translateY(-2px);
+			}
 		</style>
 	</head>
 	<body>
@@ -444,6 +485,11 @@
 		</audio>
 
 		<div id="brandLabel">TOKI</div>
+
+		<div id="overlay" aria-live="polite">
+			<p>Tap to enable motion controls or keep using touch.</p>
+			<button id="enableMotionButton" aria-label="Enable motion controls">Enable motion</button>
+		</div>
 
 		<!-- Hotspot Overlay -->
 		<div id="hotspotOverlay" class="hotspot-overlay" role="presentation"></div>
@@ -537,6 +583,8 @@
 			let glassOuter, glassInner;
 			const mouse = new THREE.Vector2();
 			let backgroundTexture = null;
+			let motionOverlay = null;
+			let enableMotionButton = null;
 
 			// Hotspot system
 			const hotspots = [];
@@ -583,6 +631,16 @@
 			// Toki Highball golden amber color (20% darker)
 			const LIQUID_COLOR = 0xaf934a;
 			const LIQUID_DEEP_COLOR = 0xa18033;
+
+			const motionState = {
+				enabled: false,
+				available: false,
+				tilt: new THREE.Vector2(),
+				targetTilt: new THREE.Vector2(),
+				ripplePos: new THREE.Vector2(10000, 10000),
+				rippleStrength: 0,
+				lastUpdate: 0,
+			};
 
 			// Background image cover scaling function
 			function updateBackgroundCover() {
@@ -1405,6 +1463,12 @@
 
 					}
 
+					// Apply tilt influence
+					const tiltX = liquidUniforms.uTilt.value.x;
+					const tiltY = liquidUniforms.uTilt.value.y;
+					bubble.velocity.x += tiltX * deltaTime * 0.5;
+					bubble.velocity.z += tiltY * deltaTime * 0.5;
+
 					// Add slight wobble
 					bubble.velocity.x += (Math.random() - 0.5) * 0.05;
 					bubble.velocity.z += (Math.random() - 0.5) * 0.05;
@@ -1579,6 +1643,7 @@
 
 				setupControls();
 				setupPanelControls();
+				setupMotionOverlay();
 
 				// Attempt to start background audio (may be blocked by browser autoplay policy)
 				const audioElement = document.getElementById('backgroundAudio');
@@ -1982,13 +2047,137 @@
 
 			}
 
+			function setupMotionOverlay() {
+
+				motionOverlay = document.getElementById('overlay');
+				enableMotionButton = document.getElementById('enableMotionButton');
+
+				if (!enableMotionButton) return;
+
+				enableMotionButton.addEventListener('click', () => {
+
+					if (motionOverlay) motionOverlay.style.display = 'none';
+					requestMotionAccess();
+
+				}, { once: true });
+
+			}
+
+			async function requestMotionAccess() {
+
+				const granted = await askForMotionPermission();
+				if (!granted) return;
+
+				motionState.enabled = true;
+				startMotionListeners();
+
+			}
+
+			async function askForMotionPermission() {
+
+				const tryPermission = async (ctor) => {
+
+					if (typeof ctor === 'undefined' || typeof ctor.requestPermission !== 'function') return true;
+					try {
+
+						const response = await ctor.requestPermission();
+						return response === 'granted';
+
+					} catch (err) {
+
+						console.warn('Motion permission request failed', err);
+						return false;
+
+					}
+
+				};
+
+				const motionGranted = await tryPermission(window.DeviceMotionEvent);
+				const orientationGranted = await tryPermission(window.DeviceOrientationEvent);
+				return motionGranted || orientationGranted;
+
+			}
+
+			function startMotionListeners() {
+
+				if (motionState.available) return;
+
+				window.addEventListener('deviceorientation', handleOrientation, true);
+				window.addEventListener('devicemotion', handleMotion, true);
+				motionState.available = true;
+
+			}
+
+			function handleOrientation(event) {
+
+				if (!motionState.enabled) return;
+
+				const gamma = event.gamma ?? 0;
+				const beta = event.beta ?? 0;
+
+				const normX = THREE.MathUtils.clamp(gamma / 40, -1, 1);
+				const normY = THREE.MathUtils.clamp(beta / 40, -1, 1);
+
+				motionState.targetTilt.set(normX, normY);
+				motionState.lastUpdate = performance.now();
+
+			}
+
+			function handleMotion(event) {
+
+				if (!motionState.enabled) return;
+				if (!event.accelerationIncludingGravity) return;
+
+				const { x = 0, y = 0, z = 0 } = event.accelerationIncludingGravity;
+				const magnitude = Math.sqrt(x * x + y * y + z * z);
+				const impulse = THREE.MathUtils.clamp(Math.abs(magnitude - 9.8) / 10, 0, 1);
+				motionState.rippleStrength = Math.max(motionState.rippleStrength, impulse * 0.4);
+				motionState.lastUpdate = performance.now();
+
+			}
+
+			function applyMotion() {
+
+				const now = performance.now();
+				const fresh = now - motionState.lastUpdate < 600;
+
+				if (motionState.enabled && fresh) {
+
+					motionState.tilt.lerp(motionState.targetTilt, 0.1);
+					liquidUniforms.uTilt.value.lerp(motionState.tilt, 0.15);
+
+					if (motionState.rippleStrength > 0.02) {
+
+						liquidUniforms.uRippleStrength.value = Math.min(
+							liquidUniforms.uRippleStrength.value + motionState.rippleStrength,
+							1.1
+						);
+						motionState.rippleStrength *= 0.88;
+
+					} else {
+
+						motionState.rippleStrength *= 0.75;
+
+					}
+
+				} else {
+
+					motionState.tilt.lerp(new THREE.Vector2(), 0.04);
+					liquidUniforms.uTilt.value.lerp(motionState.tilt, 0.15);
+
+				}
+
+				liquidUniforms.uRippleStrength.value *= 0.95;
+
+			}
+
 			function animate() {
 
 				const deltaTime = 1 / 60;
 				elapsedTime += deltaTime;
 
 				liquidUniforms.uTime.value += 0.016;
-				liquidUniforms.uRippleStrength.value *= 0.95;
+				applyMotion();
 
 				// Update animations
 				updateBubbles(deltaTime);
