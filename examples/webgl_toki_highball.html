@@ -122,7 +122,7 @@
 				border-radius: 50% !important;
 			}
 
-			#iceQuantityValue, #fizzValue, #iceSizeValue {
+			#iceQuantityValue, #fizzValue {
 				min-width: 32px;
 				text-align: center;
 				font-weight: 500;
@@ -177,6 +177,163 @@
 				text-orientation: mixed;
 				z-index: 100;
 			}
+
+			/* Hotspot Info Panel Styles */
+			.hotspot-panel {
+				position: fixed;
+				top: 50%;
+				left: 50%;
+				transform: translate(-50%, -50%) scale(0.9);
+				background: rgba(20, 40, 60, 0.96);
+				border: 1px solid rgba(126, 200, 232, 0.4);
+				border-radius: 20px;
+				padding: 32px 40px;
+				color: #e8f4fc;
+				font-family: 'Noto Sans JP', sans-serif;
+				backdrop-filter: blur(16px);
+				z-index: 200;
+				max-width: 420px;
+				width: 90%;
+				opacity: 0;
+				visibility: hidden;
+				transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+				box-shadow: 0 25px 60px rgba(0, 0, 0, 0.4);
+			}
+
+			.hotspot-panel.active {
+				opacity: 1;
+				visibility: visible;
+				transform: translate(-50%, -50%) scale(1);
+			}
+
+			.hotspot-panel-header {
+				display: flex;
+				justify-content: space-between;
+				align-items: flex-start;
+				margin-bottom: 20px;
+			}
+
+			.hotspot-panel h2 {
+				margin: 0;
+				font-family: 'Cormorant Garamond', serif;
+				font-size: 26px;
+				font-weight: 500;
+				color: #7ec8e8;
+				letter-spacing: 1px;
+			}
+
+			.hotspot-panel-close {
+				background: rgba(126, 200, 232, 0.15);
+				border: 1px solid rgba(126, 200, 232, 0.3);
+				color: #7ec8e8;
+				width: 36px;
+				height: 36px;
+				border-radius: 50%;
+				cursor: pointer;
+				font-size: 20px;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				transition: all 0.2s ease;
+				flex-shrink: 0;
+				margin-left: 16px;
+			}
+
+			.hotspot-panel-close:hover {
+				background: rgba(126, 200, 232, 0.3);
+				transform: scale(1.1);
+			}
+
+			.hotspot-panel p {
+				margin: 0 0 16px 0;
+				font-size: 14px;
+				line-height: 1.7;
+				color: rgba(255, 255, 255, 0.85);
+			}
+
+			.hotspot-panel p:last-child {
+				margin-bottom: 0;
+			}
+
+			.hotspot-panel .highlight {
+				color: #dbb85c;
+				font-weight: 500;
+			}
+
+			.hotspot-panel video {
+				width: 100%;
+				border-radius: 12px;
+				margin-top: 16px;
+				background: #000;
+			}
+
+			.hotspot-panel .video-placeholder {
+				width: 100%;
+				aspect-ratio: 16/9;
+				background: linear-gradient(135deg, rgba(126, 200, 232, 0.15), rgba(219, 184, 92, 0.15));
+				border-radius: 12px;
+				margin-top: 16px;
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				justify-content: center;
+				border: 1px dashed rgba(126, 200, 232, 0.3);
+			}
+
+			.hotspot-panel .video-placeholder svg {
+				width: 48px;
+				height: 48px;
+				fill: rgba(126, 200, 232, 0.6);
+				margin-bottom: 12px;
+			}
+
+			.hotspot-panel .video-placeholder span {
+				font-size: 12px;
+				color: rgba(255, 255, 255, 0.5);
+			}
+
+			.hotspot-overlay {
+				position: fixed;
+				top: 0;
+				left: 0;
+				width: 100%;
+				height: 100%;
+				background: rgba(0, 0, 0, 0.5);
+				z-index: 150;
+				opacity: 0;
+				visibility: hidden;
+				transition: all 0.35s ease;
+			}
+
+			.hotspot-overlay.active {
+				opacity: 1;
+				visibility: visible;
+			}
+
+			/* Hotspot Label Tooltips */
+			.hotspot-label {
+				position: fixed;
+				background: rgba(20, 40, 60, 0.9);
+				border: 1px solid rgba(126, 200, 232, 0.4);
+				border-radius: 8px;
+				padding: 8px 14px;
+				color: #7ec8e8;
+				font-family: 'Noto Sans JP', sans-serif;
+				font-size: 12px;
+				font-weight: 500;
+				pointer-events: none;
+				z-index: 120;
+				opacity: 0;
+				transform: translateY(8px);
+				transition: all 0.25s ease;
+				white-space: nowrap;
+				backdrop-filter: blur(8px);
+			}
+
+			.hotspot-label.visible {
+				opacity: 1;
+				transform: translateY(0);
+			}
 		</style>
 	</head>
 	<body>
@@ -190,7 +347,7 @@
 			</div>
 
 			<small>
-				Tap to disturb the surface. Drag to orbit.
+				Tap hotspots to learn more. Drag to orbit.
 			</small>
 		</div>
 
@@ -205,13 +362,6 @@
 				</div>
 			</div>
 			<div class="control-row">
-				<label for="iceSizeSlider">Ice Size</label>
-				<div class="controls">
-					<input type="range" id="iceSizeSlider" class="slider-control" min="50" max="300" step="25" value="100" aria-label="Ice cube size">
-					<span id="iceSizeValue">100%</span>
-				</div>
-			</div>
-			<div class="control-row">
 				<label for="fizzSlider">Carbonation</label>
 				<div class="controls">
 					<input type="range" id="fizzSlider" class="slider-control" min="0" max="100" step="5" value="70" aria-label="Fizz intensity">
@@ -221,12 +371,82 @@
 			<div class="control-row">
 				<label id="sliceLabel">Orange Slice</label>
 				<div class="controls">
-					<button id="sliceToggle" class="active" aria-pressed="true" aria-describedby="sliceLabel">Visible</button>
+					<button id="sliceToggle" aria-pressed="false" aria-describedby="sliceLabel">Hidden</button>
 				</div>
 			</div>
 		</div>
 
 		<div id="brandLabel">TOKI</div>
+
+		<!-- Hotspot Overlay -->
+		<div id="hotspotOverlay" class="hotspot-overlay" role="presentation"></div>
+
+		<!-- Hotspot Info Panels -->
+		<div id="panelWhisky" class="hotspot-panel" role="dialog" aria-labelledby="panelWhiskyTitle" aria-modal="true">
+			<div class="hotspot-panel-header">
+				<h2 id="panelWhiskyTitle">Suntory Toki</h2>
+				<button class="hotspot-panel-close" aria-label="Close panel" tabindex="0">×</button>
+			</div>
+			<p>
+				<span class="highlight">Toki</span> means "time" in Japanese, representing the harmony of old and new. 
+				This blended Japanese whisky combines malt from Hakushu and Yamazaki distilleries with 
+				grain whisky from Chita.
+			</p>
+			<p>
+				Silky with a subtle sweetness, it's the perfect base for a refreshing Highball—Japan's 
+				most popular way to enjoy whisky.
+			</p>
+		</div>
+
+		<div id="panelIce" class="hotspot-panel" role="dialog" aria-labelledby="panelIceTitle" aria-modal="true">
+			<div class="hotspot-panel-header">
+				<h2 id="panelIceTitle">The Perfect Ice</h2>
+				<button class="hotspot-panel-close" aria-label="Close panel" tabindex="0">×</button>
+			</div>
+			<p>
+				In Japan, ice is an art form. Large, <span class="highlight">crystal-clear cubes</span> are essential 
+				for the perfect Highball—they melt slowly, keeping your drink cold without over-diluting.
+			</p>
+			<p>
+				The best Highball bars in Tokyo hand-carve their ice from massive blocks, ensuring purity 
+				and the ideal melting rate.
+			</p>
+		</div>
+
+		<div id="panelGlass" class="hotspot-panel" role="dialog" aria-labelledby="panelGlassTitle" aria-modal="true">
+			<div class="hotspot-panel-header">
+				<h2 id="panelGlassTitle">Highball Glass</h2>
+				<button class="hotspot-panel-close" aria-label="Close panel" tabindex="0">×</button>
+			</div>
+			<p>
+				The tall, slender <span class="highlight">Collins glass</span> is traditional for Japanese Highballs. 
+				Its narrow profile preserves carbonation and creates an elegant presentation.
+			</p>
+			<p>
+				Many Japanese bars freeze their glasses beforehand, creating a frosty exterior that 
+				keeps your Highball perfectly chilled from the first sip to the last.
+			</p>
+		</div>
+
+		<div id="panelVideo" class="hotspot-panel" role="dialog" aria-labelledby="panelVideoTitle" aria-modal="true">
+			<div class="hotspot-panel-header">
+				<h2 id="panelVideoTitle">The Ritual</h2>
+				<button class="hotspot-panel-close" aria-label="Close panel" tabindex="0">×</button>
+			</div>
+			<p>
+				Watch how Japanese bartenders craft the <span class="highlight">perfect Toki Highball</span>—a ritual 
+				of precision and care.
+			</p>
+			<div class="video-placeholder">
+				<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+					<path d="M8 5v14l11-7z"/>
+				</svg>
+				<span>Video content placeholder</span>
+			</div>
+		</div>
+
+		<!-- Hotspot Label Tooltip -->
+		<div id="hotspotLabel" class="hotspot-label"></div>
 
 		<script type="importmap">
 			{
@@ -250,6 +470,12 @@
 			let glassOuter, glassInner;
 			const mouse = new THREE.Vector2();
 
+			// Hotspot system
+			const hotspots = [];
+			let activePanel = null;
+			const hotspotLabel = document.getElementById('hotspotLabel');
+			const hotspotOverlay = document.getElementById('hotspotOverlay');
+
 			// Bubble system
 			let bubbleGeometry, bubbleMaterial;
 			let bubbleInstances = [];
@@ -258,7 +484,7 @@
 
 			// Orange slice
 			let orangeSlice;
-			let orangeSliceVisible = true;
+			let orangeSliceVisible = false;
 
 			// Ice cubes (simple floating objects)
 			const iceObjects = [];
@@ -266,7 +492,7 @@
 				quantity: 3,
 				maxQuantity: 6,
 				baseSize: 0.12,
-				sizeMultiplier: 1.0,
+				sizeMultiplier: 3.0,
 			};
 
 			// Fizz configuration
@@ -295,20 +521,21 @@
 			function createIceMaterial() {
 
 				return new THREE.MeshPhysicalMaterial({
-					color: 0xd8dde3,
+					color: 0xe8eef5,
 					metalness: 0.0,
-					roughness: 0.08,
-					transmission: 0.75,
-					opacity: 1,
+					roughness: 0.15,
+					transmission: 0.35,
+					opacity: 0.92,
 					transparent: true,
-					thickness: 0.6,
-					clearcoat: 0.8,
-					clearcoatRoughness: 0.15,
+					thickness: 1.2,
+					clearcoat: 0.6,
+					clearcoatRoughness: 0.25,
 					ior: 1.31,
-					envMapIntensity: 1.5,
-					reflectivity: 0.3,
-					attenuationColor: new THREE.Color(0x9eaab8),
-					attenuationDistance: 0.4,
+					envMapIntensity: 1.2,
+					reflectivity: 0.4,
+					attenuationColor: new THREE.Color(0xc8d8e8),
+					attenuationDistance: 0.25,
+					depthWrite: true,
 				});
 
 			}
@@ -345,33 +572,109 @@
 
 			}
 
+			function getIceHeight(ice) {
+
+				const size = getCurrentIceSize();
+				const scale = ice.mesh.scale.x;
+				// Ice height is 2.2 * size * scale
+				return size * 2.2 * scale * 0.5;
+
+			}
+
+			function findNonOverlappingPosition(size) {
+
+				const collisionRadiusXZ = size * 1.8 * 0.55;
+				const collisionRadiusY = size * 2.2 * 0.5;
+				const maxAttempts = 80;
+				const boundsRadius = LIQUID_RADIUS - size * 2 - 0.1;
+				
+				// Base Y position (floating at surface)
+				const baseFloatY = LIQUID_SURFACE_Y - size * 0.8;
+
+				for (let attempt = 0; attempt < maxAttempts; attempt++) {
+
+					const angle = Math.random() * Math.PI * 2;
+					const radius = Math.random() * boundsRadius;
+					const testX = Math.cos(angle) * radius;
+					const testZ = Math.sin(angle) * radius;
+					let testY = baseFloatY;
+
+					let overlapping = false;
+					let maxStackY = baseFloatY;
+
+					// Check against existing ice cubes
+					for (const existingIce of iceObjects) {
+
+						const existingRadiusXZ = getIceCollisionRadius(existingIce);
+						const existingRadiusY = getIceHeight(existingIce);
+						
+						const dx = testX - existingIce.baseX;
+						const dz = testZ - existingIce.baseZ;
+						const distXZ = Math.sqrt(dx * dx + dz * dz);
+						const minDistXZ = collisionRadiusXZ + existingRadiusXZ;
+
+						// If horizontally overlapping, check if we need to stack
+						if (distXZ < minDistXZ * 0.9) {
+
+							// Calculate the Y position needed to stack on top
+							const stackY = existingIce.baseY + existingRadiusY + collisionRadiusY + 0.02;
+							maxStackY = Math.max(maxStackY, stackY);
+
+						}
+
+					}
+
+					testY = maxStackY;
+
+					// Verify the stacked position doesn't exceed glass height
+					const maxY = LIQUID_SURFACE_Y + 0.6; // Allow some stacking above liquid
+					if (testY < maxY) {
+
+						return { x: testX, z: testZ, y: testY };
+
+					}
+
+				}
+
+				// Fallback: return a position anyway, collision system will handle it
+				const angle = Math.random() * Math.PI * 2;
+				const radius = Math.random() * boundsRadius;
+				return { 
+					x: Math.cos(angle) * radius, 
+					z: Math.sin(angle) * radius, 
+					y: baseFloatY 
+				};
+
+			}
+
 			function spawnIce() {
 
 				if (iceObjects.length >= iceConfig.maxQuantity) return;
 
 				const size = getCurrentIceSize();
-				const angle = Math.random() * Math.PI * 2;
-				const radius = Math.random() * (LIQUID_RADIUS - size * 2 - 0.15);
+				const position = findNonOverlappingPosition(size);
 
 				const mesh = createIceMesh(size);
 
 				// Each ice cube gets unique animation parameters
 				const iceData = {
 					mesh,
-					baseX: Math.cos(angle) * radius,
-					baseZ: Math.sin(angle) * radius,
+					baseX: position.x,
+					baseY: position.y,
+					baseZ: position.z,
+					velocityY: 0,
 					phaseX: Math.random() * Math.PI * 2,
 					phaseZ: Math.random() * Math.PI * 2,
 					phaseY: Math.random() * Math.PI * 2,
 					rotationSpeed: (Math.random() - 0.5) * 0.3,
 					bobSpeed: 0.8 + Math.random() * 0.4,
-					bobAmount: 0.015 + Math.random() * 0.01,
-					driftAmount: 0.02 + Math.random() * 0.02,
+					bobAmount: 0.01 + Math.random() * 0.008,
+					driftAmount: 0.015 + Math.random() * 0.015,
 				};
 
 				mesh.position.set(
 					iceData.baseX,
-					LIQUID_SURFACE_Y - size * 0.8,
+					iceData.baseY,
 					iceData.baseZ
 				);
 
@@ -429,40 +732,165 @@
 
 			}
 
+			function getIceCollisionRadius(ice) {
+
+				const size = getCurrentIceSize();
+				const scale = ice.mesh.scale.x;
+				// Use the larger dimension (1.8 * size * scale) as collision radius
+				return size * 1.8 * scale * 0.5;
+
+			}
+
+			function resolveIceCollisions() {
+
+				const repulsionStrength = 0.08;
+				const minDistance = 0.01;
+				const size = getCurrentIceSize();
+				const baseFloatY = LIQUID_SURFACE_Y - size * 0.8;
+
+				for (let i = 0; i < iceObjects.length; i++) {
+
+					const iceA = iceObjects[i];
+					const radiusA = getIceCollisionRadius(iceA);
+					const heightA = getIceHeight(iceA);
+
+					for (let j = i + 1; j < iceObjects.length; j++) {
+
+						const iceB = iceObjects[j];
+						const radiusB = getIceCollisionRadius(iceB);
+						const heightB = getIceHeight(iceB);
+
+						const dx = iceB.baseX - iceA.baseX;
+						const dy = iceB.baseY - iceA.baseY;
+						const dz = iceB.baseZ - iceA.baseZ;
+						
+						const distXZ = Math.sqrt(dx * dx + dz * dz);
+						const minDistXZ = radiusA + radiusB;
+						const minDistY = heightA + heightB;
+
+						// Check if cubes overlap in XZ plane
+						const overlapXZ = minDistXZ - distXZ;
+						const overlapY = minDistY - Math.abs(dy);
+
+						// Only process if there's actual 3D overlap
+						if (overlapXZ > 0 && overlapY > 0) {
+
+							// Determine if we should push horizontally or vertically
+							// Push in the direction of least resistance
+							if (overlapXZ < overlapY && distXZ > minDistance) {
+
+								// Push horizontally
+								const pushX = (dx / distXZ) * overlapXZ * 0.5 * repulsionStrength;
+								const pushZ = (dz / distXZ) * overlapXZ * 0.5 * repulsionStrength;
+
+								iceA.baseX -= pushX;
+								iceA.baseZ -= pushZ;
+								iceB.baseX += pushX;
+								iceB.baseZ += pushZ;
+
+							} else {
+
+								// Push vertically (stack)
+								const pushY = overlapY * 0.5 * repulsionStrength;
+								
+								if (iceA.baseY < iceB.baseY) {
+
+									// A is below B, push B up
+									iceB.baseY += pushY;
+									iceA.baseY -= pushY * 0.3;
+
+								} else {
+
+									// B is below A, push A up
+									iceA.baseY += pushY;
+									iceB.baseY -= pushY * 0.3;
+
+								}
+
+							}
+
+						}
+
+					}
+
+					// Apply buoyancy - ice wants to float at surface level
+					const buoyancyTarget = baseFloatY;
+					const buoyancyStrength = 0.02;
+					
+					if (iceA.baseY < buoyancyTarget) {
+
+						iceA.baseY += (buoyancyTarget - iceA.baseY) * buoyancyStrength;
+
+					}
+
+					// Keep within glass bounds after collision resolution
+					const boundsRadius = LIQUID_RADIUS - size * 1.5 - 0.05;
+					const currentDist = Math.sqrt(iceA.baseX * iceA.baseX + iceA.baseZ * iceA.baseZ);
+
+					if (currentDist > boundsRadius) {
+
+						const scaleXZ = boundsRadius / currentDist;
+						iceA.baseX *= scaleXZ;
+						iceA.baseZ *= scaleXZ;
+
+					}
+
+					// Cap maximum height
+					const maxY = LIQUID_SURFACE_Y + 0.8;
+					if (iceA.baseY > maxY) {
+
+						iceA.baseY = maxY;
+
+					}
+
+				}
+
+			}
+
 			function updateIceAnimation(time) {
 
 				const size = getCurrentIceSize();
 
+				// Resolve collisions multiple times per frame for stability
+				for (let iter = 0; iter < 3; iter++) {
+
+					resolveIceCollisions();
+
+				}
+
 				for (const ice of iceObjects) {
 
-					// Gentle bobbing motion
+					// Gentle bobbing motion (reduced for stacked ice)
 					const bobY = Math.sin(time * ice.bobSpeed + ice.phaseY) * ice.bobAmount;
 
-					// Slight drift in X and Z
+					// Slight drift in X and Z (reduced to let collision handle positioning)
 					const driftX = Math.sin(time * 0.3 + ice.phaseX) * ice.driftAmount;
 					const driftZ = Math.cos(time * 0.25 + ice.phaseZ) * ice.driftAmount;
 
-					// Keep within bounds
+					// Apply position from base + drift
 					let newX = ice.baseX + driftX;
 					let newZ = ice.baseZ + driftZ;
+
+					// Final boundary check
 					const dist = Math.sqrt(newX * newX + newZ * newZ);
+					const maxDist = LIQUID_RADIUS - size * 1.5 - 0.05;
 
-					if (dist > LIQUID_RADIUS - size * 2) {
+					if (dist > maxDist) {
 
-						const boundsScale = (LIQUID_RADIUS - size * 2) / dist;
+						const boundsScale = maxDist / dist;
 						newX *= boundsScale;
 						newZ *= boundsScale;
 
 					}
 
 					ice.mesh.position.x = newX;
-					ice.mesh.position.y = LIQUID_SURFACE_Y - size * 0.8 + bobY;
+					ice.mesh.position.y = ice.baseY + bobY;
 					ice.mesh.position.z = newZ;
 
 					// Gentle rotation
 					ice.mesh.rotation.y += ice.rotationSpeed * 0.016;
-					ice.mesh.rotation.x = Math.sin(time * 0.5 + ice.phaseX) * 0.1;
-					ice.mesh.rotation.z = Math.cos(time * 0.4 + ice.phaseZ) * 0.1;
+					ice.mesh.rotation.x = Math.sin(time * 0.5 + ice.phaseX) * 0.08;
+					ice.mesh.rotation.z = Math.cos(time * 0.4 + ice.phaseZ) * 0.08;
 
 				}
 
@@ -570,6 +998,7 @@
 				orangeSlice = createOrangeSlice();
 				orangeSlice.position.set(0.25, LIQUID_SURFACE_Y + 0.02, 0.15);
 				orangeSlice.renderOrder = 6;
+				orangeSlice.visible = orangeSliceVisible;
 				scene.add(orangeSlice);
 
 			}
@@ -601,6 +1030,257 @@
 					orangeSlice.visible = visible;
 
 				}
+
+			}
+
+			// Hotspot creation
+			function createHotspot(position, label, panelId, color = 0x7ec8e8) {
+
+				const group = new THREE.Group();
+				group.position.copy(position);
+
+				// Inner pulsing dot
+				const dotGeometry = new THREE.SphereGeometry(0.06, 16, 16);
+				const dotMaterial = new THREE.MeshBasicMaterial({
+					color: color,
+					transparent: true,
+					opacity: 0.9,
+				});
+				const dot = new THREE.Mesh(dotGeometry, dotMaterial);
+				group.add(dot);
+
+				// Outer ring
+				const ringGeometry = new THREE.RingGeometry(0.1, 0.14, 32);
+				const ringMaterial = new THREE.MeshBasicMaterial({
+					color: color,
+					transparent: true,
+					opacity: 0.6,
+					side: THREE.DoubleSide,
+				});
+				const ring = new THREE.Mesh(ringGeometry, ringMaterial);
+				ring.lookAt(camera.position);
+				group.add(ring);
+
+				// Pulse ring (animated)
+				const pulseGeometry = new THREE.RingGeometry(0.08, 0.1, 32);
+				const pulseMaterial = new THREE.MeshBasicMaterial({
+					color: color,
+					transparent: true,
+					opacity: 0.5,
+					side: THREE.DoubleSide,
+				});
+				const pulseRing = new THREE.Mesh(pulseGeometry, pulseMaterial);
+				pulseRing.lookAt(camera.position);
+				group.add(pulseRing);
+
+				group.userData = {
+					label: label,
+					panelId: panelId,
+					dot: dot,
+					ring: ring,
+					pulseRing: pulseRing,
+					baseScale: 1,
+					hovered: false,
+				};
+
+				scene.add(group);
+				hotspots.push(group);
+
+				return group;
+
+			}
+
+			function initHotspots() {
+
+				// Whisky hotspot - at the liquid level
+				createHotspot(
+					new THREE.Vector3(0.9, 1.5, 0.4),
+					'About Toki Whisky',
+					'panelWhisky',
+					0xdbb85c
+				);
+
+				// Ice hotspot - near the ice cubes
+				createHotspot(
+					new THREE.Vector3(-0.5, 2.2, 0.7),
+					'The Perfect Ice',
+					'panelIce',
+					0xaaddff
+				);
+
+				// Glass hotspot - on the glass rim
+				createHotspot(
+					new THREE.Vector3(0.6, 2.8, -0.5),
+					'Highball Glass',
+					'panelGlass',
+					0x7ec8e8
+				);
+
+				// Video hotspot - near the base
+				createHotspot(
+					new THREE.Vector3(-0.8, 0.6, -0.6),
+					'Watch the Ritual',
+					'panelVideo',
+					0xff9f43
+				);
+
+			}
+
+			function updateHotspots(time) {
+
+				for (const hotspot of hotspots) {
+
+					const { ring, pulseRing, hovered } = hotspot.userData;
+
+					// Make rings face camera
+					ring.lookAt(camera.position);
+					pulseRing.lookAt(camera.position);
+
+					// Pulse animation
+					const pulse = 1 + Math.sin(time * 3) * 0.15;
+					pulseRing.scale.set(pulse, pulse, pulse);
+					pulseRing.material.opacity = 0.5 * (1 - (pulse - 1) / 0.15 * 0.5);
+
+					// Hover effect
+					const targetScale = hovered ? 1.3 : 1;
+					hotspot.userData.baseScale += (targetScale - hotspot.userData.baseScale) * 0.1;
+					hotspot.scale.setScalar(hotspot.userData.baseScale);
+
+				}
+
+			}
+
+			function checkHotspotHover() {
+
+				raycaster.setFromCamera(mouse, camera);
+
+				let foundHover = false;
+
+				for (const hotspot of hotspots) {
+
+					const intersects = raycaster.intersectObject(hotspot, true);
+
+					if (intersects.length > 0 && intersects[0].distance < 10) {
+
+						hotspot.userData.hovered = true;
+						foundHover = true;
+
+						// Show label
+						const screenPos = hotspot.position.clone().project(camera);
+						const x = (screenPos.x * 0.5 + 0.5) * window.innerWidth;
+						const y = (-screenPos.y * 0.5 + 0.5) * window.innerHeight;
+
+						hotspotLabel.textContent = hotspot.userData.label;
+						hotspotLabel.style.left = x + 'px';
+						hotspotLabel.style.top = (y - 50) + 'px';
+						hotspotLabel.classList.add('visible');
+
+						renderer.domElement.style.cursor = 'pointer';
+
+					} else {
+
+						hotspot.userData.hovered = false;
+
+					}
+
+				}
+
+				if (!foundHover) {
+
+					hotspotLabel.classList.remove('visible');
+					renderer.domElement.style.cursor = 'grab';
+
+				}
+
+			}
+
+			function checkHotspotClick() {
+
+				raycaster.setFromCamera(mouse, camera);
+
+				for (const hotspot of hotspots) {
+
+					const intersects = raycaster.intersectObject(hotspot, true);
+
+					if (intersects.length > 0 && intersects[0].distance < 10) {
+
+						openPanel(hotspot.userData.panelId);
+						return true;
+
+					}
+
+				}
+
+				return false;
+
+			}
+
+			function openPanel(panelId) {
+
+				// Close any open panel first
+				closePanel();
+
+				const panel = document.getElementById(panelId);
+				if (panel) {
+
+					activePanel = panel;
+					panel.classList.add('active');
+					hotspotOverlay.classList.add('active');
+					hotspotLabel.classList.remove('visible');
+
+					// Focus trap for accessibility
+					const closeBtn = panel.querySelector('.hotspot-panel-close');
+					if (closeBtn) closeBtn.focus();
+
+				}
+
+			}
+
+			function closePanel() {
+
+				if (activePanel) {
+
+					activePanel.classList.remove('active');
+					activePanel = null;
+
+				}
+
+				hotspotOverlay.classList.remove('active');
+
+			}
+
+			function setupPanelControls() {
+
+				// Close buttons
+				document.querySelectorAll('.hotspot-panel-close').forEach(btn => {
+
+					btn.addEventListener('click', closePanel);
+					btn.addEventListener('keydown', (e) => {
+
+						if (e.key === 'Enter' || e.key === ' ') {
+
+							e.preventDefault();
+							closePanel();
+
+						}
+
+					});
+
+				});
+
+				// Overlay click to close
+				hotspotOverlay.addEventListener('click', closePanel);
+
+				// Escape key to close
+				document.addEventListener('keydown', (e) => {
+
+					if (e.key === 'Escape' && activePanel) {
+
+						closePanel();
+
+					}
+
+				});
 
 			}
 
@@ -791,7 +1471,8 @@
 				pmremGenerator.dispose();
 
 				camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 100);
-				camera.position.set(0, 2.0, 4.5);
+				// Start zoomed out to max distance
+				camera.position.set(0, 3.5, 8);
 				camera.lookAt(0, 1.2, 0);
 
 				// Bright ambient lighting for light scene
@@ -841,6 +1522,9 @@
 				// Spawn orange slice
 				spawnOrangeSlice();
 
+				// Initialize hotspots
+				initHotspots();
+
 				controls = new OrbitControls(camera, renderer.domElement);
 				controls.enableDamping = true;
 				controls.dampingFactor = 0.05;
@@ -856,6 +1540,7 @@
 				window.addEventListener('resize', onWindowResize);
 
 				setupControls();
+				setupPanelControls();
 
 				renderer.setAnimationLoop(animate);
 
@@ -1094,8 +1779,6 @@
 
 				const iceMinus = document.getElementById('iceMinus');
 				const icePlus = document.getElementById('icePlus');
-				const iceSizeSlider = document.getElementById('iceSizeSlider');
-				const iceSizeValue = document.getElementById('iceSizeValue');
 				const fizzSlider = document.getElementById('fizzSlider');
 				const fizzValue = document.getElementById('fizzValue');
 				const sliceToggle = document.getElementById('sliceToggle');
@@ -1109,14 +1792,6 @@
 				const handleIcePlus = () => {
 
 					setIceQuantity(iceConfig.quantity + 1);
-
-				};
-
-				const handleIceSizeChange = () => {
-
-					iceConfig.sizeMultiplier = parseFloat(iceSizeSlider.value) / 100;
-					iceSizeValue.textContent = iceSizeSlider.value + '%';
-					updateAllIceSizes();
 
 				};
 
@@ -1140,7 +1815,6 @@
 
 				iceMinus.addEventListener('click', handleIceMinus);
 				icePlus.addEventListener('click', handleIcePlus);
-				iceSizeSlider.addEventListener('input', handleIceSizeChange);
 				fizzSlider.addEventListener('input', handleFizzChange);
 				sliceToggle.addEventListener('click', handleSliceToggle);
 
@@ -1166,12 +1840,17 @@
 			function onPointerMove(event) {
 
 				setMouseFromEvent(event);
+				checkHotspotHover();
 
 			}
 
 			function onPointerDown(event) {
 
 				setMouseFromEvent(event);
+
+				// Check hotspot click first
+				if (checkHotspotClick()) return;
+
 				triggerRipple();
 
 			}
@@ -1213,6 +1892,7 @@
 				updateBubbles(deltaTime);
 				updateIceAnimation(elapsedTime);
 				updateOrangeSliceAnimation(elapsedTime);
+				updateHotspots(elapsedTime);
 
 				controls.update();
 				renderer.render(scene, camera);
