@@ -501,6 +501,7 @@
 		import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
 		import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';
 		import { setupLights, updateLightHelpers, toggleHelpers, createLightGUI } from './lights-config.js';
+		import { liquidConfig, applyLiquidConfig } from './liquid-config.js';
 
 		let renderer, scene, camera, controls;
 		let liquidSurface, liquidBody;
@@ -510,6 +511,7 @@
 		let transformControls; // Gizmos for dragging lights
 		let floor = null; // Floor mesh reference
 		let glassModelMaterial = null; // Glass model material reference
+		let iceCubeMaterial = null; // Ice cube material reference (for GUI controls)
 			let raycaster;
 			let waterPlane;
 			let glassOuter, glassInner, glassBottom;
@@ -574,18 +576,31 @@
 
 			function createIceMaterial() {
 
-				// Use MeshStandardMaterial instead of transmission-based material
-				// to avoid masking/transparency sorting issues
-				return new THREE.MeshStandardMaterial({
+				// Use MeshPhysicalMaterial for realistic ice with transmission/refraction like glass
+				const material = new THREE.MeshPhysicalMaterial({
 					color: 0xd8e4f0,
-					metalness: 0.1,
-					roughness: 0.2,
+					metalness: 0.0,
+					roughness: 0.1,
+					transmission: 0.7,      // Moderate transmission - visible but transparent
+					opacity: 0.85,         // Slightly transparent for visibility
 					transparent: true,
-					opacity: 0.75,
-					envMapIntensity: 0.8,
+					thickness: 0.3,         // Ice thickness for refraction calculation
+					ior: 1.31,              // Index of refraction for ice (slightly less than glass)
+					clearcoat: 0.8,         // Glossy clear coat layer
+					clearcoatRoughness: 0.2,
+					envMapIntensity: 1.2,
 					side: THREE.FrontSide,
-					depthWrite: true,
+					depthWrite: true,       // Enable depth write for better visibility
+					emissive: 0x000000,
+					emissiveIntensity: 0,
 				});
+				
+				// Store reference for GUI controls
+				if (!iceCubeMaterial) {
+					iceCubeMaterial = material;
+				}
+				
+				return material;
 
 			}
 
@@ -601,13 +616,17 @@
 
 				// Add inner frosted core for realism
 				const innerGeometry = new THREE.BoxGeometry(size * 1.4, size * 1.8, size * 1.4);
-				const innerMaterial = new THREE.MeshStandardMaterial({
+				const innerMaterial = new THREE.MeshPhysicalMaterial({
 					color: 0xffffff,
 					metalness: 0.0,
 					roughness: 0.9,
+					transmission: 0.4,
+					opacity: 0.5,
 					transparent: true,
-					opacity: 0.35,
+					thickness: 0.2,
+					ior: 1.31,
 					side: THREE.FrontSide,
+					depthWrite: true,
 				});
 				const innerMesh = new THREE.Mesh(innerGeometry, innerMaterial);
 				innerMesh.renderOrder = 2;
@@ -637,6 +656,13 @@
 						iceCubeGLBModel = gltf.scene;
 						// Store the original model for cloning
 						console.log('Ice cube GLB model loaded successfully');
+						
+						// Extract material reference from GLB model
+						iceCubeGLBModel.traverse((child) => {
+							if (child.isMesh && child.material && !iceCubeMaterial) {
+								iceCubeMaterial = child.material;
+							}
+						});
 						
 						// If ice cubes haven't been spawned yet, they'll use GLB when spawned
 						// Otherwise, replace all procedural ice cubes with GLB models
@@ -672,6 +698,43 @@
 											child.castShadow = true;
 											child.receiveShadow = true;
 											child.renderOrder = 3;
+											
+											// Apply ice material with transmission properties
+											if (child.material) {
+												// Convert to MeshPhysicalMaterial if not already
+												if (!(child.material instanceof THREE.MeshPhysicalMaterial)) {
+													const iceMat = new THREE.MeshPhysicalMaterial({
+														color: child.material.color || 0xd8e4f0,
+														metalness: child.material.metalness !== undefined ? child.material.metalness : 0.0,
+														roughness: child.material.roughness !== undefined ? child.material.roughness : 0.1,
+														transmission: 0.7,
+														opacity: 0.85,
+														transparent: true,
+														thickness: 0.3,
+														ior: 1.31,
+														clearcoat: 0.8,
+														clearcoatRoughness: 0.2,
+														envMapIntensity: child.material.envMapIntensity || 1.2,
+														side: child.material.side || THREE.FrontSide,
+														depthWrite: true,
+													});
+													child.material = iceMat;
+												} else {
+													// Update existing MeshPhysicalMaterial with ice defaults
+													if (child.material.transmission === undefined) child.material.transmission = 0.7;
+													if (child.material.ior === undefined) child.material.ior = 1.31;
+													if (child.material.thickness === undefined) child.material.thickness = 0.3;
+													if (child.material.clearcoat === undefined) child.material.clearcoat = 0.8;
+													if (child.material.clearcoatRoughness === undefined) child.material.clearcoatRoughness = 0.2;
+													if (child.material.opacity === undefined || child.material.opacity === 1) child.material.opacity = 0.85;
+													child.material.depthWrite = true;
+												}
+												
+												// Store material reference for GUI controls (use first mesh material)
+												if (!iceCubeMaterial) {
+													iceCubeMaterial = child.material;
+												}
+											}
 										}
 									});
 									
@@ -688,6 +751,15 @@
 									console.log(`Replaced procedural ice cube ${index} with GLB model`);
 								}
 							});
+							
+							// Create ice cube GUI if not already created
+							if (gui && iceObjects.length > 0) {
+								// Check if GUI already has ice cube folder
+								const existingFolder = gui.children.find(child => child._title === 'Ice Cube Material');
+								if (!existingFolder) {
+									createIceCubeGUI(gui);
+								}
+							}
 						}
 					},
 					(progress) => {
@@ -789,12 +861,48 @@
 					const avgScale = (scaleX + scaleY + scaleZ) / 3;
 					mesh.scale.set(avgScale, avgScale, avgScale);
 					
-					// Ensure all meshes in the GLB have proper settings
+					// Ensure all meshes in the GLB have proper settings and apply ice material
 					mesh.traverse((child) => {
 						if (child.isMesh) {
 							child.castShadow = true;
 							child.receiveShadow = true;
 							child.renderOrder = 3;
+							
+							// Apply ice material with transmission properties
+							if (child.material) {
+								// Convert to MeshPhysicalMaterial if not already
+								if (!(child.material instanceof THREE.MeshPhysicalMaterial)) {
+													const iceMat = new THREE.MeshPhysicalMaterial({
+														color: child.material.color || 0xd8e4f0,
+														metalness: child.material.metalness !== undefined ? child.material.metalness : 0.0,
+														roughness: child.material.roughness !== undefined ? child.material.roughness : 0.1,
+														transmission: 0.7,
+														opacity: 0.85,
+														transparent: true,
+														thickness: 0.3,
+														ior: 1.31,
+														clearcoat: 0.8,
+														clearcoatRoughness: 0.2,
+														envMapIntensity: child.material.envMapIntensity || 1.2,
+														side: child.material.side || THREE.FrontSide,
+														depthWrite: true,
+													});
+									child.material = iceMat;
+								} else {
+									// Update existing MeshPhysicalMaterial with ice defaults
+									if (child.material.transmission === undefined) child.material.transmission = 0.9;
+									if (child.material.ior === undefined) child.material.ior = 1.31;
+									if (child.material.thickness === undefined) child.material.thickness = 0.5;
+									if (child.material.clearcoat === undefined) child.material.clearcoat = 1.0;
+									if (child.material.clearcoatRoughness === undefined) child.material.clearcoatRoughness = 0.1;
+									child.material.depthWrite = false;
+								}
+								
+								// Store material reference for GUI controls (use first mesh material)
+								if (!iceCubeMaterial) {
+									iceCubeMaterial = child.material;
+								}
+							}
 						}
 					});
 					
@@ -1822,6 +1930,407 @@
 			glassFolder.close();
 		}
 
+		// Create ice cube material GUI controls
+		function createIceCubeGUI(gui) {
+			// Get material from first ice cube if available
+			if (iceObjects.length > 0 && iceObjects[0].mesh) {
+				// Try to get material from GLB model or procedural mesh
+				let material = null;
+				iceObjects[0].mesh.traverse((child) => {
+					if (child.isMesh && child.material && !material) {
+						material = child.material;
+					}
+				});
+				
+				// Fallback to stored material reference
+				if (!material) {
+					material = iceCubeMaterial;
+				}
+				
+				if (!material) return;
+				
+				const iceFolder = gui.addFolder('Ice Cube Material');
+				
+				const iceSettings = {
+					color: '#' + material.color.getHexString(),
+					roughness: material.roughness,
+					metalness: material.metalness,
+					opacity: material.opacity,
+					transmission: material.transmission !== undefined ? material.transmission : 0,
+					ior: material.ior !== undefined ? material.ior : 1.5,
+					thickness: material.thickness !== undefined ? material.thickness : 0,
+					clearcoat: material.clearcoat !== undefined ? material.clearcoat : 0,
+					clearcoatRoughness: material.clearcoatRoughness !== undefined ? material.clearcoatRoughness : 0,
+					envMapIntensity: material.envMapIntensity || 1.0,
+					emissive: '#' + (material.emissive ? material.emissive.getHexString() : '000000'),
+					emissiveIntensity: material.emissiveIntensity || 0,
+					side: material.side === THREE.DoubleSide ? 'Double' : (material.side === THREE.BackSide ? 'Back' : 'Front'),
+					depthWrite: material.depthWrite,
+					transparent: material.transparent,
+				};
+
+				// Basic Properties
+				const basicFolder = iceFolder.addFolder('Basic');
+				basicFolder.addColor(iceSettings, 'color').name('Color').onChange((value) => {
+					// Update all ice cube materials
+					iceObjects.forEach((ice) => {
+						ice.mesh.traverse((child) => {
+							if (child.isMesh && child.material) {
+								if (Array.isArray(child.material)) {
+									child.material.forEach(mat => mat.color.set(value));
+								} else {
+									child.material.color.set(value);
+								}
+							}
+						});
+					});
+				});
+				basicFolder.add(iceSettings, 'roughness', 0, 1, 0.01).name('Roughness').onChange((value) => {
+					iceObjects.forEach((ice) => {
+						ice.mesh.traverse((child) => {
+							if (child.isMesh && child.material) {
+								if (Array.isArray(child.material)) {
+									child.material.forEach(mat => mat.roughness = value);
+								} else {
+									child.material.roughness = value;
+								}
+							}
+						});
+					});
+				});
+				basicFolder.add(iceSettings, 'metalness', 0, 1, 0.01).name('Metalness').onChange((value) => {
+					iceObjects.forEach((ice) => {
+						ice.mesh.traverse((child) => {
+							if (child.isMesh && child.material) {
+								if (Array.isArray(child.material)) {
+									child.material.forEach(mat => mat.metalness = value);
+								} else {
+									child.material.metalness = value;
+								}
+							}
+						});
+					});
+				});
+				basicFolder.add(iceSettings, 'opacity', 0, 1, 0.01).name('Opacity').onChange((value) => {
+					iceObjects.forEach((ice) => {
+						ice.mesh.traverse((child) => {
+							if (child.isMesh && child.material) {
+								if (Array.isArray(child.material)) {
+									child.material.forEach(mat => mat.opacity = value);
+								} else {
+									child.material.opacity = value;
+								}
+							}
+						});
+					});
+				});
+				basicFolder.close();
+
+				// Transmission & Refraction
+				const transmissionFolder = iceFolder.addFolder('Transmission & Refraction');
+				transmissionFolder.add(iceSettings, 'transmission', 0, 1, 0.01).name('Transmission').onChange((value) => {
+					iceObjects.forEach((ice) => {
+						ice.mesh.traverse((child) => {
+							if (child.isMesh && child.material) {
+								if (Array.isArray(child.material)) {
+									child.material.forEach(mat => {
+										if (mat.transmission !== undefined) mat.transmission = value;
+									});
+								} else {
+									if (child.material.transmission !== undefined) child.material.transmission = value;
+								}
+							}
+						});
+					});
+				});
+				transmissionFolder.add(iceSettings, 'ior', 1, 2.5, 0.01).name('IOR').onChange((value) => {
+					iceObjects.forEach((ice) => {
+						ice.mesh.traverse((child) => {
+							if (child.isMesh && child.material) {
+								if (Array.isArray(child.material)) {
+									child.material.forEach(mat => {
+										if (mat.ior !== undefined) mat.ior = value;
+									});
+								} else {
+									if (child.material.ior !== undefined) child.material.ior = value;
+								}
+							}
+						});
+					});
+				});
+				transmissionFolder.add(iceSettings, 'thickness', 0, 2, 0.1).name('Thickness').onChange((value) => {
+					iceObjects.forEach((ice) => {
+						ice.mesh.traverse((child) => {
+							if (child.isMesh && child.material) {
+								if (Array.isArray(child.material)) {
+									child.material.forEach(mat => {
+										if (mat.thickness !== undefined) mat.thickness = value;
+									});
+								} else {
+									if (child.material.thickness !== undefined) child.material.thickness = value;
+								}
+							}
+						});
+					});
+				});
+				transmissionFolder.close();
+
+				// Clearcoat
+				const clearcoatFolder = iceFolder.addFolder('Clearcoat');
+				clearcoatFolder.add(iceSettings, 'clearcoat', 0, 1, 0.01).name('Clearcoat').onChange((value) => {
+					iceObjects.forEach((ice) => {
+						ice.mesh.traverse((child) => {
+							if (child.isMesh && child.material) {
+								if (Array.isArray(child.material)) {
+									child.material.forEach(mat => {
+										if (mat.clearcoat !== undefined) mat.clearcoat = value;
+									});
+								} else {
+									if (child.material.clearcoat !== undefined) child.material.clearcoat = value;
+								}
+							}
+						});
+					});
+				});
+				clearcoatFolder.add(iceSettings, 'clearcoatRoughness', 0, 1, 0.01).name('Clearcoat Roughness').onChange((value) => {
+					iceObjects.forEach((ice) => {
+						ice.mesh.traverse((child) => {
+							if (child.isMesh && child.material) {
+								if (Array.isArray(child.material)) {
+									child.material.forEach(mat => {
+										if (mat.clearcoatRoughness !== undefined) mat.clearcoatRoughness = value;
+									});
+								} else {
+									if (child.material.clearcoatRoughness !== undefined) child.material.clearcoatRoughness = value;
+								}
+							}
+						});
+					});
+				});
+				clearcoatFolder.close();
+
+				// Emissive Properties
+				const emissiveFolder = iceFolder.addFolder('Emissive');
+				emissiveFolder.addColor(iceSettings, 'emissive').name('Emissive Color').onChange((value) => {
+					iceObjects.forEach((ice) => {
+						ice.mesh.traverse((child) => {
+							if (child.isMesh && child.material) {
+								if (Array.isArray(child.material)) {
+									child.material.forEach(mat => {
+										if (mat.emissive) mat.emissive.set(value);
+									});
+								} else {
+									if (child.material.emissive) child.material.emissive.set(value);
+								}
+							}
+						});
+					});
+				});
+				emissiveFolder.add(iceSettings, 'emissiveIntensity', 0, 2, 0.01).name('Emissive Intensity').onChange((value) => {
+					iceObjects.forEach((ice) => {
+						ice.mesh.traverse((child) => {
+							if (child.isMesh && child.material) {
+								if (Array.isArray(child.material)) {
+									child.material.forEach(mat => {
+										if (mat.emissiveIntensity !== undefined) mat.emissiveIntensity = value;
+									});
+								} else {
+									if (child.material.emissiveIntensity !== undefined) child.material.emissiveIntensity = value;
+								}
+							}
+						});
+					});
+				});
+				emissiveFolder.close();
+
+				// Environment & Rendering
+				const envFolder = iceFolder.addFolder('Environment & Rendering');
+				envFolder.add(iceSettings, 'envMapIntensity', 0, 3, 0.1).name('Reflection Intensity').onChange((value) => {
+					iceObjects.forEach((ice) => {
+						ice.mesh.traverse((child) => {
+							if (child.isMesh && child.material) {
+								if (Array.isArray(child.material)) {
+									child.material.forEach(mat => {
+										if (mat.envMapIntensity !== undefined) mat.envMapIntensity = value;
+									});
+								} else {
+									if (child.material.envMapIntensity !== undefined) child.material.envMapIntensity = value;
+								}
+							}
+						});
+					});
+				});
+				envFolder.add(iceSettings, 'side', ['Front', 'Back', 'Double']).name('Side').onChange((value) => {
+					const sideMap = {
+						'Front': THREE.FrontSide,
+						'Back': THREE.BackSide,
+						'Double': THREE.DoubleSide
+					};
+					iceObjects.forEach((ice) => {
+						ice.mesh.traverse((child) => {
+							if (child.isMesh && child.material) {
+								if (Array.isArray(child.material)) {
+									child.material.forEach(mat => {
+										mat.side = sideMap[value];
+										mat.needsUpdate = true;
+									});
+								} else {
+									child.material.side = sideMap[value];
+									child.material.needsUpdate = true;
+								}
+							}
+						});
+					});
+				});
+				envFolder.add(iceSettings, 'depthWrite').name('Depth Write').onChange((value) => {
+					iceObjects.forEach((ice) => {
+						ice.mesh.traverse((child) => {
+							if (child.isMesh && child.material) {
+								if (Array.isArray(child.material)) {
+									child.material.forEach(mat => mat.depthWrite = value);
+								} else {
+									child.material.depthWrite = value;
+								}
+							}
+						});
+					});
+				});
+				envFolder.add(iceSettings, 'transparent').name('Transparent').onChange((value) => {
+					iceObjects.forEach((ice) => {
+						ice.mesh.traverse((child) => {
+							if (child.isMesh && child.material) {
+								if (Array.isArray(child.material)) {
+									child.material.forEach(mat => mat.transparent = value);
+								} else {
+									child.material.transparent = value;
+								}
+							}
+						});
+					});
+				});
+				envFolder.close();
+
+				// Keep folder collapsed by default
+				iceFolder.close();
+			}
+		}
+
+		// Create liquid material GUI controls
+		function createLiquidGUI(gui) {
+			if (!liquidSurface || !liquidBody || !liquidSurface.material || !liquidBody.material) return;
+
+			const liquidFolder = gui.addFolder('Liquid Material');
+			
+			// Surface Material Settings
+			const surfaceFolder = liquidFolder.addFolder('Surface (Top Circle)');
+			const surfaceSettings = {
+				color: '#' + liquidSurface.material.color.getHexString(),
+				roughness: liquidSurface.material.roughness,
+				metalness: liquidSurface.material.metalness,
+				opacity: liquidSurface.material.opacity,
+				emissive: '#' + (liquidSurface.material.emissive ? liquidSurface.material.emissive.getHexString() : '000000'),
+				emissiveIntensity: liquidSurface.material.emissiveIntensity || 0,
+				envMapIntensity: liquidSurface.material.envMapIntensity || 1.0,
+				side: liquidSurface.material.side === THREE.DoubleSide ? 'Double' : (liquidSurface.material.side === THREE.BackSide ? 'Back' : 'Front'),
+				depthWrite: liquidSurface.material.depthWrite,
+				transparent: liquidSurface.material.transparent,
+			};
+
+			surfaceFolder.addColor(surfaceSettings, 'color').name('Color').onChange((value) => {
+				liquidSurface.material.color.set(value);
+			});
+			surfaceFolder.add(surfaceSettings, 'roughness', 0, 1, 0.01).name('Roughness').onChange((value) => {
+				liquidSurface.material.roughness = value;
+			});
+			surfaceFolder.add(surfaceSettings, 'metalness', 0, 1, 0.01).name('Metalness').onChange((value) => {
+				liquidSurface.material.metalness = value;
+			});
+			surfaceFolder.add(surfaceSettings, 'opacity', 0, 1, 0.01).name('Opacity').onChange((value) => {
+				liquidSurface.material.opacity = value;
+			});
+			surfaceFolder.addColor(surfaceSettings, 'emissive').name('Emissive Color').onChange((value) => {
+				if (liquidSurface.material.emissive) liquidSurface.material.emissive.set(value);
+			});
+			surfaceFolder.add(surfaceSettings, 'emissiveIntensity', 0, 2, 0.01).name('Emissive Intensity').onChange((value) => {
+				if (liquidSurface.material.emissiveIntensity !== undefined) liquidSurface.material.emissiveIntensity = value;
+			});
+			surfaceFolder.add(surfaceSettings, 'envMapIntensity', 0, 3, 0.1).name('Reflection Intensity').onChange((value) => {
+				if (liquidSurface.material.envMapIntensity !== undefined) liquidSurface.material.envMapIntensity = value;
+			});
+			surfaceFolder.add(surfaceSettings, 'side', ['Front', 'Back', 'Double']).name('Side').onChange((value) => {
+				const sideMap = {
+					'Front': THREE.FrontSide,
+					'Back': THREE.BackSide,
+					'Double': THREE.DoubleSide
+				};
+				liquidSurface.material.side = sideMap[value];
+				liquidSurface.material.needsUpdate = true;
+			});
+			surfaceFolder.add(surfaceSettings, 'depthWrite').name('Depth Write').onChange((value) => {
+				liquidSurface.material.depthWrite = value;
+			});
+			surfaceFolder.add(surfaceSettings, 'transparent').name('Transparent').onChange((value) => {
+				liquidSurface.material.transparent = value;
+			});
+			surfaceFolder.close();
+
+			// Body Material Settings (Cylinder)
+			const bodyFolder = liquidFolder.addFolder('Body (Cylinder)');
+			const bodySettings = {
+				color: '#' + liquidBody.material.color.getHexString(),
+				roughness: liquidBody.material.roughness,
+				metalness: liquidBody.material.metalness,
+				opacity: liquidBody.material.opacity,
+				emissive: '#' + (liquidBody.material.emissive ? liquidBody.material.emissive.getHexString() : '000000'),
+				emissiveIntensity: liquidBody.material.emissiveIntensity || 0,
+				envMapIntensity: liquidBody.material.envMapIntensity || 1.0,
+				side: liquidBody.material.side === THREE.DoubleSide ? 'Double' : (liquidBody.material.side === THREE.BackSide ? 'Back' : 'Front'),
+				depthWrite: liquidBody.material.depthWrite,
+				transparent: liquidBody.material.transparent,
+			};
+
+			bodyFolder.addColor(bodySettings, 'color').name('Color').onChange((value) => {
+				liquidBody.material.color.set(value);
+			});
+			bodyFolder.add(bodySettings, 'roughness', 0, 1, 0.01).name('Roughness').onChange((value) => {
+				liquidBody.material.roughness = value;
+			});
+			bodyFolder.add(bodySettings, 'metalness', 0, 1, 0.01).name('Metalness').onChange((value) => {
+				liquidBody.material.metalness = value;
+			});
+			bodyFolder.add(bodySettings, 'opacity', 0, 1, 0.01).name('Opacity').onChange((value) => {
+				liquidBody.material.opacity = value;
+			});
+			bodyFolder.addColor(bodySettings, 'emissive').name('Emissive Color').onChange((value) => {
+				if (liquidBody.material.emissive) liquidBody.material.emissive.set(value);
+			});
+			bodyFolder.add(bodySettings, 'emissiveIntensity', 0, 2, 0.01).name('Emissive Intensity').onChange((value) => {
+				if (liquidBody.material.emissiveIntensity !== undefined) liquidBody.material.emissiveIntensity = value;
+			});
+			bodyFolder.add(bodySettings, 'envMapIntensity', 0, 3, 0.1).name('Reflection Intensity').onChange((value) => {
+				if (liquidBody.material.envMapIntensity !== undefined) liquidBody.material.envMapIntensity = value;
+			});
+			bodyFolder.add(bodySettings, 'side', ['Front', 'Back', 'Double']).name('Side').onChange((value) => {
+				const sideMap = {
+					'Front': THREE.FrontSide,
+					'Back': THREE.BackSide,
+					'Double': THREE.DoubleSide
+				};
+				liquidBody.material.side = sideMap[value];
+				liquidBody.material.needsUpdate = true;
+			});
+			bodyFolder.add(bodySettings, 'depthWrite').name('Depth Write').onChange((value) => {
+				liquidBody.material.depthWrite = value;
+			});
+			bodyFolder.add(bodySettings, 'transparent').name('Transparent').onChange((value) => {
+				liquidBody.material.transparent = value;
+			});
+			bodyFolder.close();
+
+			// Keep folder collapsed by default
+			liquidFolder.close();
+		}
+
 		function init() {
 
 			renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -1893,6 +2402,11 @@
 
 			// Spawn orange slice
 			spawnOrangeSlice();
+			
+			// Create ice cube material GUI controls after ice cubes are spawned
+			if (gui && iceObjects.length > 0) {
+				createIceCubeGUI(gui);
+			}
 
 			// Load cube model
 			loadCubeModel();
@@ -1940,6 +2454,11 @@
 			
 			// Glass material controls will be added after model loads
 			// (createGlassGUI is called in loadCubeModel callback)
+			
+			// Add liquid material controls (liquid is already built)
+			if (liquidSurface && liquidBody) {
+				createLiquidGUI(gui);
+			}
 			
 			// Add light controls
 			createLightGUI(gui, lights, scene, transformControls);
@@ -2071,16 +2590,19 @@
 				surfaceGeometry.translate(0, LIQUID_SURFACE_Y, 0);
 
 				const surfaceMaterial = new THREE.MeshStandardMaterial({
-					color: LIQUID_COLOR,
-					metalness: 0.15,
-					roughness: 0.08,
-					transparent: true,
-					opacity: 0.88,
-					emissive: LIQUID_DEEP_COLOR,
-					emissiveIntensity: 0.08,
-					side: THREE.DoubleSide,
-					depthWrite: true,
+					color: liquidConfig.surface.color,
+					metalness: liquidConfig.surface.metalness,
+					roughness: liquidConfig.surface.roughness,
+					transparent: liquidConfig.surface.transparent,
+					opacity: liquidConfig.surface.opacity,
+					emissive: liquidConfig.surface.emissive,
+					emissiveIntensity: liquidConfig.surface.emissiveIntensity,
+					side: liquidConfig.surface.side === 'Double' ? THREE.DoubleSide : (liquidConfig.surface.side === 'Back' ? THREE.BackSide : THREE.FrontSide),
+					depthWrite: liquidConfig.surface.depthWrite,
 				});
+				if (liquidConfig.surface.envMapIntensity !== undefined) {
+					surfaceMaterial.envMapIntensity = liquidConfig.surface.envMapIntensity;
+				}
 
 				surfaceMaterial.onBeforeCompile = (shader) => {
 
@@ -2140,48 +2662,51 @@
 				liquidSurface.renderOrder = 2;
 				scene.add(liquidSurface);
 
-				// Liquid body (cylinder)
+				// Liquid body (tapered - skinnier at bottom, larger at top)
 				const bodyGeometry = new THREE.CylinderGeometry(
-					LIQUID_RADIUS,
-					LIQUID_RADIUS,
+					LIQUID_RADIUS * liquidConfig.geometry.topRadius,      // Top radius (larger)
+					LIQUID_RADIUS * liquidConfig.geometry.bottomRadius,   // Bottom radius (skinnier)
 					LIQUID_HEIGHT,
-					64,
-					1,
+					liquidConfig.geometry.radialSegments,
+					liquidConfig.geometry.heightSegments,
 					true
 				);
 				bodyGeometry.translate(0, LIQUID_BASE_Y + LIQUID_HEIGHT * 0.5, 0);
 
 				const bodyMaterial = new THREE.MeshStandardMaterial({
-					color: LIQUID_COLOR,
-					metalness: 0.1,
-					roughness: 0.12,
-					transparent: true,
-					opacity: 0.75,
-					emissive: LIQUID_DEEP_COLOR,
-					emissiveIntensity: 0.05,
-					side: THREE.DoubleSide,
-					depthWrite: false,
+					color: liquidConfig.body.color,
+					metalness: liquidConfig.body.metalness,
+					roughness: liquidConfig.body.roughness,
+					transparent: liquidConfig.body.transparent,
+					opacity: liquidConfig.body.opacity,
+					emissive: liquidConfig.body.emissive,
+					emissiveIntensity: liquidConfig.body.emissiveIntensity,
+					side: liquidConfig.body.side === 'Double' ? THREE.DoubleSide : (liquidConfig.body.side === 'Back' ? THREE.BackSide : THREE.FrontSide),
+					depthWrite: liquidConfig.body.depthWrite,
 				});
+				if (liquidConfig.body.envMapIntensity !== undefined) {
+					bodyMaterial.envMapIntensity = liquidConfig.body.envMapIntensity;
+				}
 
 				liquidBody = new THREE.Mesh(bodyGeometry, bodyMaterial);
 				liquidBody.renderOrder = 1;
 				scene.add(liquidBody);
 
-				// Liquid bottom
-				const bottomGeometry = new THREE.CircleGeometry(LIQUID_RADIUS, 64);
+				// Liquid bottom (matches bottom radius of tapered cylinder)
+				const bottomGeometry = new THREE.CircleGeometry(LIQUID_RADIUS * liquidConfig.geometry.bottomRadius, 64);
 				bottomGeometry.rotateX(Math.PI * 0.5);
 				bottomGeometry.translate(0, LIQUID_BASE_Y, 0);
 
 				const bottomMaterial = new THREE.MeshStandardMaterial({
-					color: LIQUID_DEEP_COLOR,
-					metalness: 0.1,
-					roughness: 0.2,
-					transparent: true,
-					opacity: 0.7,
-					emissive: 0x8b6914,
-					emissiveIntensity: 0.03,
-					side: THREE.DoubleSide,
-					depthWrite: false,
+					color: liquidConfig.bottom.color,
+					metalness: liquidConfig.bottom.metalness,
+					roughness: liquidConfig.bottom.roughness,
+					transparent: liquidConfig.bottom.transparent,
+					opacity: liquidConfig.bottom.opacity,
+					emissive: liquidConfig.bottom.emissive,
+					emissiveIntensity: liquidConfig.bottom.emissiveIntensity,
+					side: liquidConfig.bottom.side === 'Double' ? THREE.DoubleSide : (liquidConfig.bottom.side === 'Back' ? THREE.BackSide : THREE.FrontSide),
+					depthWrite: liquidConfig.bottom.depthWrite,
 				});
 
 				const liquidBottom = new THREE.Mesh(bottomGeometry, bottomMaterial);

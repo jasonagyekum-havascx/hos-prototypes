@@ -25,7 +25,7 @@ export const lightConfig = {
 		name: 'keyLight',
 		enabled: true,
 		color: 0xffffff,
-		intensity: 2.0,
+		intensity: 0,
 		position: { x: 0, y: 2, z: 6 },  // Moved farther away
 		castShadow: false,
 		helper: false,
@@ -257,12 +257,9 @@ export function toggleHelpers(lights, visible) {
 export function createLightGUI(gui, lights, scene, transformControls) {
 	if (!gui || !lights) return;
 
-	// Settings folder
-	const settingsFolder = gui.addFolder('Light Settings');
-	
+	// Settings object for internal use (no GUI folder)
 	const settings = {
 		selectedLight: null,
-		showHelpers: true,
 		attachGizmo: (light) => {
 			if (light && transformControls) {
 				transformControls.attach(light);
@@ -277,10 +274,6 @@ export function createLightGUI(gui, lights, scene, transformControls) {
 		},
 		gizmoMode: 'translate',
 	};
-
-	settingsFolder.add(settings, 'showHelpers').name('Show Helpers').onChange((value) => {
-		toggleHelpers(lights, value);
-	});
 
 	// Directional Lights
 	if (lights.directional && lights.directional.length > 0) {
