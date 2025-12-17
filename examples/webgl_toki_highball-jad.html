@@ -2587,7 +2587,7 @@
 				const surfaceSegments = 64;
 				const surfaceGeometry = new THREE.CircleGeometry(LIQUID_RADIUS, surfaceSegments);
 				surfaceGeometry.rotateX(-Math.PI * 0.5);
-				surfaceGeometry.translate(0, LIQUID_SURFACE_Y, 0);
+				surfaceGeometry.translate(0, LIQUID_SURFACE_Y - 0.02, 0); // Slightly lower to reduce gap with cylinder
 
 				const surfaceMaterial = new THREE.MeshStandardMaterial({
 					color: liquidConfig.surface.color,
@@ -2630,18 +2630,18 @@
 						// Tilt effect
 						float tilt = dot(transformed.xz, uTilt) * 0.2;
 						
-						// Gentle waves
-						float wave = sin(transformed.x * 4.0 + uTime * 1.5) * 0.012
-						           + sin(transformed.z * 4.5 + uTime * 1.1) * 0.012
-						           + sin((transformed.x + transformed.z) * 3.0 + uTime * 1.8) * 0.008;
+						// Gentle waves (slowed down, reduced amplitude)
+						float wave = sin(transformed.x * 4.0 + uTime * 0.75) * 0.006
+						           + sin(transformed.z * 4.5 + uTime * 0.55) * 0.006
+						           + sin((transformed.x + transformed.z) * 3.0 + uTime * 0.9) * 0.004;
 						
-						// Fizz surface disturbance
-						float fizz = sin(transformed.x * 20.0 + uTime * 5.0) * 0.003 * uFizz
-						           + sin(transformed.z * 22.0 + uTime * 6.0) * 0.003 * uFizz;
+						// Fizz surface disturbance (slowed down, reduced amplitude)
+						float fizz = sin(transformed.x * 20.0 + uTime * 2.5) * 0.0015 * uFizz
+						           + sin(transformed.z * 22.0 + uTime * 3.0) * 0.0015 * uFizz;
 						
-						// Ripple from touch
+						// Ripple from touch (slowed down)
 						float dist = length(transformed.xz - uRippleCenter);
-						float ripple = uRippleStrength * exp(-dist * 3.0) * sin(12.0 * dist - uTime * 5.0);
+						float ripple = uRippleStrength * exp(-dist * 3.0) * sin(12.0 * dist - uTime * 2.5);
 						
 						float totalWave = tilt + wave + fizz + ripple;
 						transformed.y += totalWave;
