@@ -10,7 +10,9 @@ import { initHotspots, updateHotspots, checkHotspotHover, checkHotspotClick, clo
 import { buildLiquid, updateLiquidAnimation, triggerRipple, getLiquidMeshes, getLiquidUniforms } from './liquid-system.js';
 import { spawnIce, updateIceAnimation, loadIceCubeGLB, getIceObjects } from './ice-system.js';
 import { initBubbleSystem, updateBubbles } from './bubble-system.js';
-import { createLiquidGUI, createIceCubeGUI } from './gui.js';
+import { createLiquidGUI, createIceCubeGUI, createGlassGUI } from './gui.js';
+import { loadFloorModel } from './model-floor.js';
+import { loadGlassModel, getGlassModelMaterial } from './model-glass.js';
 import { iceConfig, fizzIntensity } from './constants.js';
 
 let renderer, scene, camera, controls;
@@ -18,7 +20,6 @@ let lights; // Store lights reference for helpers
 let gui; // GUI panel
 let transformControls; // Gizmos for dragging lights
 let floor = null; // Floor mesh reference
-let glassModelMaterial = null; // Glass model material reference
 let raycaster;
 const mouse = new THREE.Vector2();
 
@@ -26,11 +27,7 @@ const mouse = new THREE.Vector2();
 let orangeSlice;
 let orangeSliceVisible = false;
 
-// Cube model
-let cubeModel;
 
-// Floor model
-let floorModel;
 
 // Time tracking
 let elapsedTime = 0;
@@ -190,117 +187,7 @@ function toggleOrangeSlice(visible) {
 	}
 }
 
-// Load cube.glb model
-function loadGlassModel() {
-	const dracoLoader = new DRACOLoader();
-	dracoLoader.setDecoderPath('jsm/libs/draco/gltf/');
 
-	const gltfLoader = new GLTFLoader();
-	gltfLoader.setDRACOLoader(dracoLoader);
-
-	gltfLoader.load(
-		'models/glb/glass-01.glb',
-		(gltf) => {
-			cubeModel = gltf.scene;
-
-			// Use 1:1 scale - no auto-scaling or centering
-			// Model position and scale from Blender will be used directly
-			cubeModel.scale.set(1, 1, 1);
-
-			// Apply realistic glass material using transmission (not just opacity)
-			cubeModel.traverse((child) => {
-				if (child.isMesh) {
-					child.castShadow = true;
-					child.receiveShadow = true;
-					
-					// Use MeshPhysicalMaterial for realistic glass with refraction
-					glassModelMaterial = new THREE.MeshPhysicalMaterial({
-						color: 0xffffff,
-						metalness: 0.2,          // Glass is not metallic
-						roughness: 0,       // Very smooth surface
-						transmission: 0.95,    // HIGH transmission = see-through with refraction (NOT opacity!)
-						opacity: 1,            // Keep at 1 when using transmission
-						transparent: true,
-						thickness: 0,        // Glass thickness for refraction calculation
-						clearcoat: 1.0,        // Glossy clear coat layer
-						clearcoatRoughness: 0, // Perfectly smooth clear coat
-						ior: 1.5,              // Index of refraction for glass
-						envMapIntensity: 1.3,  // Environment reflections
-						side: THREE.FrontSide, // Render front side only
-						depthWrite: false,     // Important for transparency sorting
-					});
-					
-					child.material = glassModelMaterial;
-				}
-			});
-
-			// Position in the scene - centered at origin
-			const container = new THREE.Group();
-			container.add(cubeModel);
-			container.position.set(0, 0, 0); // Centered at world origin
-			container.renderOrder = 5;
-
-			scene.add(container);
-
-			// console.log('Cube model loaded successfully at 1:1 scale');
-
-			// Create glass material GUI controls now that material is available
-			if (gui && glassModelMaterial) {
-				createGlassGUI(gui);
-			}
-		},
-		(progress) => {
-			// console.log('Loading cube:', (progress.loaded / progress.total * 100) + '%');
-		},
-		(error) => {
-			console.error('Error loading cube model:', error);
-		}
-	);
-}
-
-// Load floor-01.glb model
-function loadFloorModel() {
-	const dracoLoader = new DRACOLoader();
-	dracoLoader.setDecoderPath('jsm/libs/draco/gltf/');
-
-	const gltfLoader = new GLTFLoader();
-	gltfLoader.setDRACOLoader(dracoLoader);
-
-	gltfLoader.load(
-		'models/glb/floor-01.glb',
-		(gltf) => {
-			floorModel = gltf.scene;
-
-			// Use 1:1 scale - no auto-scaling or centering
-			// Model position and scale from Blender will be used directly
-			floorModel.scale.set(1, 1, 1);
-
-			// Ensure all meshes in the model have proper settings
-			floorModel.traverse((child) => {
-				if (child.isMesh) {
-					child.castShadow = true;
-					child.receiveShadow = true;
-				}
-			});
-
-			// Position in the scene - centered at origin
-			const container = new THREE.Group();
-			container.add(floorModel);
-			container.position.set(0, 0, 0); // Centered at world origin
-			container.renderOrder = 0; // Render before other objects
-
-			scene.add(container);
-
-			// console.log('Floor model loaded successfully at 1:1 scale');
-		},
-		(progress) => {
-			// console.log('Loading floor:', (progress.loaded / progress.total * 100) + '%');
-		},
-		(error) => {
-			console.error('Error loading floor model:', error);
-		}
-	);
-}
 
 // Create floor GUI controls
 function createFloorGUI(gui) {
@@ -345,83 +232,6 @@ function createFloorGUI(gui) {
 	floorFolder.close();
 }
 
-// Create glass material GUI controls
-function createGlassGUI(gui) {
-	if (!glassModelMaterial) return;
-
-	const glassFolder = gui.addFolder('Glass Material');
-	
-	const glassSettings = {
-		color: '#' + glassModelMaterial.color.getHexString(),
-		roughness: glassModelMaterial.roughness,
-		metalness: glassModelMaterial.metalness,
-		transmission: glassModelMaterial.transmission,
-		opacity: glassModelMaterial.opacity,
-		ior: glassModelMaterial.ior,
-		thickness: glassModelMaterial.thickness,
-		clearcoat: glassModelMaterial.clearcoat,
-		clearcoatRoughness: glassModelMaterial.clearcoatRoughness,
-		envMapIntensity: glassModelMaterial.envMapIntensity,
-		side: glassModelMaterial.side === THREE.DoubleSide ? 'Double' : 'Front',
-		depthWrite: glassModelMaterial.depthWrite,
-	};
-
-	// Basic Properties
-	const basicFolder = glassFolder.addFolder('Basic');
-	basicFolder.addColor(glassSettings, 'color').name('Color').onChange((value) => {
-		glassModelMaterial.color.set(value);
-	});
-	basicFolder.add(glassSettings, 'roughness', 0, 1, 0.01).name('Roughness').onChange((value) => {
-		glassModelMaterial.roughness = value;
-	});
-	basicFolder.add(glassSettings, 'metalness', 0, 1, 0.01).name('Metalness').onChange((value) => {
-		glassModelMaterial.metalness = value;
-	});
-	basicFolder.add(glassSettings, 'opacity', 0, 1, 0.01).name('Opacity').onChange((value) => {
-		glassModelMaterial.opacity = value;
-	});
-	basicFolder.close();
-
-	// Transmission & Refraction
-	const transmissionFolder = glassFolder.addFolder('Transmission & Refraction');
-	transmissionFolder.add(glassSettings, 'transmission', 0, 1, 0.01).name('Transmission').onChange((value) => {
-		glassModelMaterial.transmission = value;
-	});
-	transmissionFolder.add(glassSettings, 'ior', 1, 2.5, 0.01).name('IOR').onChange((value) => {
-		glassModelMaterial.ior = value;
-	});
-	transmissionFolder.add(glassSettings, 'thickness', 0, 2, 0.1).name('Thickness').onChange((value) => {
-		glassModelMaterial.thickness = value;
-	});
-	transmissionFolder.close();
-
-	// Clearcoat
-	const clearcoatFolder = glassFolder.addFolder('Clearcoat');
-	clearcoatFolder.add(glassSettings, 'clearcoat', 0, 1, 0.01).name('Clearcoat').onChange((value) => {
-		glassModelMaterial.clearcoat = value;
-	});
-	clearcoatFolder.add(glassSettings, 'clearcoatRoughness', 0, 1, 0.01).name('Clearcoat Roughness').onChange((value) => {
-		glassModelMaterial.clearcoatRoughness = value;
-	});
-	clearcoatFolder.close();
-
-	// Environment & Rendering
-	const envFolder = glassFolder.addFolder('Environment & Rendering');
-	envFolder.add(glassSettings, 'envMapIntensity', 0, 3, 0.1).name('Reflection Intensity').onChange((value) => {
-		glassModelMaterial.envMapIntensity = value;
-	});
-	envFolder.add(glassSettings, 'side', ['Front', 'Double']).name('Side').onChange((value) => {
-		glassModelMaterial.side = value === 'Double' ? THREE.DoubleSide : THREE.FrontSide;
-		glassModelMaterial.needsUpdate = true;
-	});
-	envFolder.add(glassSettings, 'depthWrite').name('Depth Write').onChange((value) => {
-		glassModelMaterial.depthWrite = value;
-	});
-	envFolder.close();
-
-	// Keep folder collapsed by default
-	glassFolder.close();
-}
 
 function init() {
 	// Initialize scene, renderer, camera
@@ -441,11 +251,16 @@ function init() {
 	// Spawn orange slice
 	spawnOrangeSlice();
 
-	// Load cube model
-	loadGlassModel();
+	// Load glass model
+	loadGlassModel(scene, (glassMaterial) => {
+		// Create glass GUI after model loads, if gui is already created
+		if (gui && glassMaterial) {
+			createGlassGUI(gui);
+		}
+	});
 
 	// Load floor model
-	loadFloorModel();
+	loadFloorModel(scene);
 
 	// Setup camera controls
 	controls = setupCameraControls(camera, renderer);
@@ -488,8 +303,11 @@ function init() {
 	// Add floor controls
 	createFloorGUI(gui);
 	
-	// Glass material controls will be added after model loads
-	// (createGlassGUI is called in loadGlassModel callback)
+	// Add glass material controls (if model has already loaded)
+	const glassMaterial = getGlassModelMaterial();
+	if (glassMaterial) {
+		createGlassGUI(gui);
+	}
 	
 	// Add liquid material controls (liquid is already built)
 	const liquidMeshes = getLiquidMeshes();
