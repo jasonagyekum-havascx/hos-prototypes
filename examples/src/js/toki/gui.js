@@ -128,7 +128,8 @@ function createGlassGUI(gui) {
 
 		// Create ice cube material GUI controls
 
-function createIceCubeGUI(gui) {
+export function createIceCubeGUI(gui) {
+			const iceObjects = getIceObjects();
 			// Get material from first ice cube if available
 			if (iceObjects.length > 0 && iceObjects[0].mesh) {
 				// Try to get material from GLB model or procedural mesh
@@ -141,7 +142,7 @@ function createIceCubeGUI(gui) {
 				
 				// Fallback to stored material reference
 				if (!material) {
-					material = iceCubeMaterial;
+					material = getIceCubeMaterial();
 				}
 				
 				if (!material) return;

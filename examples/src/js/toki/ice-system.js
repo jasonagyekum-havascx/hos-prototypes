@@ -10,62 +10,6 @@ let iceObjects = [];
 let iceCubeGLBModel = null;
 let iceCubeMaterial = null;
 
-// Create ice material
-function createIceMaterial() {
-	const material = new THREE.MeshPhysicalMaterial({
-		color: 0xd8e4f0,
-		metalness: 0.0,
-		roughness: 0.1,
-		transmission: 0.7,
-		opacity: 0.85,
-		transparent: true,
-		thickness: 0.3,
-		ior: 1.31,
-		clearcoat: 0.8,
-		clearcoatRoughness: 0.2,
-		envMapIntensity: 1.2,
-		side: THREE.FrontSide,
-		depthWrite: true,
-		emissive: 0x000000,
-		emissiveIntensity: 0,
-	});
-	
-	if (!iceCubeMaterial) {
-		iceCubeMaterial = material;
-	}
-	
-	return material;
-}
-
-// Create procedural ice mesh
-function createIceMesh(size) {
-	const geometry = new THREE.BoxGeometry(size * 1.8, size * 2.2, size * 1.8);
-	const material = createIceMaterial();
-	const mesh = new THREE.Mesh(geometry, material);
-	mesh.renderOrder = 3;
-	mesh.userData.baseSize = size;
-	mesh.userData.isProcedural = true;
-
-	// Add inner frosted core for realism
-	const innerGeometry = new THREE.BoxGeometry(size * 1.4, size * 1.8, size * 1.4);
-	const innerMaterial = new THREE.MeshPhysicalMaterial({
-		color: 0xffffff,
-		metalness: 0.0,
-		roughness: 0.9,
-		transmission: 0.4,
-		opacity: 0.5,
-		transparent: true,
-		thickness: 0.2,
-		ior: 1.31,
-		side: THREE.FrontSide,
-		depthWrite: true,
-	});
-	const innerMesh = new THREE.Mesh(innerGeometry, innerMaterial);
-	innerMesh.renderOrder = 2;
-	mesh.add(innerMesh);
-
-	return mesh;
-}
 
 function getCurrentIceSize() {
 	return iceConfig.baseSize * iceConfig.sizeMultiplier;
@@ -140,37 +84,39 @@ function applyIceMaterialToMesh(child, size) {
 	}
 }
 
-// Spawn an ice cube
+// Spawn an ice cube (only uses GLB model)
 export function spawnIce(scene, gui, createIceCubeGUI) {
 	if (iceObjects.length >= iceConfig.maxQuantity) return;
+	
+	if (!iceCubeGLBModel) {
+		console.warn('Ice cube GLB model not loaded yet. Cannot spawn ice cube.');
+		return;
+	}
 
 	const size = getCurrentIceSize();
 	const iceIndex = iceObjects.length;
 	const position = findNonOverlappingPosition(size, iceIndex);
 	const isFirstIce = iceIndex === 0;
 	
-	let mesh;
-	if (iceCubeGLBModel) {
-		mesh = iceCubeGLBModel.clone();
-		
-		const box = new THREE.Box3().setFromObject(mesh);
-		const glbSize = box.getSize(new THREE.Vector3());
-		const targetWidth = size * 1.8;
-		const targetHeight = size * 2.2;
-		const scaleX = targetWidth / Math.max(glbSize.x, 0.001);
-		const scaleY = targetHeight / Math.max(glbSize.y, 0.001);
-		const scaleZ = targetWidth / Math.max(glbSize.z, 0.001);
-		const avgScale = (scaleX + scaleY + scaleZ) / 3;
-		mesh.scale.set(avgScale, avgScale, avgScale);
-		
-		mesh.traverse((child) => applyIceMaterialToMesh(child, size));
-		
-		mesh.renderOrder = 3;
-		mesh.userData.baseSize = size;
-		mesh.userData.isProcedural = false;
-	} else {
-		mesh = createIceMesh(size);
-	}
+	// Clone the GLB model for this ice cube
+	const mesh = iceCubeGLBModel.clone();
+	
+	// Calculate scale to match target size
+	const box = new THREE.Box3().setFromObject(mesh);
+	const glbSize = box.getSize(new THREE.Vector3());
+	const targetWidth = size * 1.8;
+	const targetHeight = size * 2.2;
+	const scaleX = targetWidth / Math.max(glbSize.x, 0.001);
+	const scaleY = targetHeight / Math.max(glbSize.y, 0.001);
+	const scaleZ = targetWidth / Math.max(glbSize.z, 0.001);
+	const avgScale = (scaleX + scaleY + scaleZ) / 3;
+	mesh.scale.set(avgScale, avgScale, avgScale);
+	
+	// Apply ice material properties to all meshes in the GLB
+	mesh.traverse((child) => applyIceMaterialToMesh(child, size));
+	
+	mesh.renderOrder = 3;
+	mesh.userData.baseSize = size;
 
 	const iceData = {
 		mesh,
@@ -286,63 +232,30 @@ export function loadIceCubeGLB(scene, gui, createIceCubeGUI) {
 	const gltfLoader = new GLTFLoader();
 	gltfLoader.setDRACOLoader(dracoLoader);
 
-	gltfLoader.load(
-		'models/glb/ice-cube.glb',
-		(gltf) => {
-			iceCubeGLBModel = gltf.scene;
-			
-			iceCubeGLBModel.traverse((child) => {
-				if (child.isMesh && child.material && !iceCubeMaterial) {
-					iceCubeMaterial = child.material;
-				}
-			});
-			
-			if (iceObjects.length > 0) {
-				const size = getCurrentIceSize();
+		gltfLoader.load(
+			'models/glb/ice-cube.glb',
+			(gltf) => {
+				iceCubeGLBModel = gltf.scene;
 				
-				iceObjects.forEach((ice) => {
-					if (ice.mesh.userData.isProcedural) {
-						const oldPosition = ice.mesh.position.clone();
-						const oldRotation = ice.mesh.rotation.clone();
-						
-						scene.remove(ice.mesh);
-						ice.mesh.geometry.dispose();
-						ice.mesh.material.dispose();
-						
-						const mesh = iceCubeGLBModel.clone();
-						
-						const box = new THREE.Box3().setFromObject(mesh);
-						const glbSize = box.getSize(new THREE.Vector3());
-						const targetWidth = size * 1.8;
-						const targetHeight = size * 2.2;
-						const scaleX = targetWidth / Math.max(glbSize.x, 0.001);
-						const scaleY = targetHeight / Math.max(glbSize.y, 0.001);
-						const scaleZ = targetWidth / Math.max(glbSize.z, 0.001);
-						const avgScale = (scaleX + scaleY + scaleZ) / 3;
-						mesh.scale.set(avgScale, avgScale, avgScale);
-						
-						mesh.traverse((child) => applyIceMaterialToMesh(child, size));
-						
-						mesh.renderOrder = 3;
-						mesh.userData.baseSize = size;
-						mesh.userData.isProcedural = false;
-						
-						mesh.position.copy(oldPosition);
-						mesh.rotation.copy(oldRotation);
-						
-						scene.add(mesh);
-						ice.mesh = mesh;
+				iceCubeGLBModel.traverse((child) => {
+					if (child.isMesh && child.material && !iceCubeMaterial) {
+						iceCubeMaterial = child.material;
 					}
 				});
 				
-				if (gui && iceObjects.length > 0) {
+				// Spawn initial ice cubes now that the model is loaded
+				for (let i = 0; i < iceConfig.quantity; i++) {
+					spawnIce(scene, gui, createIceCubeGUI);
+				}
+				
+				// Create ice cube GUI after ice cubes are spawned
+				if (gui && iceObjects.length > 0 && createIceCubeGUI) {
 					const existingFolder = gui.children.find(child => child._title === 'Ice Cube Material');
 					if (!existingFolder) {
 						createIceCubeGUI(gui);
 					}
 				}
-			}
-		},
+			},
 		undefined,
 		(error) => {
 			console.error('Error loading ice cube model:', error);

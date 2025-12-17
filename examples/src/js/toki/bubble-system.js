@@ -47,44 +47,48 @@ export function initBubbleSystem(scene) {
 
 // Spawn a bubble
 export function spawnBubble() {
-	for (let i = 0; i < MAX_BUBBLES; i++) {
-		if (!bubbleInstances[i].active) {
-			const bubble = bubbleInstances[i];
-			
-			// Random position at bottom of liquid
-			const angle = Math.random() * Math.PI * 2;
-			const radius = Math.random() * LIQUID_RADIUS * 0.7;
-			bubble.position.set(
-				Math.cos(angle) * radius,
-				LIQUID_BASE_Y + 0.1,
-				Math.sin(angle) * radius
-			);
-			
-			// Random upward velocity with slight horizontal drift
-			bubble.velocity.set(
-				(Math.random() - 0.5) * 0.02,
-				0.08 + Math.random() * 0.04,
-				(Math.random() - 0.5) * 0.02
-			);
-			
-			bubble.size = 0.8 + Math.random() * 0.4;
-			bubble.life = 0;
-			bubble.maxLife = 2 + Math.random() * 1;
-			bubble.active = true;
-			return;
-		}
-	}
+	const bubble = bubbleInstances.find(b => !b.active);
+	if (!bubble) return;
+
+	const angle = Math.random() * Math.PI * 2;
+	const radius = Math.random() * (LIQUID_RADIUS - 0.1);
+
+	bubble.position.set(
+		Math.cos(angle) * radius,
+		LIQUID_BASE_Y + 0.05,
+		Math.sin(angle) * radius
+	);
+
+	bubble.velocity.set(
+		(Math.random() - 0.5) * 0.02,
+		0.3 + Math.random() * 0.4,
+		(Math.random() - 0.5) * 0.02
+	);
+
+	bubble.size = 0.5 + Math.random() * 1.0;
+	bubble.life = 0;
+	bubble.maxLife = 2 + Math.random() * 3;
+	bubble.active = true;
 }
 
 // Update bubbles
-export function updateBubbles(deltaTime) {
+export function updateBubbles(deltaTime, fizzIntensity = 3.0) {
 	if (!bubbleMesh) return;
 
+	// Spawn bubbles based on fizz intensity
+	const spawnRate = fizzIntensity * 30;
+	const spawnChance = spawnRate * deltaTime;
+
+	if (Math.random() < spawnChance) {
+		spawnBubble();
+	}
+
 	const matrix = new THREE.Matrix4();
+	const position = new THREE.Vector3();
 	const quaternion = new THREE.Quaternion();
 	const scale = new THREE.Vector3();
 
-	for (let i = 0; i < MAX_BUBBLES; i++) {
+	for (let i = 0; i < bubbleInstances.length; i++) {
 		const bubble = bubbleInstances[i];
 
 		if (!bubble.active) {
@@ -94,12 +98,9 @@ export function updateBubbles(deltaTime) {
 			continue;
 		}
 
-		// Update position
-		bubble.position.add(bubble.velocity.clone().multiplyScalar(deltaTime));
 		bubble.life += deltaTime;
 
-		// Deactivate if reached surface or max life
-		if (bubble.position.y > LIQUID_SURFACE_Y || bubble.life > bubble.maxLife) {
+		if (bubble.life > bubble.maxLife || bubble.position.y > LIQUID_SURFACE_Y) {
 			bubble.active = false;
 			scale.set(0, 0, 0);
 			matrix.compose(bubble.position, quaternion, scale);
@@ -107,10 +108,27 @@ export function updateBubbles(deltaTime) {
 			continue;
 		}
 
-		// Size animation (grow as it rises)
+		// Add slight wobble
+		bubble.velocity.x += (Math.random() - 0.5) * 0.05;
+		bubble.velocity.z += (Math.random() - 0.5) * 0.05;
+
+		bubble.position.x += bubble.velocity.x * deltaTime;
+		bubble.position.y += bubble.velocity.y * deltaTime;
+		bubble.position.z += bubble.velocity.z * deltaTime;
+
+		const dist = Math.sqrt(
+			bubble.position.x * bubble.position.x +
+			bubble.position.z * bubble.position.z
+		);
+
+		if (dist > LIQUID_RADIUS - 0.05) {
+			bubble.position.x *= (LIQUID_RADIUS - 0.05) / dist;
+			bubble.position.z *= (LIQUID_RADIUS - 0.05) / dist;
+		}
+
 		const lifeRatio = bubble.life / bubble.maxLife;
 		let sizeMultiplier = 1;
-		
+
 		if (lifeRatio < 0.1) {
 			sizeMultiplier = lifeRatio / 0.1;
 		} else if (lifeRatio > 0.9) {
