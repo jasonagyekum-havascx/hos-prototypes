@@ -25,8 +25,6 @@ const mouse = new THREE.Vector2();
 let orangeSlice;
 let orangeSliceVisible = false;
 
-
-
 // Time tracking
 let elapsedTime = 0;
 
@@ -185,8 +183,6 @@ function toggleOrangeSlice(visible) {
 	}
 }
 
-
-
 // Create floor GUI controls
 function createFloorGUI(gui) {
 	if (!floor || !floor.material) return;
@@ -229,7 +225,6 @@ function createFloorGUI(gui) {
 	// Keep folder collapsed by default
 	floorFolder.close();
 }
-
 
 function init() {
 	// Initialize scene, renderer, camera
@@ -315,7 +310,6 @@ function init() {
 	renderer.setAnimationLoop(animate);
 }
 
-
 function onPointerMove(event) {
 	setMouseFromEvent(event);
 	checkHotspotHover();
@@ -356,4 +350,3 @@ function animate() {
 	controls.update();
 	renderer.render(scene, camera);
 }
-
