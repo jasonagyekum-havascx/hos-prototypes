@@ -93,24 +93,21 @@ export function spawnIce(scene, gui, createIceCubeGUI) {
 		return;
 	}
 
-	const size = getCurrentIceSize();
 	const iceIndex = iceObjects.length;
-	const position = findNonOverlappingPosition(size, iceIndex);
 	const isFirstIce = iceIndex === 0;
 	
 	// Clone the GLB model for this ice cube
 	const mesh = iceCubeGLBModel.clone();
 	
-	// Calculate scale to match target size
+	// Use the scale from Blender directly - don't override it
+	// The model's scale from Blender will be preserved
+	
+	// Get actual size from the model's bounding box (respects Blender scale)
 	const box = new THREE.Box3().setFromObject(mesh);
-	const glbSize = box.getSize(new THREE.Vector3());
-	const targetWidth = size * 1.8;
-	const targetHeight = size * 2.2;
-	const scaleX = targetWidth / Math.max(glbSize.x, 0.001);
-	const scaleY = targetHeight / Math.max(glbSize.y, 0.001);
-	const scaleZ = targetWidth / Math.max(glbSize.z, 0.001);
-	const avgScale = (scaleX + scaleY + scaleZ) / 3;
-	mesh.scale.set(avgScale, avgScale, avgScale);
+	const actualSize = box.getSize(new THREE.Vector3());
+	const size = Math.max(actualSize.x, actualSize.y, actualSize.z) * 0.5; // Use largest dimension as size reference
+	
+	const position = findNonOverlappingPosition(size, iceIndex);
 	
 	// Apply ice material properties to all meshes in the GLB
 	mesh.traverse((child) => applyIceMaterialToMesh(child, size));
