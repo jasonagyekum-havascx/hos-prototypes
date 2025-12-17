@@ -4,7 +4,6 @@ import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import { TransformControls } from 'three/addons/controls/TransformControls.js';
 import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
 import { setupLights, updateLightHelpers, toggleHelpers, createLightGUI } from './lights-config.js';
-import { liquidConfig, applyLiquidConfig } from './liquid-config.js';
 import { initScene, setupCameraControls, setupResizeHandler } from './scene-setup.js';
 import { setupPanelControls, setupControls } from './controls.js';
 import { initHotspots, updateHotspots, checkHotspotHover, checkHotspotClick, closePanel, getActivePanel, getHotspotOverlay } from './hotspots.js';
@@ -21,7 +20,6 @@ let transformControls; // Gizmos for dragging lights
 let floor = null; // Floor mesh reference
 let glassModelMaterial = null; // Glass model material reference
 let raycaster;
-let glassOuter, glassInner, glassBottom;
 const mouse = new THREE.Vector2();
 
 // Orange slice
@@ -193,7 +191,7 @@ function toggleOrangeSlice(visible) {
 }
 
 // Load cube.glb model
-function loadCubeModel() {
+function loadGlassModel() {
 	const dracoLoader = new DRACOLoader();
 	dracoLoader.setDecoderPath('jsm/libs/draco/gltf/');
 
@@ -444,7 +442,7 @@ function init() {
 	spawnOrangeSlice();
 
 	// Load cube model
-	loadCubeModel();
+	loadGlassModel();
 
 	// Load floor model
 	loadFloorModel();
@@ -491,7 +489,7 @@ function init() {
 	createFloorGUI(gui);
 	
 	// Glass material controls will be added after model loads
-	// (createGlassGUI is called in loadCubeModel callback)
+	// (createGlassGUI is called in loadGlassModel callback)
 	
 	// Add liquid material controls (liquid is already built)
 	const liquidMeshes = getLiquidMeshes();
@@ -564,8 +562,3 @@ function animate() {
 	renderer.render(scene, camera);
 }
 
-function onWindowResize() {
-	camera.aspect = window.innerWidth / window.innerHeight;
-	camera.updateProjectionMatrix();
-	renderer.setSize(window.innerWidth, window.innerHeight);
-}

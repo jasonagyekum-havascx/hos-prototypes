@@ -3,7 +3,7 @@
 import * as THREE from '../../../../build/three.module.js';
 import { getIceObjects, getIceCubeMaterial } from './ice-system.js';
 import { getLiquidMeshes } from './liquid-system.js';
-import { getGlassModelMaterial } from './models.js';
+// import { getGlassModelMaterial } from './models.js';
 
 function createFloorGUI(gui) {
 			if (!floor || !floor.material) return;
