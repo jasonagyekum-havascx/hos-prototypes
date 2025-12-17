@@ -1,12 +1,12 @@
 import * as THREE from 'three';
-import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import { TransformControls } from 'three/addons/controls/TransformControls.js';
 import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
-import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';
 import { setupLights, updateLightHelpers, toggleHelpers, createLightGUI } from './lights-config.js';
 import { liquidConfig, applyLiquidConfig } from './liquid-config.js';
+import { initScene, setupCameraControls, setupResizeHandler } from './scene-setup.js';
+import { setupPanelControls, setupControls } from './controls.js';
 
 		let renderer, scene, camera, controls;
 		let liquidSurface, liquidBody;
@@ -1067,98 +1067,6 @@ import { liquidConfig, applyLiquidConfig } from './liquid-config.js';
 
 			}
 
-			function setupPanelControls() {
-
-				// Close buttons
-				document.querySelectorAll('.hotspot-panel-close').forEach(btn => {
-
-					btn.addEventListener('click', closePanel);
-					btn.addEventListener('keydown', (e) => {
-
-						if (e.key === 'Enter' || e.key === ' ') {
-
-							e.preventDefault();
-							closePanel();
-
-						}
-
-					});
-
-				});
-
-				// Overlay click to close
-				hotspotOverlay.addEventListener('click', closePanel);
-
-			// Escape key to close
-			document.addEventListener('keydown', (e) => {
-
-				if (e.key === 'Escape' && activePanel) {
-
-					closePanel();
-
-				}
-
-			// 'G' key to toggle glass
-			if (e.key === 'g' || e.key === 'G') {
-
-				window.toggleGlass();
-
-			}
-
-			// 'H' key to toggle light helpers
-			if (e.key === 'h' || e.key === 'H') {
-
-				if (lights && lights.helpers && lights.helpers.length > 0) {
-					const currentVisibility = lights.helpers[0].visible;
-					toggleHelpers(lights, !currentVisibility);
-				}
-
-			}
-
-			// 'T' key to set gizmo to translate mode
-			if (e.key === 't' || e.key === 'T') {
-
-				if (transformControls) {
-					transformControls.setMode('translate');
-					// console.log('Gizmo mode: translate');
-				}
-
-			}
-
-			// 'R' key to set gizmo to rotate mode
-			if (e.key === 'r' || e.key === 'R') {
-
-				if (transformControls) {
-					transformControls.setMode('rotate');
-					// console.log('Gizmo mode: rotate');
-				}
-
-			}
-
-			// 'S' key to set gizmo to scale mode
-			if (e.key === 's' || e.key === 'S') {
-
-				if (transformControls) {
-					transformControls.setMode('scale');
-					// console.log('Gizmo mode: scale');
-				}
-
-			}
-
-			// 'D' key to detach gizmo
-			if (e.key === 'd' || e.key === 'D') {
-
-				if (transformControls) {
-					transformControls.detach();
-					// console.log('Gizmo detached');
-				}
-
-			}
-
-			});
-
-			}
-
 			// Bubble system
 			function initBubbleSystem() {
 
@@ -1231,7 +1139,7 @@ import { liquidConfig, applyLiquidConfig } from './liquid-config.js';
 
 			function updateBubbles(deltaTime) {
 
-				const spawnRate = fizzIntensity * 30;
+				const spawnRate = (window.fizzIntensityRef ? window.fizzIntensityRef.value : fizzIntensity) * 30;
 				const spawnChance = spawnRate * deltaTime;
 
 				if (Math.random() < spawnChance) {
@@ -1837,56 +1745,11 @@ import { liquidConfig, applyLiquidConfig } from './liquid-config.js';
 		}
 
 		function init() {
-
-			renderer = new THREE.WebGLRenderer({ antialias: true });
-				renderer.setPixelRatio(window.devicePixelRatio);
-				renderer.setSize(window.innerWidth, window.innerHeight);
-				renderer.outputColorSpace = THREE.SRGBColorSpace;
-				renderer.toneMapping = THREE.ACESFilmicToneMapping;
-				renderer.toneMappingExposure = 1.1;
-				document.body.appendChild(renderer.domElement);
-
-			scene = new THREE.Scene();
-			scene.background = new THREE.Color(0x0a0a0a); // Pretty black (very dark gray)
-
-			// Load HDR environment map
-			const pmremGenerator = new THREE.PMREMGenerator(renderer);
-			pmremGenerator.compileEquirectangularShader();
-
-			const rgbeLoader = new RGBELoader();
-			rgbeLoader.setPath('./textures/');
-			rgbeLoader.load('hdr_500.hdr', (texture) => {
-				const envMap = pmremGenerator.fromEquirectangular(texture).texture;
-				scene.environment = envMap; // Use HDR for reflections only
-				scene.background = new THREE.Color(0x0a0a0a); // Pretty black (very dark gray)
-				
-				texture.dispose();
-				pmremGenerator.dispose();
-				
-				// console.log('HDR environment map loaded: hdr_500.hdr (reflections only)');
-			}, undefined, (error) => {
-				console.error('Error loading HDR environment map:', error);
-				// console.log('Falling back to simple environment...');
-				
-				// Fallback to simple environment if HDR fails
-				const envScene = new THREE.Scene();
-				envScene.background = new THREE.Color(0xaaddff);
-				const envGeo = new THREE.SphereGeometry(50, 32, 32);
-				const envMat = new THREE.MeshBasicMaterial({
-					color: 0xeef6ff,
-					side: THREE.BackSide,
-				});
-				const envMesh = new THREE.Mesh(envGeo, envMat);
-				envScene.add(envMesh);
-				const envMap = pmremGenerator.fromScene(envScene).texture;
-				scene.environment = envMap;
-				pmremGenerator.dispose();
-			});
-
-			camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 100);
-			// Start zoomed out to max distance
-			camera.position.set(0, 3.5, 8);
-			camera.lookAt(0, 1.2, 0);
+			// Initialize scene, renderer, camera
+			const sceneSetup = initScene();
+			renderer = sceneSetup.renderer;
+			scene = sceneSetup.scene;
+			camera = sceneSetup.camera;
 
 			// Setup lights from config file
 			lights = setupLights(scene);
@@ -1925,23 +1788,15 @@ import { liquidConfig, applyLiquidConfig } from './liquid-config.js';
 			// Initialize hotspots
 			initHotspots();
 
-			controls = new OrbitControls(camera, renderer.domElement);
-			controls.enableDamping = true;
-			controls.dampingFactor = 0.05;
-			controls.target.set(0, 1.2, 0);
-			// Zoom constraints removed - can zoom freely
-			// controls.minDistance = 2.5;
-			// controls.maxDistance = 8;
-			controls.maxPolarAngle = Math.PI * 0.85;
+			// Setup camera controls
+			controls = setupCameraControls(camera, renderer);
 
 				raycaster = new THREE.Raycaster();
 				renderer.domElement.addEventListener('pointermove', onPointerMove);
 				renderer.domElement.addEventListener('pointerdown', onPointerDown);
 
-				window.addEventListener('resize', onWindowResize);
-
-			setupControls();
-			setupPanelControls();
+				// Setup window resize handler
+				setupResizeHandler(camera, renderer);
 
 			// Setup TransformControls for dragging lights
 			transformControls = new TransformControls(camera, renderer.domElement);
@@ -1949,6 +1804,18 @@ import { liquidConfig, applyLiquidConfig } from './liquid-config.js';
 				controls.enabled = !event.value; // Disable orbit controls while dragging
 			});
 			scene.add(transformControls);
+
+			// Setup controls (after transformControls is created)
+			// Wrap fizzIntensity and orangeSliceVisible in objects for pass-by-reference
+			const fizzIntensityRef = { value: fizzIntensity };
+			const orangeSliceVisibleRef = { value: orangeSliceVisible };
+			
+			setupControls(fizzIntensityRef, liquidUniforms, orangeSliceVisibleRef, toggleOrangeSlice);
+			setupPanelControls(closePanel, activePanel, hotspotOverlay, transformControls, lights, window.toggleGlass);
+			
+			// Store refs for use in other functions
+			window.fizzIntensityRef = fizzIntensityRef;
+			window.orangeSliceVisibleRef = orangeSliceVisibleRef;
 
 			// Setup GUI for light controls
 			gui = new GUI({ width: 320 });
@@ -2229,41 +2096,6 @@ import { liquidConfig, applyLiquidConfig } from './liquid-config.js';
 
 			}
 
-			function setupControls() {
-
-				const fizzSlider = document.getElementById('fizzSlider');
-				const fizzValue = document.getElementById('fizzValue');
-				const sliceToggle = document.getElementById('sliceToggle');
-
-				const handleFizzChange = () => {
-
-					fizzIntensity = parseFloat(fizzSlider.value) / 100;
-					fizzValue.textContent = fizzSlider.value + '%';
-					liquidUniforms.uFizz.value = fizzIntensity;
-
-				};
-
-				const handleSliceToggle = () => {
-
-					orangeSliceVisible = !orangeSliceVisible;
-					toggleOrangeSlice(orangeSliceVisible);
-					sliceToggle.textContent = orangeSliceVisible ? 'Visible' : 'Hidden';
-					sliceToggle.classList.toggle('active', orangeSliceVisible);
-					sliceToggle.setAttribute('aria-pressed', orangeSliceVisible);
-
-				};
-
-				fizzSlider.addEventListener('input', handleFizzChange);
-				sliceToggle.addEventListener('click', handleSliceToggle);
-
-				// Keyboard support
-				sliceToggle.addEventListener('keydown', (e) => {
-
-					if (e.key === 'Enter' || e.key === ' ') handleSliceToggle();
-
-				});
-
-			}
 
 			function onPointerMove(event) {
 
