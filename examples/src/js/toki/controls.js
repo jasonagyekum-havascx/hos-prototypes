@@ -1,9 +1,11 @@
 // Controls - handles keyboard shortcuts and panel controls
 
 import { toggleHelpers } from './lights-config.js';
+import { closePanel, getActivePanel, getHotspotOverlay } from './hotspots.js';
 
 // Setup panel controls (hotspot panels, keyboard shortcuts)
-export function setupPanelControls(closePanel, activePanel, hotspotOverlay, transformControls, lights, toggleGlass) {
+export function setupPanelControls(transformControls, lights) {
+	const hotspotOverlay = getHotspotOverlay();
 	// Close buttons
 	document.querySelectorAll('.hotspot-panel-close').forEach(btn => {
 		btn.addEventListener('click', closePanel);
@@ -20,13 +22,8 @@ export function setupPanelControls(closePanel, activePanel, hotspotOverlay, tran
 
 	// Escape key to close
 	document.addEventListener('keydown', (e) => {
-		if (e.key === 'Escape' && activePanel) {
+		if (e.key === 'Escape' && getActivePanel()) {
 			closePanel();
-		}
-
-		// 'G' key to toggle glass
-		if (e.key === 'g' || e.key === 'G') {
-			toggleGlass();
 		}
 
 		// 'H' key to toggle light helpers

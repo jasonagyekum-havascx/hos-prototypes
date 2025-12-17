@@ -7,6 +7,7 @@ import { setupLights, updateLightHelpers, toggleHelpers, createLightGUI } from '
 import { liquidConfig, applyLiquidConfig } from './liquid-config.js';
 import { initScene, setupCameraControls, setupResizeHandler } from './scene-setup.js';
 import { setupPanelControls, setupControls } from './controls.js';
+import { initHotspots, updateHotspots, checkHotspotHover, checkHotspotClick, closePanel, getActivePanel, getHotspotOverlay } from './hotspots.js';
 
 		let renderer, scene, camera, controls;
 		let liquidSurface, liquidBody;
@@ -21,12 +22,6 @@ import { setupPanelControls, setupControls } from './controls.js';
 			let waterPlane;
 			let glassOuter, glassInner, glassBottom;
 			const mouse = new THREE.Vector2();
-
-			// Hotspot system
-			const hotspots = [];
-			let activePanel = null;
-			const hotspotLabel = document.getElementById('hotspotLabel');
-			const hotspotOverlay = document.getElementById('hotspotOverlay');
 
 			// Bubble system
 			let bubbleGeometry, bubbleMaterial;
@@ -851,221 +846,6 @@ import { setupPanelControls, setupControls } from './controls.js';
 
 		}
 
-			// Hotspot creation
-			function createHotspot(position, label, panelId, color = 0x7ec8e8) {
-
-				const group = new THREE.Group();
-				group.position.copy(position);
-
-				// Inner pulsing dot
-				const dotGeometry = new THREE.SphereGeometry(0.06, 16, 16);
-				const dotMaterial = new THREE.MeshBasicMaterial({
-					color: color,
-					transparent: true,
-					opacity: 0.9,
-				});
-				const dot = new THREE.Mesh(dotGeometry, dotMaterial);
-				group.add(dot);
-
-				// Outer ring
-				const ringGeometry = new THREE.RingGeometry(0.1, 0.14, 32);
-				const ringMaterial = new THREE.MeshBasicMaterial({
-					color: color,
-					transparent: true,
-					opacity: 0.6,
-					side: THREE.DoubleSide,
-				});
-				const ring = new THREE.Mesh(ringGeometry, ringMaterial);
-				ring.lookAt(camera.position);
-				group.add(ring);
-
-				// Pulse ring (animated)
-				const pulseGeometry = new THREE.RingGeometry(0.08, 0.1, 32);
-				const pulseMaterial = new THREE.MeshBasicMaterial({
-					color: color,
-					transparent: true,
-					opacity: 0.5,
-					side: THREE.DoubleSide,
-				});
-				const pulseRing = new THREE.Mesh(pulseGeometry, pulseMaterial);
-				pulseRing.lookAt(camera.position);
-				group.add(pulseRing);
-
-				group.userData = {
-					label: label,
-					panelId: panelId,
-					dot: dot,
-					ring: ring,
-					pulseRing: pulseRing,
-					baseScale: 1,
-					hovered: false,
-				};
-
-				scene.add(group);
-				hotspots.push(group);
-
-				return group;
-
-			}
-
-			function initHotspots() {
-
-				// Whisky hotspot - at the liquid level
-				createHotspot(
-					new THREE.Vector3(0.9, 1.5, 0.4),
-					'About Toki Whisky',
-					'panelWhisky',
-					0xdbb85c
-				);
-
-				// Ice hotspot - near the ice cubes
-				createHotspot(
-					new THREE.Vector3(-0.5, 2.2, 0.7),
-					'The Perfect Ice',
-					'panelIce',
-					0xaaddff
-				);
-
-				// Glass hotspot - on the glass rim
-				createHotspot(
-					new THREE.Vector3(0.6, 2.8, -0.5),
-					'Highball Glass',
-					'panelGlass',
-					0x7ec8e8
-				);
-
-				// Video hotspot - near the base
-				createHotspot(
-					new THREE.Vector3(-0.8, 0.6, -0.6),
-					'Watch the Ritual',
-					'panelVideo',
-					0xff9f43
-				);
-
-			}
-
-			function updateHotspots(time) {
-
-				for (const hotspot of hotspots) {
-
-					const { ring, pulseRing, hovered } = hotspot.userData;
-
-					// Make rings face camera
-					ring.lookAt(camera.position);
-					pulseRing.lookAt(camera.position);
-
-					// Pulse animation
-					const pulse = 1 + Math.sin(time * 3) * 0.15;
-					pulseRing.scale.set(pulse, pulse, pulse);
-					pulseRing.material.opacity = 0.5 * (1 - (pulse - 1) / 0.15 * 0.5);
-
-					// Hover effect
-					const targetScale = hovered ? 1.3 : 1;
-					hotspot.userData.baseScale += (targetScale - hotspot.userData.baseScale) * 0.1;
-					hotspot.scale.setScalar(hotspot.userData.baseScale);
-
-				}
-
-			}
-
-			function checkHotspotHover() {
-
-				raycaster.setFromCamera(mouse, camera);
-
-				let foundHover = false;
-
-				for (const hotspot of hotspots) {
-
-					const intersects = raycaster.intersectObject(hotspot, true);
-
-					if (intersects.length > 0 && intersects[0].distance < 10) {
-
-						hotspot.userData.hovered = true;
-						foundHover = true;
-
-						// Show label
-						const screenPos = hotspot.position.clone().project(camera);
-						const x = (screenPos.x * 0.5 + 0.5) * window.innerWidth;
-						const y = (-screenPos.y * 0.5 + 0.5) * window.innerHeight;
-
-						hotspotLabel.textContent = hotspot.userData.label;
-						hotspotLabel.style.left = x + 'px';
-						hotspotLabel.style.top = (y - 50) + 'px';
-						hotspotLabel.classList.add('visible');
-
-						renderer.domElement.style.cursor = 'pointer';
-
-					} else {
-
-						hotspot.userData.hovered = false;
-
-					}
-
-				}
-
-				if (!foundHover) {
-
-					hotspotLabel.classList.remove('visible');
-					renderer.domElement.style.cursor = 'grab';
-
-				}
-
-			}
-
-			function checkHotspotClick() {
-
-				raycaster.setFromCamera(mouse, camera);
-
-				for (const hotspot of hotspots) {
-
-					const intersects = raycaster.intersectObject(hotspot, true);
-
-					if (intersects.length > 0 && intersects[0].distance < 10) {
-
-						openPanel(hotspot.userData.panelId);
-						return true;
-
-					}
-
-				}
-
-				return false;
-
-			}
-
-			function openPanel(panelId) {
-
-				// Close any open panel first
-				closePanel();
-
-				const panel = document.getElementById(panelId);
-				if (panel) {
-
-					activePanel = panel;
-					panel.classList.add('active');
-					hotspotOverlay.classList.add('active');
-					hotspotLabel.classList.remove('visible');
-
-					// Focus trap for accessibility
-					const closeBtn = panel.querySelector('.hotspot-panel-close');
-					if (closeBtn) closeBtn.focus();
-
-				}
-
-			}
-
-			function closePanel() {
-
-				if (activePanel) {
-
-					activePanel.classList.remove('active');
-					activePanel = null;
-
-				}
-
-				hotspotOverlay.classList.remove('active');
-
-			}
 
 			// Bubble system
 			function initBubbleSystem() {
@@ -1758,7 +1538,6 @@ import { setupPanelControls, setupControls } from './controls.js';
 			// Default floor removed - using floor-01.glb model instead
 
 				buildLiquid();
-				buildGlass();
 				initBubbleSystem();
 
 				// Spawn initial ice
@@ -1785,15 +1564,17 @@ import { setupPanelControls, setupControls } from './controls.js';
 			// Load ice cube GLB model
 			loadIceCubeGLB();
 
-			// Initialize hotspots
-			initHotspots();
-
 			// Setup camera controls
 			controls = setupCameraControls(camera, renderer);
 
-				raycaster = new THREE.Raycaster();
-				renderer.domElement.addEventListener('pointermove', onPointerMove);
-				renderer.domElement.addEventListener('pointerdown', onPointerDown);
+			// Create raycaster before initializing hotspots
+			raycaster = new THREE.Raycaster();
+			
+			// Initialize hotspots
+			initHotspots(scene, camera, renderer, raycaster, mouse);
+
+			renderer.domElement.addEventListener('pointermove', onPointerMove);
+			renderer.domElement.addEventListener('pointerdown', onPointerDown);
 
 				// Setup window resize handler
 				setupResizeHandler(camera, renderer);
@@ -1811,7 +1592,7 @@ import { setupPanelControls, setupControls } from './controls.js';
 			const orangeSliceVisibleRef = { value: orangeSliceVisible };
 			
 			setupControls(fizzIntensityRef, liquidUniforms, orangeSliceVisibleRef, toggleOrangeSlice);
-			setupPanelControls(closePanel, activePanel, hotspotOverlay, transformControls, lights, window.toggleGlass);
+			setupPanelControls(transformControls, lights);
 			
 			// Store refs for use in other functions
 			window.fizzIntensityRef = fizzIntensityRef;
@@ -1838,103 +1619,6 @@ import { setupPanelControls, setupControls } from './controls.js';
 			renderer.setAnimationLoop(animate);
 
 			}
-
-			function buildGlass() {
-
-				// Outer glass cylinder
-				const outerGeometry = new THREE.CylinderGeometry(
-					GLASS_RADIUS,
-					GLASS_RADIUS * 0.92,
-					GLASS_HEIGHT,
-					64,
-					1,
-					true
-				);
-
-				const glassMaterialOuter = new THREE.MeshPhysicalMaterial({
-					color: 0xffffff,
-					metalness: 0,
-					roughness: 0.02,
-					transmission: 1,
-					opacity: 1,
-					transparent: true,
-					thickness: 1,
-					clearcoat: 1.0,
-					ior: 1.52,
-					envMapIntensity: 1.2,
-					depthWrite: false,
-				});
-
-			glassOuter = new THREE.Mesh(outerGeometry, glassMaterialOuter);
-			glassOuter.position.y = GLASS_HEIGHT / 2 + 0.1;
-			glassOuter.renderOrder = 10;
-			glassOuter.visible = false; // Hidden by default
-			scene.add(glassOuter);
-
-				// Inner glass surface
-				const innerGeometry = new THREE.CylinderGeometry(
-					GLASS_RADIUS - GLASS_THICKNESS,
-					(GLASS_RADIUS * 0.92) - GLASS_THICKNESS,
-					GLASS_HEIGHT,
-					64,
-					1,
-					true
-				);
-
-				const glassMaterialInner = new THREE.MeshPhysicalMaterial({
-					color: 0xffffff,
-					metalness: 0,
-					roughness: 0.02,
-					transmission: 0.97,
-					opacity: 1,
-					transparent: true,
-					thickness: 0.08,
-					clearcoat: 1.0,
-					ior: 1.52,
-					side: THREE.BackSide,
-					depthWrite: false,
-				});
-
-			glassInner = new THREE.Mesh(innerGeometry, glassMaterialInner);
-			glassInner.position.y = GLASS_HEIGHT / 2 + 0.1;
-			glassInner.renderOrder = 9;
-			glassInner.visible = false; // Hidden by default
-			scene.add(glassInner);
-
-				// Glass bottom
-				const bottomGeometry = new THREE.CylinderGeometry(
-					GLASS_RADIUS * 0.92,
-					GLASS_RADIUS * 0.92,
-					0.12,
-					64
-				);
-				const bottomMaterial = new THREE.MeshPhysicalMaterial({
-					color: 0xffffff,
-					metalness: 0,
-					roughness: 0.05,
-					transmission: 0.9,
-					transparent: true,
-					thickness: 0.12,
-					ior: 1.52,
-					depthWrite: false,
-				});
-
-			glassBottom = new THREE.Mesh(bottomGeometry, bottomMaterial);
-			glassBottom.position.y = 0.06;
-			glassBottom.renderOrder = 8;
-			glassBottom.visible = false; // Hidden by default
-			scene.add(glassBottom);
-
-		}
-
-		// Toggle glass visibility (call from console: toggleGlass())
-		window.toggleGlass = function() {
-			const isVisible = glassOuter.visible;
-			glassOuter.visible = !isVisible;
-			glassInner.visible = !isVisible;
-			glassBottom.visible = !isVisible;
-			// console.log('Glass', isVisible ? 'hidden' : 'visible');
-		};
 
 		// Toggle light helpers visibility (call from console: toggleLightHelpers())
 		window.toggleLightHelpers = function() {
