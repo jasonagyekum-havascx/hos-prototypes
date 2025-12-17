@@ -68,7 +68,8 @@ export function setupCameraControls(camera, renderer) {
 	// Zoom constraints removed - can zoom freely
 	// controls.minDistance = 2.5;
 	// controls.maxDistance = 8;
-	controls.maxPolarAngle = Math.PI * 0.85;
+	controls.minPolarAngle = 0; // Allow viewing from above
+	controls.maxPolarAngle = Math.PI / 2; // Prevent viewing from below (horizontal is the limit)
 	return controls;
 }
 

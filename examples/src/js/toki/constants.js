@@ -22,3 +22,19 @@ export const iceConfig = {
 export const MAX_BUBBLES = 500;
 export const fizzIntensity = 3.0;
 
+// Orbit system defaults
+export const ORBIT_DEFAULTS = {
+	enabled: true,
+	globalSpeed: 1.0,
+	globalRadiusMultiplier: 1.0,
+	globalScaleMultiplier: 1.0,
+	honeyWobbleIntensity: 0.15,
+	honeyWobbleSpeed: 1.5,
+};
+
+export const ORBIT_RINGS = [
+	{ radius: 1.8, height: 1.8, speed: 0.4 },   // Ring 1 - Inner
+	{ radius: 2.4, height: 2.2, speed: 0.3 },   // Ring 2 - Middle
+	{ radius: 3.0, height: 1.5, speed: 0.25 },  // Ring 3 - Outer
+];
+

@@ -9,10 +9,11 @@ import { initHotspots, updateHotspots, checkHotspotHover, checkHotspotClick, clo
 import { buildLiquid, updateLiquidAnimation, triggerRipple, getLiquidMeshes, getLiquidUniforms } from './liquid-system.js';
 import { spawnIce, updateIceAnimation, loadIceCubeGLB, getIceObjects } from './ice-system.js';
 import { initBubbleSystem, updateBubbles } from './bubble-system.js';
-import { createLiquidGUI, createIceCubeGUI, createGlassGUI } from './gui.js';
+import { createLiquidGUI, createIceCubeGUI, createGlassGUI, createOrbitGUI } from './gui.js';
 import { loadFloorModel } from './model-floor.js';
 import { loadGlassModel, getGlassModelMaterial } from './model-glass.js';
 import { iceConfig, fizzIntensity } from './constants.js';
+import { initOrbitSystem, updateOrbitAnimation } from './orbit-system.js';
 
 let renderer, scene, camera, controls;
 let lights;
@@ -255,6 +256,9 @@ function init() {
 	// Load floor model
 	loadFloorModel(scene);
 
+	// Initialize orbiting ingredients system
+	initOrbitSystem(scene);
+
 	// Setup camera controls
 	controls = setupCameraControls(camera, renderer);
 
@@ -303,6 +307,9 @@ function init() {
 	
 	// Add light controls
 	createLightGUI(gui, lights, scene);
+	
+	// Add orbiting ingredients controls
+	createOrbitGUI(gui);
 
 	// Load ice cube GLB model (after GUI is created so it can add controls)
 	loadIceCubeGLB(scene, gui, createIceCubeGUI);
@@ -345,6 +352,7 @@ function animate() {
 	updateBubbles(deltaTime, currentFizzIntensity);
 	updateIceAnimation(elapsedTime);
 	updateOrangeSliceAnimation(elapsedTime);
+	updateOrbitAnimation(elapsedTime);
 	updateHotspots(elapsedTime);
 
 	controls.update();

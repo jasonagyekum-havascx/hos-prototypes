@@ -4,6 +4,17 @@ import * as THREE from '../../../../build/three.module.js';
 import { getIceObjects, getIceCubeMaterial } from './ice-system.js';
 import { getLiquidMeshes } from './liquid-system.js';
 import { getGlassModelMaterial } from './model-glass.js';
+import {
+	getOrbitConfig,
+	getIngredientConfigs,
+	setOrbitEnabled,
+	setOrbitSpeed,
+	setOrbitRadius,
+	setOrbitScale,
+	setIngredientVisible,
+	setHoneyWobbleIntensity,
+	setHoneyWobbleSpeed,
+} from './orbit-system.js';
 
 function createFloorGUI(gui) {
   if (!floor || !floor.material) return;
@@ -533,4 +544,72 @@ export function createLiquidGUI(gui) {
 
   // Keep folder collapsed by default
   liquidFolder.close();
+}
+
+// Create orbiting ingredients GUI controls
+
+export function createOrbitGUI(gui) {
+  const orbitConfig = getOrbitConfig();
+  const ingredientConfigs = getIngredientConfigs();
+  
+  if (!orbitConfig) return;
+  
+  const orbitFolder = gui.addFolder('Orbiting Ingredients');
+  
+  // Master controls
+  const masterSettings = {
+    enabled: orbitConfig.enabled,
+    speed: orbitConfig.globalSpeed,
+    radius: orbitConfig.globalRadiusMultiplier,
+    scale: orbitConfig.globalScaleMultiplier,
+  };
+  
+  orbitFolder.add(masterSettings, 'enabled').name('Enable Orbiting').onChange((value) => {
+    setOrbitEnabled(value);
+  });
+  
+  orbitFolder.add(masterSettings, 'speed', 0.1, 3.0, 0.1).name('Orbit Speed').onChange((value) => {
+    setOrbitSpeed(value);
+  });
+  
+  orbitFolder.add(masterSettings, 'radius', 0.5, 2.0, 0.1).name('Orbit Radius').onChange((value) => {
+    setOrbitRadius(value);
+  });
+  
+  orbitFolder.add(masterSettings, 'scale', 0.5, 3.0, 0.1).name('Ingredient Size').onChange((value) => {
+    setOrbitScale(value);
+  });
+  
+  // Ingredients visibility subfolder
+  const ingredientsFolder = orbitFolder.addFolder('Ingredients Visibility');
+  
+  Object.entries(ingredientConfigs).forEach(([key, config]) => {
+    const setting = { visible: config.visible };
+    ingredientsFolder.add(setting, 'visible').name(config.name).onChange((value) => {
+      setIngredientVisible(key, value);
+    });
+  });
+  
+  ingredientsFolder.close();
+  
+  // Honey effects subfolder
+  const honeyFolder = orbitFolder.addFolder('Honey Effects');
+  
+  const honeySettings = {
+    wobbleIntensity: orbitConfig.honeyWobbleIntensity,
+    wobbleSpeed: orbitConfig.honeyWobbleSpeed,
+  };
+  
+  honeyFolder.add(honeySettings, 'wobbleIntensity', 0, 0.5, 0.01).name('Wobble Intensity').onChange((value) => {
+    setHoneyWobbleIntensity(value);
+  });
+  
+  honeyFolder.add(honeySettings, 'wobbleSpeed', 0.1, 4.0, 0.1).name('Wobble Speed').onChange((value) => {
+    setHoneyWobbleSpeed(value);
+  });
+  
+  honeyFolder.close();
+  
+  // Keep folder collapsed by default
+  orbitFolder.close();
 }
