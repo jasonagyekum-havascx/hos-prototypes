@@ -256,27 +256,9 @@ export function toggleHelpers(lights, visible) {
 	// console.log('Light helpers', visible ? 'visible' : 'hidden');
 }
 
-// Create GUI panel for light controls with gizmos
-export function createLightGUI(gui, lights, scene, transformControls) {
+// Create GUI panel for light controls
+export function createLightGUI(gui, lights, scene) {
 	if (!gui || !lights) return;
-
-	// Settings object for internal use (no GUI folder)
-	const settings = {
-		selectedLight: null,
-		attachGizmo: (light) => {
-			if (light && transformControls) {
-				transformControls.attach(light);
-				// console.log('Gizmo attached to:', light.name);
-			}
-		},
-		detachGizmo: () => {
-			if (transformControls) {
-				transformControls.detach();
-				// console.log('Gizmo detached');
-			}
-		},
-		gizmoMode: 'translate',
-	};
 
 	// Directional Lights
 	if (lights.directional && lights.directional.length > 0) {
@@ -339,10 +321,6 @@ export function createLightGUI(gui, lights, scene, transformControls) {
 			posFolder.add(light.position, 'z', -10, 10, 0.1).name('Z').listen();
 			posFolder.close(); // Collapse by default
 			
-			lightFolder.add({
-				attachGizmo: () => settings.attachGizmo(light)
-			}, 'attachGizmo').name('🎯 Attach Gizmo');
-			
 			// Collapse individual light folders by default
 			lightFolder.close();
 		});
@@ -378,10 +356,6 @@ export function createLightGUI(gui, lights, scene, transformControls) {
 			posFolder.add(light.position, 'z', -10, 10, 0.1).name('Z').listen();
 			posFolder.close(); // Collapse by default
 			
-			lightFolder.add({
-				attachGizmo: () => settings.attachGizmo(light)
-			}, 'attachGizmo').name('🎯 Attach Gizmo');
-			
 			// Collapse individual light folders by default
 			lightFolder.close();
 		});
@@ -401,6 +375,7 @@ export function createLightGUI(gui, lights, scene, transformControls) {
 		ambientFolder.addColor(colorControl, 'color').name('Color').onChange((value) => {
 			lights.ambient.color.set(value);
 		});
+		ambientFolder.close(); // Collapse by default
 	}
 
 	// Hemisphere Light
@@ -421,8 +396,9 @@ export function createLightGUI(gui, lights, scene, transformControls) {
 		hemiFolder.addColor(groundColorControl, 'color').name('Ground Color').onChange((value) => {
 			lights.hemisphere.groundColor.set(value);
 		});
+		hemiFolder.close(); // Collapse by default
 	}
 
-	// console.log('Light GUI created with gizmo controls');
+	// console.log('Light GUI created');
 }
 

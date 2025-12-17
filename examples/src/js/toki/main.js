@@ -1,9 +1,8 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
-import { TransformControls } from 'three/addons/controls/TransformControls.js';
 import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
-import { setupLights, updateLightHelpers, toggleHelpers, createLightGUI } from './lights-config.js';
+import { setupLights, createLightGUI } from './lights-config.js';
 import { initScene, setupCameraControls, setupResizeHandler } from './scene-setup.js';
 import { setupPanelControls, setupControls } from './controls.js';
 import { initHotspots, updateHotspots, checkHotspotHover, checkHotspotClick, closePanel, getActivePanel, getHotspotOverlay } from './hotspots.js';
@@ -16,9 +15,8 @@ import { loadGlassModel, getGlassModelMaterial } from './model-glass.js';
 import { iceConfig, fizzIntensity } from './constants.js';
 
 let renderer, scene, camera, controls;
-let lights; // Store lights reference for helpers
+let lights;
 let gui; // GUI panel
-let transformControls; // Gizmos for dragging lights
 let floor = null; // Floor mesh reference
 let raycaster;
 const mouse = new THREE.Vector2();
@@ -277,20 +275,13 @@ function init() {
 	// Setup window resize handler
 	setupResizeHandler(camera, renderer);
 
-	// Setup TransformControls for dragging lights
-	transformControls = new TransformControls(camera, renderer.domElement);
-	transformControls.addEventListener('dragging-changed', (event) => {
-		controls.enabled = !event.value; // Disable orbit controls while dragging
-	});
-	scene.add(transformControls);
-
-	// Setup controls (after transformControls is created)
+	// Setup controls
 	// Wrap fizzIntensity and orangeSliceVisible in objects for pass-by-reference
 	const fizzIntensityRef = { value: fizzIntensity };
 	const orangeSliceVisibleRef = { value: orangeSliceVisible };
 	
 	setupControls(fizzIntensityRef, getLiquidUniforms(), orangeSliceVisibleRef, toggleOrangeSlice);
-	setupPanelControls(transformControls, lights);
+	setupPanelControls();
 	
 	// Store refs for use in other functions
 	window.fizzIntensityRef = fizzIntensityRef;
@@ -316,7 +307,7 @@ function init() {
 	}
 	
 	// Add light controls
-	createLightGUI(gui, lights, scene, transformControls);
+	createLightGUI(gui, lights, scene);
 
 	// Load ice cube GLB model (after GUI is created so it can add controls)
 	loadIceCubeGLB(scene, gui, createIceCubeGUI);
@@ -324,15 +315,6 @@ function init() {
 	renderer.setAnimationLoop(animate);
 }
 
-// Toggle light helpers visibility (call from console: toggleLightHelpers())
-window.toggleLightHelpers = function() {
-	if (lights && lights.helpers && lights.helpers.length > 0) {
-		const currentVisibility = lights.helpers[0].visible;
-		toggleHelpers(lights, !currentVisibility);
-	} else {
-		// console.log('No light helpers available');
-	}
-};
 
 function onPointerMove(event) {
 	setMouseFromEvent(event);
@@ -370,11 +352,6 @@ function animate() {
 	updateIceAnimation(elapsedTime);
 	updateOrangeSliceAnimation(elapsedTime);
 	updateHotspots(elapsedTime);
-
-	// Update light helpers
-	if (lights) {
-		updateLightHelpers(lights);
-	}
 
 	controls.update();
 	renderer.render(scene, camera);
