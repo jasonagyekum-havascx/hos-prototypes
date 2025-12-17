@@ -414,8 +414,12 @@ function createIceCubeGUI(gui) {
 
 		// Create liquid material GUI controls
 
-function createLiquidGUI(gui) {
-			if (!liquidSurface || !liquidBody || !liquidSurface.material || !liquidBody.material) return;
+export function createLiquidGUI(gui) {
+			const liquidMeshes = getLiquidMeshes();
+			if (!liquidMeshes || !liquidMeshes.surface || !liquidMeshes.body || !liquidMeshes.surface.material || !liquidMeshes.body.material) return;
+
+			const liquidSurface = liquidMeshes.surface;
+			const liquidBody = liquidMeshes.body;
 
 			const liquidFolder = gui.addFolder('Liquid Material');
 			

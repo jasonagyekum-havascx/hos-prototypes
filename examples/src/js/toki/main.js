@@ -8,10 +8,10 @@ import { liquidConfig, applyLiquidConfig } from './liquid-config.js';
 import { initScene, setupCameraControls, setupResizeHandler } from './scene-setup.js';
 import { setupPanelControls, setupControls } from './controls.js';
 import { initHotspots, updateHotspots, checkHotspotHover, checkHotspotClick, closePanel, getActivePanel, getHotspotOverlay } from './hotspots.js';
+import { buildLiquid, updateLiquidAnimation, triggerRipple, getLiquidMeshes, getLiquidUniforms } from './liquid-system.js';
+import { createLiquidGUI } from './gui.js';
 
 		let renderer, scene, camera, controls;
-		let liquidSurface, liquidBody;
-		let liquidUniforms;
 		let lights; // Store lights reference for helpers
 		let gui; // GUI panel
 		let transformControls; // Gizmos for dragging lights
@@ -19,7 +19,6 @@ import { initHotspots, updateHotspots, checkHotspotHover, checkHotspotClick, clo
 		let glassModelMaterial = null; // Glass model material reference
 		let iceCubeMaterial = null; // Ice cube material reference (for GUI controls)
 			let raycaster;
-			let waterPlane;
 			let glassOuter, glassInner, glassBottom;
 			const mouse = new THREE.Vector2();
 
@@ -1408,122 +1407,6 @@ import { initHotspots, updateHotspots, checkHotspotHover, checkHotspotClick, clo
 			}
 		}
 
-		// Create liquid material GUI controls
-		function createLiquidGUI(gui) {
-			if (!liquidSurface || !liquidBody || !liquidSurface.material || !liquidBody.material) return;
-
-			const liquidFolder = gui.addFolder('Liquid Material');
-			
-			// Surface Material Settings
-			const surfaceFolder = liquidFolder.addFolder('Surface (Top Circle)');
-			const surfaceSettings = {
-				color: '#' + liquidSurface.material.color.getHexString(),
-				roughness: liquidSurface.material.roughness,
-				metalness: liquidSurface.material.metalness,
-				opacity: liquidSurface.material.opacity,
-				emissive: '#' + (liquidSurface.material.emissive ? liquidSurface.material.emissive.getHexString() : '000000'),
-				emissiveIntensity: liquidSurface.material.emissiveIntensity || 0,
-				envMapIntensity: liquidSurface.material.envMapIntensity || 1.0,
-				side: liquidSurface.material.side === THREE.DoubleSide ? 'Double' : (liquidSurface.material.side === THREE.BackSide ? 'Back' : 'Front'),
-				depthWrite: liquidSurface.material.depthWrite,
-				transparent: liquidSurface.material.transparent,
-			};
-
-			surfaceFolder.addColor(surfaceSettings, 'color').name('Color').onChange((value) => {
-				liquidSurface.material.color.set(value);
-			});
-			surfaceFolder.add(surfaceSettings, 'roughness', 0, 1, 0.01).name('Roughness').onChange((value) => {
-				liquidSurface.material.roughness = value;
-			});
-			surfaceFolder.add(surfaceSettings, 'metalness', 0, 1, 0.01).name('Metalness').onChange((value) => {
-				liquidSurface.material.metalness = value;
-			});
-			surfaceFolder.add(surfaceSettings, 'opacity', 0, 1, 0.01).name('Opacity').onChange((value) => {
-				liquidSurface.material.opacity = value;
-			});
-			surfaceFolder.addColor(surfaceSettings, 'emissive').name('Emissive Color').onChange((value) => {
-				if (liquidSurface.material.emissive) liquidSurface.material.emissive.set(value);
-			});
-			surfaceFolder.add(surfaceSettings, 'emissiveIntensity', 0, 2, 0.01).name('Emissive Intensity').onChange((value) => {
-				if (liquidSurface.material.emissiveIntensity !== undefined) liquidSurface.material.emissiveIntensity = value;
-			});
-			surfaceFolder.add(surfaceSettings, 'envMapIntensity', 0, 3, 0.1).name('Reflection Intensity').onChange((value) => {
-				if (liquidSurface.material.envMapIntensity !== undefined) liquidSurface.material.envMapIntensity = value;
-			});
-			surfaceFolder.add(surfaceSettings, 'side', ['Front', 'Back', 'Double']).name('Side').onChange((value) => {
-				const sideMap = {
-					'Front': THREE.FrontSide,
-					'Back': THREE.BackSide,
-					'Double': THREE.DoubleSide
-				};
-				liquidSurface.material.side = sideMap[value];
-				liquidSurface.material.needsUpdate = true;
-			});
-			surfaceFolder.add(surfaceSettings, 'depthWrite').name('Depth Write').onChange((value) => {
-				liquidSurface.material.depthWrite = value;
-			});
-			surfaceFolder.add(surfaceSettings, 'transparent').name('Transparent').onChange((value) => {
-				liquidSurface.material.transparent = value;
-			});
-			surfaceFolder.close();
-
-			// Body Material Settings (Cylinder)
-			const bodyFolder = liquidFolder.addFolder('Body (Cylinder)');
-			const bodySettings = {
-				color: '#' + liquidBody.material.color.getHexString(),
-				roughness: liquidBody.material.roughness,
-				metalness: liquidBody.material.metalness,
-				opacity: liquidBody.material.opacity,
-				emissive: '#' + (liquidBody.material.emissive ? liquidBody.material.emissive.getHexString() : '000000'),
-				emissiveIntensity: liquidBody.material.emissiveIntensity || 0,
-				envMapIntensity: liquidBody.material.envMapIntensity || 1.0,
-				side: liquidBody.material.side === THREE.DoubleSide ? 'Double' : (liquidBody.material.side === THREE.BackSide ? 'Back' : 'Front'),
-				depthWrite: liquidBody.material.depthWrite,
-				transparent: liquidBody.material.transparent,
-			};
-
-			bodyFolder.addColor(bodySettings, 'color').name('Color').onChange((value) => {
-				liquidBody.material.color.set(value);
-			});
-			bodyFolder.add(bodySettings, 'roughness', 0, 1, 0.01).name('Roughness').onChange((value) => {
-				liquidBody.material.roughness = value;
-			});
-			bodyFolder.add(bodySettings, 'metalness', 0, 1, 0.01).name('Metalness').onChange((value) => {
-				liquidBody.material.metalness = value;
-			});
-			bodyFolder.add(bodySettings, 'opacity', 0, 1, 0.01).name('Opacity').onChange((value) => {
-				liquidBody.material.opacity = value;
-			});
-			bodyFolder.addColor(bodySettings, 'emissive').name('Emissive Color').onChange((value) => {
-				if (liquidBody.material.emissive) liquidBody.material.emissive.set(value);
-			});
-			bodyFolder.add(bodySettings, 'emissiveIntensity', 0, 2, 0.01).name('Emissive Intensity').onChange((value) => {
-				if (liquidBody.material.emissiveIntensity !== undefined) liquidBody.material.emissiveIntensity = value;
-			});
-			bodyFolder.add(bodySettings, 'envMapIntensity', 0, 3, 0.1).name('Reflection Intensity').onChange((value) => {
-				if (liquidBody.material.envMapIntensity !== undefined) liquidBody.material.envMapIntensity = value;
-			});
-			bodyFolder.add(bodySettings, 'side', ['Front', 'Back', 'Double']).name('Side').onChange((value) => {
-				const sideMap = {
-					'Front': THREE.FrontSide,
-					'Back': THREE.BackSide,
-					'Double': THREE.DoubleSide
-				};
-				liquidBody.material.side = sideMap[value];
-				liquidBody.material.needsUpdate = true;
-			});
-			bodyFolder.add(bodySettings, 'depthWrite').name('Depth Write').onChange((value) => {
-				liquidBody.material.depthWrite = value;
-			});
-			bodyFolder.add(bodySettings, 'transparent').name('Transparent').onChange((value) => {
-				liquidBody.material.transparent = value;
-			});
-			bodyFolder.close();
-
-			// Keep folder collapsed by default
-			liquidFolder.close();
-		}
-
 		function init() {
 			// Initialize scene, renderer, camera
 			const sceneSetup = initScene();
@@ -1537,7 +1420,7 @@ import { initHotspots, updateHotspots, checkHotspotHover, checkHotspotClick, clo
 
 			// Default floor removed - using floor-01.glb model instead
 
-				buildLiquid();
+				buildLiquid(scene, fizzIntensity);
 				initBubbleSystem();
 
 				// Spawn initial ice
@@ -1591,7 +1474,7 @@ import { initHotspots, updateHotspots, checkHotspotHover, checkHotspotClick, clo
 			const fizzIntensityRef = { value: fizzIntensity };
 			const orangeSliceVisibleRef = { value: orangeSliceVisible };
 			
-			setupControls(fizzIntensityRef, liquidUniforms, orangeSliceVisibleRef, toggleOrangeSlice);
+			setupControls(fizzIntensityRef, getLiquidUniforms(), orangeSliceVisibleRef, toggleOrangeSlice);
 			setupPanelControls(transformControls, lights);
 			
 			// Store refs for use in other functions
@@ -1609,7 +1492,8 @@ import { initHotspots, updateHotspots, checkHotspotHover, checkHotspotClick, clo
 			// (createGlassGUI is called in loadCubeModel callback)
 			
 			// Add liquid material controls (liquid is already built)
-			if (liquidSurface && liquidBody) {
+			const liquidMeshes = getLiquidMeshes();
+			if (liquidMeshes && liquidMeshes.surface && liquidMeshes.body) {
 				createLiquidGUI(gui);
 			}
 			
@@ -1630,155 +1514,6 @@ import { initHotspots, updateHotspots, checkHotspotHover, checkHotspotClick, clo
 			}
 		};
 
-			function buildLiquid() {
-
-				liquidUniforms = {
-					uTime: { value: 0 },
-					uTilt: { value: new THREE.Vector2() },
-					uRippleCenter: { value: new THREE.Vector2(10000, 10000) },
-					uRippleStrength: { value: 0 },
-					uFizz: { value: fizzIntensity },
-				};
-
-				const surfaceSegments = 64;
-				const surfaceGeometry = new THREE.CircleGeometry(LIQUID_RADIUS, surfaceSegments);
-				surfaceGeometry.rotateX(-Math.PI * 0.5);
-				surfaceGeometry.translate(0, LIQUID_SURFACE_Y - 0.02, 0); // Slightly lower to reduce gap with cylinder
-
-				const surfaceMaterial = new THREE.MeshStandardMaterial({
-					color: liquidConfig.surface.color,
-					metalness: liquidConfig.surface.metalness,
-					roughness: liquidConfig.surface.roughness,
-					transparent: liquidConfig.surface.transparent,
-					opacity: liquidConfig.surface.opacity,
-					emissive: liquidConfig.surface.emissive,
-					emissiveIntensity: liquidConfig.surface.emissiveIntensity,
-					side: liquidConfig.surface.side === 'Double' ? THREE.DoubleSide : (liquidConfig.surface.side === 'Back' ? THREE.BackSide : THREE.FrontSide),
-					depthWrite: liquidConfig.surface.depthWrite,
-				});
-				if (liquidConfig.surface.envMapIntensity !== undefined) {
-					surfaceMaterial.envMapIntensity = liquidConfig.surface.envMapIntensity;
-				}
-
-				surfaceMaterial.onBeforeCompile = (shader) => {
-
-					shader.uniforms.uTime = liquidUniforms.uTime;
-					shader.uniforms.uTilt = liquidUniforms.uTilt;
-					shader.uniforms.uRippleCenter = liquidUniforms.uRippleCenter;
-					shader.uniforms.uRippleStrength = liquidUniforms.uRippleStrength;
-					shader.uniforms.uFizz = liquidUniforms.uFizz;
-
-					shader.vertexShader = shader.vertexShader.replace(
-						'#include <common>',
-						`#include <common>
-						uniform float uTime;
-						uniform vec2 uTilt;
-						uniform vec2 uRippleCenter;
-						uniform float uRippleStrength;
-						uniform float uFizz;
-						varying float vWaveHeight;`
-					);
-
-					shader.vertexShader = shader.vertexShader.replace(
-						'#include <begin_vertex>',
-						`vec3 transformed = vec3(position);
-						
-						// Tilt effect
-						float tilt = dot(transformed.xz, uTilt) * 0.2;
-						
-						// Gentle waves (slowed down, reduced amplitude)
-						float wave = sin(transformed.x * 4.0 + uTime * 0.75) * 0.006
-						           + sin(transformed.z * 4.5 + uTime * 0.55) * 0.006
-						           + sin((transformed.x + transformed.z) * 3.0 + uTime * 0.9) * 0.004;
-						
-						// Fizz surface disturbance (slowed down, reduced amplitude)
-						float fizz = sin(transformed.x * 20.0 + uTime * 2.5) * 0.0015 * uFizz
-						           + sin(transformed.z * 22.0 + uTime * 3.0) * 0.0015 * uFizz;
-						
-						// Ripple from touch (slowed down)
-						float dist = length(transformed.xz - uRippleCenter);
-						float ripple = uRippleStrength * exp(-dist * 3.0) * sin(12.0 * dist - uTime * 2.5);
-						
-						float totalWave = tilt + wave + fizz + ripple;
-						transformed.y += totalWave;
-						vWaveHeight = totalWave;`
-					);
-
-					shader.fragmentShader = shader.fragmentShader.replace(
-						'#include <common>',
-						`#include <common>
-						varying float vWaveHeight;`
-					);
-
-					surfaceMaterial.userData.shader = shader;
-
-				};
-
-				liquidSurface = new THREE.Mesh(surfaceGeometry, surfaceMaterial);
-				liquidSurface.renderOrder = 2;
-				scene.add(liquidSurface);
-
-				// Liquid body (tapered - skinnier at bottom, larger at top)
-				const bodyGeometry = new THREE.CylinderGeometry(
-					LIQUID_RADIUS * liquidConfig.geometry.topRadius,      // Top radius (larger)
-					LIQUID_RADIUS * liquidConfig.geometry.bottomRadius,   // Bottom radius (skinnier)
-					LIQUID_HEIGHT,
-					liquidConfig.geometry.radialSegments,
-					liquidConfig.geometry.heightSegments,
-					true
-				);
-				bodyGeometry.translate(0, LIQUID_BASE_Y + LIQUID_HEIGHT * 0.5, 0);
-
-				const bodyMaterial = new THREE.MeshStandardMaterial({
-					color: liquidConfig.body.color,
-					metalness: liquidConfig.body.metalness,
-					roughness: liquidConfig.body.roughness,
-					transparent: liquidConfig.body.transparent,
-					opacity: liquidConfig.body.opacity,
-					emissive: liquidConfig.body.emissive,
-					emissiveIntensity: liquidConfig.body.emissiveIntensity,
-					side: liquidConfig.body.side === 'Double' ? THREE.DoubleSide : (liquidConfig.body.side === 'Back' ? THREE.BackSide : THREE.FrontSide),
-					depthWrite: liquidConfig.body.depthWrite,
-				});
-				if (liquidConfig.body.envMapIntensity !== undefined) {
-					bodyMaterial.envMapIntensity = liquidConfig.body.envMapIntensity;
-				}
-
-				liquidBody = new THREE.Mesh(bodyGeometry, bodyMaterial);
-				liquidBody.renderOrder = 1;
-				scene.add(liquidBody);
-
-				// Liquid bottom (matches bottom radius of tapered cylinder)
-				const bottomGeometry = new THREE.CircleGeometry(LIQUID_RADIUS * liquidConfig.geometry.bottomRadius, 64);
-				bottomGeometry.rotateX(Math.PI * 0.5);
-				bottomGeometry.translate(0, LIQUID_BASE_Y, 0);
-
-				const bottomMaterial = new THREE.MeshStandardMaterial({
-					color: liquidConfig.bottom.color,
-					metalness: liquidConfig.bottom.metalness,
-					roughness: liquidConfig.bottom.roughness,
-					transparent: liquidConfig.bottom.transparent,
-					opacity: liquidConfig.bottom.opacity,
-					emissive: liquidConfig.bottom.emissive,
-					emissiveIntensity: liquidConfig.bottom.emissiveIntensity,
-					side: liquidConfig.bottom.side === 'Double' ? THREE.DoubleSide : (liquidConfig.bottom.side === 'Back' ? THREE.BackSide : THREE.FrontSide),
-					depthWrite: liquidConfig.bottom.depthWrite,
-				});
-
-				const liquidBottom = new THREE.Mesh(bottomGeometry, bottomMaterial);
-				liquidBottom.renderOrder = 0;
-				scene.add(liquidBottom);
-
-				// Invisible raycast plane
-				waterPlane = new THREE.Mesh(
-					new THREE.PlaneGeometry(LIQUID_RADIUS * 2, LIQUID_RADIUS * 2),
-					new THREE.MeshBasicMaterial({ visible: false })
-				);
-				waterPlane.rotation.x = -Math.PI * 0.5;
-				waterPlane.position.y = LIQUID_SURFACE_Y;
-				scene.add(waterPlane);
-
-			}
 
 
 			function onPointerMove(event) {
@@ -1795,7 +1530,8 @@ import { initHotspots, updateHotspots, checkHotspotHover, checkHotspotClick, clo
 				// Check hotspot click first
 				if (checkHotspotClick()) return;
 
-				triggerRipple();
+				// Trigger ripple on liquid surface
+				triggerRipple(raycaster, mouse, camera);
 
 			}
 
@@ -1809,28 +1545,14 @@ import { initHotspots, updateHotspots, checkHotspotHover, checkHotspotClick, clo
 
 			}
 
-			function triggerRipple() {
-
-				raycaster.setFromCamera(mouse, camera);
-				const hit = raycaster.intersectObject(waterPlane);
-				if (hit.length === 0) return;
-
-				const point = hit[0].point;
-				liquidUniforms.uRippleCenter.value.set(point.x, point.z);
-				liquidUniforms.uRippleStrength.value = Math.min(
-					liquidUniforms.uRippleStrength.value + 0.4,
-					1.2
-				);
-
-			}
 
 			function animate() {
 
 				const deltaTime = 1 / 60;
 				elapsedTime += deltaTime;
 
-				liquidUniforms.uTime.value += 0.016;
-				liquidUniforms.uRippleStrength.value *= 0.95;
+				// Update liquid animation
+				updateLiquidAnimation(deltaTime);
 
 			// Update animations
 			updateBubbles(deltaTime);
