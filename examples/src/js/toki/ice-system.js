@@ -54,7 +54,7 @@ function applyIceMaterialToMesh(child, size) {
 				const iceMat = new THREE.MeshPhysicalMaterial({
 					color: child.material.color || 0xd8e4f0,
 					metalness: child.material.metalness !== undefined ? child.material.metalness : 0.0,
-					roughness: child.material.roughness !== undefined ? child.material.roughness : 0.1,
+					roughness: 0,
 					transmission: 0.7,
 					opacity: 0.85,
 					transparent: true,
@@ -74,6 +74,7 @@ function applyIceMaterialToMesh(child, size) {
 				if (child.material.clearcoat === undefined) child.material.clearcoat = 0.8;
 				if (child.material.clearcoatRoughness === undefined) child.material.clearcoatRoughness = 0.2;
 				if (child.material.opacity === undefined || child.material.opacity === 1) child.material.opacity = 0.85;
+				child.material.roughness = 0; // Set roughness to 0
 				child.material.depthWrite = true;
 			}
 			
@@ -130,6 +131,8 @@ export function spawnIce(scene, gui, createIceCubeGUI) {
 		bobSpeed: 0.8 + Math.random() * 0.4,
 		bobAmount: isFirstIce ? 0.02 : 0.01,
 		driftAmount: 0.01 + Math.random() * 0.01,
+		hasBeenAnimatedDown: false, // Flag to track if ice has been manually animated down
+		animationStopped: false, // Flag to stop all continuous animations
 	};
 
 	mesh.position.set(iceData.baseX, iceData.baseY, iceData.baseZ);
@@ -162,12 +165,17 @@ function resolveIceCollisions() {
 		const topIce = iceObjects[0];
 		const bottomIce = iceObjects[1];
 
-		const topTargetY = LIQUID_SURFACE_Y - iceHeight * 0.35;
-		topIce.baseY += (topTargetY - topIce.baseY) * 0.1;
+		// Only adjust positions if ice hasn't been manually animated down
+		if (!topIce.hasBeenAnimatedDown) {
+			const topTargetY = LIQUID_SURFACE_Y - iceHeight * 0.35;
+			topIce.baseY += (topTargetY - topIce.baseY) * 0.1;
+		}
 
-		const bottomTargetY = topIce.baseY - iceHeight - 0.02;
-		const clampedBottomY = Math.max(bottomTargetY, minY);
-		bottomIce.baseY += (clampedBottomY - bottomIce.baseY) * 0.1;
+		if (!bottomIce.hasBeenAnimatedDown) {
+			const bottomTargetY = topIce.baseY - iceHeight - 0.02;
+			const clampedBottomY = Math.max(bottomTargetY, minY);
+			bottomIce.baseY += (clampedBottomY - bottomIce.baseY) * 0.1;
+		}
 
 		bottomIce.baseX += (topIce.baseX - bottomIce.baseX) * 0.05;
 		bottomIce.baseZ += (topIce.baseZ - bottomIce.baseZ) * 0.05;
@@ -181,11 +189,16 @@ function resolveIceCollisions() {
 			ice.baseZ *= scale;
 		}
 
-		const maxY = ice.isFloater 
-			? LIQUID_SURFACE_Y - iceHeight * 0.25 
-			: LIQUID_SURFACE_Y - iceHeight * 0.6;
+		// Only clamp Y position if ice hasn't been manually animated down
+		if (!ice.hasBeenAnimatedDown) {
+			const maxY = ice.isFloater 
+				? LIQUID_SURFACE_Y - iceHeight * 0.25 
+				: LIQUID_SURFACE_Y - iceHeight * 0.6;
+			
+			if (ice.baseY > maxY) ice.baseY = maxY;
+		}
 		
-		if (ice.baseY > maxY) ice.baseY = maxY;
+		// Always enforce minimum Y to prevent going below liquid base
 		if (ice.baseY < minY) ice.baseY = minY;
 	}
 }
@@ -197,6 +210,15 @@ export function updateIceAnimation(time) {
 	resolveIceCollisions();
 
 	for (const ice of iceObjects) {
+		// Skip all animations if animation has been stopped
+		if (ice.animationStopped) {
+			ice.mesh.position.x = ice.baseX;
+			ice.mesh.position.y = ice.baseY;
+			ice.mesh.position.z = ice.baseZ;
+			// Keep rotation as is (don't update it)
+			continue;
+		}
+
 		const bobY = Math.sin(time * ice.bobSpeed + ice.phaseY) * ice.bobAmount;
 		const driftX = Math.sin(time * 0.3 + ice.phaseX) * ice.driftAmount;
 		const driftZ = Math.cos(time * 0.25 + ice.phaseZ) * ice.driftAmount;
@@ -263,6 +285,67 @@ export function loadIceCubeGLB(scene, gui, createIceCubeGUI) {
 // Get ice objects for external access
 export function getIceObjects() {
 	return iceObjects;
+}
+
+// Animate ice cubes down by a certain amount
+export function animateIceDown(amount, duration = 1.0) {
+	if (iceObjects.length === 0) return;
+	
+	// Store animation state
+	let startTime = Date.now();
+	let isAnimating = true;
+	
+	// Store starting positions
+	const startPositions = iceObjects.map(ice => ice.baseY);
+	const targetPositions = startPositions.map(y => y - amount);
+	
+	// Animation function
+	function animate() {
+		if (!isAnimating) return;
+		
+		const elapsed = (Date.now() - startTime) / 1000;
+		const progress = Math.min(elapsed / duration, 1.0);
+		
+		// Easing function (ease-out cubic)
+		const eased = 1 - Math.pow(1 - progress, 3);
+		
+		// Update each ice cube's baseY
+		for (let i = 0; i < iceObjects.length; i++) {
+			const ice = iceObjects[i];
+			ice.baseY = startPositions[i] + (targetPositions[i] - startPositions[i]) * eased;
+		}
+		
+		if (progress >= 1.0) {
+			isAnimating = false;
+			// Mark all ice cubes as having been animated down so collision resolution doesn't pull them back up
+			for (const ice of iceObjects) {
+				ice.hasBeenAnimatedDown = true;
+			}
+			
+			// Stop continuous animation on all ice cubes after first animation completes
+			for (const ice of iceObjects) {
+				ice.bobAmount = 0; // Stop bobbing
+				ice.driftAmount = 0; // Stop drifting
+				ice.rotationSpeed = 0; // Stop rotation
+				ice.animationStopped = true; // Stop all continuous animations
+			}
+		} else {
+			requestAnimationFrame(animate);
+		}
+	}
+	
+	animate();
+}
+
+// Stop animation on a specific ice cube by index
+export function stopIceAnimation(iceIndex) {
+	if (iceIndex >= 0 && iceIndex < iceObjects.length) {
+		const ice = iceObjects[iceIndex];
+		ice.bobAmount = 0;
+		ice.driftAmount = 0;
+		ice.rotationSpeed = 0;
+		ice.animationStopped = true;
+	}
 }
 
 // Get ice cube material for GUI
