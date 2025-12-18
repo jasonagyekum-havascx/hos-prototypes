@@ -4,6 +4,8 @@ import * as THREE from '../../../../build/three.module.js';
 import { getIceObjects, getIceCubeMaterial } from './ice-system.js';
 import { getLiquidMeshes, getLiquidUniforms } from './liquid-system.js';
 import { getGlassModelMaterial } from './model-glass.js';
+import { getGlassBottomModelMaterial } from './model-glass-bottom.js';
+import { getFloorModel, getFloorMaterials } from './model-floor.js';
 import {
 	getOrbitConfig,
 	getIngredientConfigs,
@@ -26,42 +28,57 @@ import {
 } from './orange-peel.js';
 import { fizzIntensity, MAX_FIZZ_INTENSITY } from './constants.js';
 
-function createFloorGUI(gui) {
-  if (!floor || !floor.material) return;
+export function createFloorGUI(gui) {
+  const floorMaterials = getFloorMaterials();
+  if (!floorMaterials || floorMaterials.length === 0) return;
 
   const floorFolder = gui.addFolder('Floor');
-  
-  const floorSettings = {
-    color: '#' + floor.material.color.getHexString(),
-    roughness: floor.material.roughness,
-    metalness: floor.material.metalness,
-    envMapIntensity: floor.material.envMapIntensity,
-    visible: floor.visible,
-  };
 
-  // Color control
-  floorFolder.addColor(floorSettings, 'color').name('Color').onChange((value) => {
-    floor.material.color.set(value);
-  });
+  // Create controls for each material
+  floorMaterials.forEach((floorData, index) => {
+    const { mesh, material, meshName, materialName } = floorData;
+    
+    // Create a subfolder for each material (use mesh name and material name if available)
+    const materialLabel = materialName !== `Material ${index}` 
+      ? `${meshName} - ${materialName}` 
+      : `${meshName} - Material ${index + 1}`;
+    const materialFolder = floorFolder.addFolder(materialLabel);
+    
+    const materialSettings = {
+      color: '#' + material.color.getHexString(),
+      roughness: material.roughness,
+      metalness: material.metalness,
+      envMapIntensity: material.envMapIntensity,
+      visible: mesh.visible,
+    };
 
-  // Roughness control
-  floorFolder.add(floorSettings, 'roughness', 0, 1, 0.01).name('Roughness').onChange((value) => {
-    floor.material.roughness = value;
-  });
+    // Color control
+    materialFolder.addColor(materialSettings, 'color').name('Color').onChange((value) => {
+      material.color.set(value);
+    });
 
-  // Metalness control
-  floorFolder.add(floorSettings, 'metalness', 0, 1, 0.01).name('Metalness').onChange((value) => {
-    floor.material.metalness = value;
-  });
+    // Roughness control
+    materialFolder.add(materialSettings, 'roughness', 0, 1, 0.01).name('Roughness').onChange((value) => {
+      material.roughness = value;
+    });
 
-  // Environment map intensity
-  floorFolder.add(floorSettings, 'envMapIntensity', 0, 3, 0.1).name('Reflection Intensity').onChange((value) => {
-    floor.material.envMapIntensity = value;
-  });
+    // Metalness control
+    materialFolder.add(materialSettings, 'metalness', 0, 1, 0.01).name('Metalness').onChange((value) => {
+      material.metalness = value;
+    });
 
-  // Visibility toggle
-  floorFolder.add(floorSettings, 'visible').name('Visible').onChange((value) => {
-    floor.visible = value;
+    // Environment map intensity
+    materialFolder.add(materialSettings, 'envMapIntensity', 0, 3, 0.1).name('Reflection Intensity').onChange((value) => {
+      material.envMapIntensity = value;
+    });
+
+    // Visibility toggle
+    materialFolder.add(materialSettings, 'visible').name('Visible').onChange((value) => {
+      mesh.visible = value;
+    });
+
+    // Keep subfolder collapsed by default
+    materialFolder.close();
   });
 
   // Keep folder collapsed by default
@@ -146,6 +163,85 @@ export function createGlassGUI(gui) {
 
   // Keep folder collapsed by default
   glassFolder.close();
+}
+
+// Create glass bottom material GUI controls
+export function createGlassBottomGUI(gui) {
+  const glassBottomModelMaterial = getGlassBottomModelMaterial();
+  if (!glassBottomModelMaterial) return;
+
+  const glassBottomFolder = gui.addFolder('Glass Bottom Material');
+  
+  const glassBottomSettings = {
+    color: '#' + glassBottomModelMaterial.color.getHexString(),
+    roughness: glassBottomModelMaterial.roughness,
+    metalness: glassBottomModelMaterial.metalness,
+    transmission: glassBottomModelMaterial.transmission,
+    opacity: glassBottomModelMaterial.opacity,
+    ior: glassBottomModelMaterial.ior,
+    thickness: glassBottomModelMaterial.thickness,
+    clearcoat: glassBottomModelMaterial.clearcoat,
+    clearcoatRoughness: glassBottomModelMaterial.clearcoatRoughness,
+    envMapIntensity: glassBottomModelMaterial.envMapIntensity,
+    side: glassBottomModelMaterial.side === THREE.DoubleSide ? 'Double' : 'Front',
+    depthWrite: glassBottomModelMaterial.depthWrite,
+  };
+
+  // Basic Properties
+  const basicFolder = glassBottomFolder.addFolder('Basic');
+  basicFolder.addColor(glassBottomSettings, 'color').name('Color').onChange((value) => {
+    glassBottomModelMaterial.color.set(value);
+  });
+  basicFolder.add(glassBottomSettings, 'roughness', 0, 1, 0.01).name('Roughness').onChange((value) => {
+    glassBottomModelMaterial.roughness = value;
+  });
+  basicFolder.add(glassBottomSettings, 'metalness', 0, 1, 0.01).name('Metalness').onChange((value) => {
+    glassBottomModelMaterial.metalness = value;
+  });
+  basicFolder.add(glassBottomSettings, 'opacity', 0, 1, 0.01).name('Opacity').onChange((value) => {
+    glassBottomModelMaterial.opacity = value;
+  });
+  basicFolder.close();
+
+  // Transmission & Refraction
+  const transmissionFolder = glassBottomFolder.addFolder('Transmission & Refraction');
+  transmissionFolder.add(glassBottomSettings, 'transmission', 0, 1, 0.01).name('Transmission').onChange((value) => {
+    glassBottomModelMaterial.transmission = value;
+  });
+  transmissionFolder.add(glassBottomSettings, 'ior', 1, 2.5, 0.01).name('IOR').onChange((value) => {
+    glassBottomModelMaterial.ior = value;
+  });
+  transmissionFolder.add(glassBottomSettings, 'thickness', 0, 2, 0.1).name('Thickness').onChange((value) => {
+    glassBottomModelMaterial.thickness = value;
+  });
+  transmissionFolder.close();
+
+  // Clearcoat
+  const clearcoatFolder = glassBottomFolder.addFolder('Clearcoat');
+  clearcoatFolder.add(glassBottomSettings, 'clearcoat', 0, 1, 0.01).name('Clearcoat').onChange((value) => {
+    glassBottomModelMaterial.clearcoat = value;
+  });
+  clearcoatFolder.add(glassBottomSettings, 'clearcoatRoughness', 0, 1, 0.01).name('Clearcoat Roughness').onChange((value) => {
+    glassBottomModelMaterial.clearcoatRoughness = value;
+  });
+  clearcoatFolder.close();
+
+  // Environment & Rendering
+  const envFolder = glassBottomFolder.addFolder('Environment & Rendering');
+  envFolder.add(glassBottomSettings, 'envMapIntensity', 0, 3, 0.1).name('Reflection Intensity').onChange((value) => {
+    glassBottomModelMaterial.envMapIntensity = value;
+  });
+  envFolder.add(glassBottomSettings, 'side', ['Front', 'Double']).name('Side').onChange((value) => {
+    glassBottomModelMaterial.side = value === 'Double' ? THREE.DoubleSide : THREE.FrontSide;
+    glassBottomModelMaterial.needsUpdate = true;
+  });
+  envFolder.add(glassBottomSettings, 'depthWrite').name('Depth Write').onChange((value) => {
+    glassBottomModelMaterial.depthWrite = value;
+  });
+  envFolder.close();
+
+  // Keep folder collapsed by default
+  glassBottomFolder.close();
 }
 
 // Create ice cube material GUI controls

@@ -28,8 +28,8 @@ export const lightConfig = {
 		name: 'keyLight',
 		enabled: true,
 		color: 0xffffff,
-		intensity: 0,
-		position: { x: 0, y: 2, z: 6 },  // Moved farther away
+		intensity: 1,
+		position: { x: 5, y: -0.5, z: -2.2 },
 		castShadow: false,
 		helper: false,
 		helperSize: 1,

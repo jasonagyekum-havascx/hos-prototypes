@@ -9,9 +9,10 @@ import { initHotspots, updateHotspots, checkHotspotHover, checkHotspotClick, clo
 import { buildLiquid, updateLiquidAnimation, triggerRipple, getLiquidMeshes, getLiquidUniforms, animateLiquidHeight } from './liquid-system.js';
 import { spawnIce, updateIceAnimation, loadIceCubeGLB, getIceObjects, animateIceDown, stopIceAnimation } from './ice-system.js';
 import { initBubbleSystem, updateBubbles, animateBubbleSurfaceHeight } from './bubble-system.js';
-import { createLiquidGUI, createIceCubeGUI, createGlassGUI, createOrbitGUI, createDrinkSettingsGUI } from './gui.js';
-import { loadFloorModel } from './model-floor.js';
+import { createLiquidGUI, createIceCubeGUI, createGlassGUI, createGlassBottomGUI, createFloorGUI, createOrbitGUI, createDrinkSettingsGUI } from './gui.js';
+import { loadFloorModel, getFloorModel } from './model-floor.js';
 import { loadGlassModel, getGlassModelMaterial } from './model-glass.js';
+import { loadGlassBottomModel, getGlassBottomModelMaterial } from './model-glass-bottom.js';
 import { iceConfig, fizzIntensity } from './constants.js';
 import { initOrbitSystem, updateOrbitAnimation } from './orbit-system.js';
 import { spawnOrangePeel, updateOrangePeelAnimation } from './orange-peel.js';
@@ -19,7 +20,6 @@ import { spawnOrangePeel, updateOrangePeelAnimation } from './orange-peel.js';
 let renderer, scene, camera, controls;
 let lights;
 let gui; // GUI panel
-let floor = null; // Floor mesh reference
 let raycaster;
 const mouse = new THREE.Vector2();
 
@@ -30,49 +30,6 @@ let elapsedTime = 0;
 let fizzIntensityRef = { value: fizzIntensity };
 
 init();
-
-// Create floor GUI controls
-function createFloorGUI(gui) {
-	if (!floor || !floor.material) return;
-
-	const floorFolder = gui.addFolder('Floor');
-	
-	const floorSettings = {
-		color: '#' + floor.material.color.getHexString(),
-		roughness: floor.material.roughness,
-		metalness: floor.material.metalness,
-		envMapIntensity: floor.material.envMapIntensity,
-		visible: floor.visible,
-	};
-
-	// Color control
-	floorFolder.addColor(floorSettings, 'color').name('Color').onChange((value) => {
-		floor.material.color.set(value);
-	});
-
-	// Roughness control
-	floorFolder.add(floorSettings, 'roughness', 0, 1, 0.01).name('Roughness').onChange((value) => {
-		floor.material.roughness = value;
-	});
-
-	// Metalness control
-	floorFolder.add(floorSettings, 'metalness', 0, 1, 0.01).name('Metalness').onChange((value) => {
-		floor.material.metalness = value;
-	});
-
-	// Environment map intensity
-	floorFolder.add(floorSettings, 'envMapIntensity', 0, 3, 0.1).name('Reflection Intensity').onChange((value) => {
-		floor.material.envMapIntensity = value;
-	});
-
-	// Visibility toggle
-	floorFolder.add(floorSettings, 'visible').name('Visible').onChange((value) => {
-		floor.visible = value;
-	});
-
-	// Keep folder collapsed by default
-	floorFolder.close();
-}
 
 function init() {
 	// Initialize scene, renderer, camera
@@ -99,8 +56,21 @@ function init() {
 		}
 	});
 
-	// Load floor model
-	loadFloorModel(scene);
+	// Load glass bottom model
+	loadGlassBottomModel(scene, (glassBottomMaterial) => {
+		// Create glass bottom GUI after model loads, if gui is already created
+		if (gui && glassBottomMaterial) {
+			createGlassBottomGUI(gui);
+		}
+	});
+
+	// Load floor model (disabled)
+	// loadFloorModel(scene, (floorModel) => {
+	// 	// Create floor GUI after model loads, if gui is already created
+	// 	if (gui && floorModel) {
+	// 		createFloorGUI(gui);
+	// 	}
+	// });
 
 	// Initialize orbiting ingredients system
 	initOrbitSystem(scene);
@@ -159,13 +129,22 @@ function init() {
 	// Add drink settings first (carbonation + orange peel) - this one stays open
 	createDrinkSettingsGUI(gui, fizzIntensityRef);
 	
-	// Add floor controls
-	createFloorGUI(gui);
+	// Add floor controls (if model has already loaded) - disabled
+	// const floorModel = getFloorModel();
+	// if (floorModel) {
+	// 	createFloorGUI(gui);
+	// }
 	
 	// Add glass material controls (if model has already loaded)
 	const glassMaterial = getGlassModelMaterial();
 	if (glassMaterial) {
 		createGlassGUI(gui);
+	}
+	
+	// Add glass bottom material controls (if model has already loaded)
+	const glassBottomMaterial = getGlassBottomModelMaterial();
+	if (glassBottomMaterial) {
+		createGlassBottomGUI(gui);
 	}
 	
 	// Add liquid material controls (liquid is already built)
