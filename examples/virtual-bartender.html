@@ -169,15 +169,16 @@
     }
 
     .landing-title {
-      font-family: var(--font-serif);
-      font-size: clamp(42px, 12vw, 56px);
-      font-weight: 400;
-      font-style: italic;
-      line-height: 1.05;
-      letter-spacing: 2px;
-      color: var(--color-text-light);
-      text-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
-      opacity: 0;
+      color: #FFF;
+text-align: center;
+text-shadow: 0 4px 4px rgba(0, 0, 0, 0.25);
+font-family: "SUNTORY Sabon";
+font-size: 44px;
+font-style: normal;
+font-weight: 700;
+line-height: normal;
+letter-spacing: 0.88px;
+text-transform: uppercase;
       transform: translateY(20px);
       animation: fadeInUp 0.8s ease forwards 0.4s;
     }
@@ -219,6 +220,7 @@
 
     .destination-prompt {
       font-size: 16px;
+      text-align: center;
       color: var(--color-text-light);
       margin-bottom: 20px;
       opacity: 0;
@@ -236,7 +238,7 @@
     }
 
     .destination-btn {
-      padding: 14px 24px;
+      padding: 14px 15px;
       border-radius: 50px;
       font-family: var(--font-sans);
       font-size: 12px;
@@ -265,7 +267,7 @@
     }
 
     .destination-btn--active {
-      background: var(--color-gold);
+      background: rgba(150, 105, 55, 1);
       color: white;
     }
 
@@ -287,11 +289,8 @@
       z-index: 10;
       display: flex;
       align-items: center;
-      justify-content: space-between;
+      justify-content: flex-end;
       padding: 16px 20px;
-      background: rgba(26, 21, 18, 0.95);
-      backdrop-filter: blur(10px);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
     }
 
     .header-logo {
@@ -303,9 +302,16 @@
       color: var(--color-text-light);
     }
 
+    .chat-header .header-logo {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      text-align: center;
+    }
+
     .header-profile {
-      width: 32px;
-      height: 32px;
+      width: 14px;
+      height: 14px;
       border-radius: 50%;
       border: 1.5px solid rgba(255, 255, 255, 0.6);
       background: transparent;
@@ -387,15 +393,18 @@
       left: 0;
       right: 0;
       z-index: 2;
-      max-height: 55%;
+      max-height: 65%;
       overflow-y: auto;
       padding: 20px;
-      padding-top: 24px;
+      padding-top: 40px;
       display: flex;
       flex-direction: column;
       gap: 12px;
       scroll-behavior: smooth;
-      background: linear-gradient(180deg, transparent 0%, rgba(26, 21, 18, 0.95) 15%);
+      background: linear-gradient(180deg, transparent 0%, rgba(26, 21, 18, 0.95) 12%);
+      /* Smooth fade-out effect at the top */
+      -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 8%);
+      mask-image: linear-gradient(to bottom, transparent 0%, black 8%);
     }
 
     .chat-messages::-webkit-scrollbar {
@@ -409,6 +418,14 @@
     .chat-messages::-webkit-scrollbar-thumb {
       background: rgba(139, 115, 85, 0.3);
       border-radius: 2px;
+    }
+
+    /* Extra padding at the bottom for content visibility */
+    .chat-messages::after {
+      content: '';
+      display: block;
+      min-height: 20px;
+      flex-shrink: 0;
     }
 
     /* Message Bubbles */
@@ -440,13 +457,15 @@
     .cocktail-cards {
       display: flex;
       gap: 14px;
-      padding: 8px 0;
+      padding: 12px 0 16px;
       overflow-x: auto;
+      overflow-y: visible;
       -webkit-overflow-scrolling: touch;
       scrollbar-width: none;
       opacity: 0;
       transform: translateY(20px);
       animation: messageIn 0.4s ease forwards;
+      min-height: 220px;
     }
 
     .cocktail-cards::-webkit-scrollbar {
@@ -456,14 +475,18 @@
     .cocktail-card {
       flex-shrink: 0;
       width: 155px;
+      min-height: 200px;
       background: rgba(255, 252, 248, 0.97);
       border-radius: 18px;
-      padding: 20px 16px 18px;
+      padding: 16px 14px 14px;
       text-align: center;
       cursor: pointer;
       transition: var(--transition-smooth);
       border: 3px solid transparent;
       box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
 
     .cocktail-card:hover,
@@ -478,18 +501,20 @@
     }
 
     .cocktail-card__image {
-      width: 90px;
-      height: 130px;
-      margin: 0 auto 14px;
+      width: 80px;
+      height: 140px;
+      margin: 0 auto 10px;
       display: flex;
       align-items: center;
       justify-content: center;
       position: relative;
+      flex-shrink: 0;
     }
 
     .cocktail-card__image svg {
       width: 100%;
       height: 100%;
+      display: block;
     }
 
     .cocktail-card__name {
@@ -505,7 +530,9 @@
     .experience-cta {
       display: inline-flex;
       align-items: center;
+      justify-content: center;
       gap: 12px;
+      width: 100%;
       padding: 16px 28px;
       background: rgba(180, 170, 160, 0.9);
       border-radius: 50px;
@@ -820,7 +847,7 @@
       <header class="chat-header">
         <span class="header-logo">The House of Suntory</span>
         <button class="header-profile" aria-label="User profile" tabindex="0">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
             <circle cx="12" cy="8" r="4"/>
             <path d="M4 20c0-4 4-6 8-6s8 2 8 6"/>
           </svg>
@@ -1062,73 +1089,19 @@
       const cardsContainer = document.createElement('div');
       cardsContainer.className = 'cocktail-cards';
       
-      // SVG drink illustrations
-      const tokiHighballSVG = `
-        <svg viewBox="0 0 80 140" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <!-- Glass -->
-          <path d="M15 25 L18 130 Q19 135 25 135 L55 135 Q61 135 62 130 L65 25 L15 25Z" fill="url(#glassGrad)" stroke="#d4c4a8" stroke-width="1"/>
-          <!-- Liquid -->
-          <path d="M18 35 L20 125 Q21 128 27 128 L53 128 Q59 128 60 125 L62 35 L18 35Z" fill="url(#liquidGrad)" opacity="0.85"/>
-          <!-- Ice cubes -->
-          <rect x="25" y="45" width="18" height="16" rx="3" fill="rgba(255,255,255,0.5)" stroke="rgba(255,255,255,0.7)"/>
-          <rect x="38" y="55" width="16" height="14" rx="3" fill="rgba(255,255,255,0.4)" stroke="rgba(255,255,255,0.6)"/>
-          <rect x="28" y="68" width="14" height="12" rx="2" fill="rgba(255,255,255,0.35)" stroke="rgba(255,255,255,0.5)"/>
-          <!-- Bubbles -->
-          <circle cx="30" cy="100" r="2" fill="rgba(255,255,255,0.6)"/>
-          <circle cx="45" cy="95" r="1.5" fill="rgba(255,255,255,0.5)"/>
-          <circle cx="38" cy="108" r="1.8" fill="rgba(255,255,255,0.55)"/>
-          <circle cx="50" cy="115" r="1.2" fill="rgba(255,255,255,0.4)"/>
-          <circle cx="32" cy="85" r="1" fill="rgba(255,255,255,0.45)"/>
-          <!-- Orange peel garnish -->
-          <path d="M52 32 Q62 28 68 40 Q70 48 65 52" stroke="#E8A455" stroke-width="4" stroke-linecap="round" fill="none"/>
-          <defs>
-            <linearGradient id="glassGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" style="stop-color:rgba(255,255,255,0.15)"/>
-              <stop offset="50%" style="stop-color:rgba(255,255,255,0.05)"/>
-              <stop offset="100%" style="stop-color:rgba(255,255,255,0.12)"/>
-            </linearGradient>
-            <linearGradient id="liquidGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" style="stop-color:#E8D4A0"/>
-              <stop offset="100%" style="stop-color:#D4C088"/>
-            </linearGradient>
-          </defs>
-        </svg>`;
-      
-      const rokuGinFizzSVG = `
-        <svg viewBox="0 0 80 140" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <!-- Glass -->
-          <path d="M15 25 L18 130 Q19 135 25 135 L55 135 Q61 135 62 130 L65 25 L15 25Z" fill="url(#glassGrad2)" stroke="#d4c4a8" stroke-width="1"/>
-          <!-- Liquid -->
-          <path d="M18 35 L20 125 Q21 128 27 128 L53 128 Q59 128 60 125 L62 35 L18 35Z" fill="url(#ginGrad)" opacity="0.8"/>
-          <!-- Ice cubes -->
-          <rect x="26" y="48" width="16" height="14" rx="3" fill="rgba(255,255,255,0.55)" stroke="rgba(255,255,255,0.7)"/>
-          <rect x="40" y="58" width="14" height="12" rx="2" fill="rgba(255,255,255,0.45)" stroke="rgba(255,255,255,0.6)"/>
-          <!-- Bubbles (fizz) -->
-          <circle cx="28" cy="90" r="2.2" fill="rgba(255,255,255,0.65)"/>
-          <circle cx="48" cy="85" r="1.8" fill="rgba(255,255,255,0.55)"/>
-          <circle cx="35" cy="100" r="1.5" fill="rgba(255,255,255,0.5)"/>
-          <circle cx="52" cy="105" r="1.3" fill="rgba(255,255,255,0.45)"/>
-          <circle cx="30" cy="115" r="1.6" fill="rgba(255,255,255,0.5)"/>
-          <circle cx="42" cy="118" r="1" fill="rgba(255,255,255,0.4)"/>
-          <!-- Lime wedge garnish -->
-          <ellipse cx="56" cy="38" rx="12" ry="8" fill="#9DC45F" stroke="#7BA33D" stroke-width="1"/>
-          <path d="M48 38 L56 32 L64 38 L56 44 Z" fill="#B8D977" stroke="#9DC45F" stroke-width="0.5"/>
-          <defs>
-            <linearGradient id="glassGrad2" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" style="stop-color:rgba(255,255,255,0.15)"/>
-              <stop offset="50%" style="stop-color:rgba(255,255,255,0.05)"/>
-              <stop offset="100%" style="stop-color:rgba(255,255,255,0.12)"/>
-            </linearGradient>
-            <linearGradient id="ginGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" style="stop-color:#E8F0E0"/>
-              <stop offset="100%" style="stop-color:#D8E8D0"/>
-            </linearGradient>
-          </defs>
-        </svg>`;
-      
       const cocktails = [
-        { id: 'toki-highball', name: 'Toki Highball', svg: tokiHighballSVG },
-        { id: 'roku-gin-fizz', name: 'Roku Gin Fizz', svg: rokuGinFizzSVG }
+        { 
+          id: 'toki-highball', 
+          name: 'Toki Highball', 
+          imageSrc: '../images/toki-thumbnail.png',
+          imageAlt: 'Toki Highball cocktail thumbnail'
+        },
+        { 
+          id: 'roku-gin-fizz', 
+          name: 'Roku Gin Fizz', 
+          imageSrc: '../images/roku-thumbnail.png',
+          imageAlt: 'Roku Gin Fizz cocktail thumbnail'
+        }
       ];
 
       cocktails.forEach(cocktail => {
@@ -1137,7 +1110,13 @@
         card.setAttribute('tabindex', '0');
         card.setAttribute('aria-label', `Select ${cocktail.name}`);
         card.innerHTML = `
-          <div class="cocktail-card__image">${cocktail.svg}</div>
+          <div class="cocktail-card__image">
+            <img 
+              src="${cocktail.imageSrc}" 
+              alt="${cocktail.imageAlt}" 
+              style="width: 100%; height: 100%; object-fit: cover; border-radius: 12px;"
+            />
+          </div>
           <p class="cocktail-card__name">${cocktail.name}</p>
         `;
         
