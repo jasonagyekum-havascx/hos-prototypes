@@ -1,0 +1,1328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>House of Suntory - Virtual Bartender</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+  
+  <style>
+    /* CSS Variables */
+    :root {
+      --color-gold: #8B7355;
+      --color-gold-light: #A89070;
+      --color-cream: #F5F0E8;
+      --color-dark: #1A1512;
+      --color-text-light: rgba(255, 255, 255, 0.95);
+      --color-text-muted: rgba(255, 255, 255, 0.7);
+      --color-bubble-ai: rgba(45, 35, 28, 0.92);
+      --color-bubble-user: #8B7355;
+      --font-serif: 'Cormorant Garamond', Georgia, serif;
+      --font-sans: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      --transition-smooth: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Reset */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      height: 100%;
+      overflow: hidden;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background-color: var(--color-dark);
+      color: var(--color-text-light);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* App Container */
+    .app {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      max-width: 430px;
+      margin: 0 auto;
+      overflow: hidden;
+    }
+
+    @media (min-width: 431px) {
+      body {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #0a0a0a 0%, #1a1512 100%);
+      }
+      
+      .app {
+        height: 100%;
+        max-height: 932px;
+        border-radius: 0;
+        box-shadow: 0 25px 80px rgba(0, 0, 0, 0.5);
+      }
+    }
+
+    /* Screen Base */
+    .screen {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      visibility: hidden;
+      transition: var(--transition-smooth);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .screen.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    /* ==================== */
+    /* LANDING SCREEN */
+    /* ==================== */
+    .landing-screen {
+      justify-content: space-between;
+      padding: 60px 24px 48px;
+    }
+
+    /* Nature background with actual Japanese garden image */
+    .landing-background {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: 
+        linear-gradient(180deg, 
+          rgba(20, 40, 30, 0.25) 0%, 
+          rgba(15, 30, 22, 0.35) 40%,
+          rgba(10, 20, 15, 0.7) 100%
+        ),
+        url('../archive/examples/images/wallpaper.jpg');
+      background-size: cover;
+      background-position: center top;
+      z-index: 0;
+      filter: blur(2px);
+      transform: scale(1.02);
+    }
+
+    /* Soft vignette overlay */
+    .landing-background::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: 
+        radial-gradient(ellipse 120% 80% at 50% 30%, transparent 0%, rgba(10, 20, 15, 0.4) 100%);
+    }
+
+    /* Bottom fade for text readability */
+    .landing-background::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 50%;
+      background: 
+        linear-gradient(0deg, 
+          rgba(10, 15, 12, 0.85) 0%, 
+          rgba(15, 25, 20, 0.5) 50%,
+          transparent 100%
+        );
+    }
+
+    .landing-content {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      padding-top: 80px;
+    }
+
+    .landing-subtitle {
+      font-family: var(--font-serif);
+      font-size: 15px;
+      font-weight: 400;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      color: var(--color-text-light);
+      margin-bottom: 8px;
+      opacity: 0;
+      transform: translateY(20px);
+      animation: fadeInUp 0.8s ease forwards 0.2s;
+    }
+
+    .landing-title {
+      font-family: var(--font-serif);
+      font-size: clamp(42px, 12vw, 56px);
+      font-weight: 400;
+      font-style: italic;
+      line-height: 1.05;
+      letter-spacing: 2px;
+      color: var(--color-text-light);
+      text-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+      opacity: 0;
+      transform: translateY(20px);
+      animation: fadeInUp 0.8s ease forwards 0.4s;
+    }
+
+    .landing-footer {
+      position: relative;
+      z-index: 1;
+    }
+
+    .location-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 20px;
+      font-size: 14px;
+      color: var(--color-text-light);
+      opacity: 0;
+      animation: fadeInUp 0.8s ease forwards 0.6s;
+    }
+
+    .location-icon {
+      width: 16px;
+      height: 16px;
+      opacity: 0.9;
+    }
+
+    .location-text {
+      text-decoration: underline;
+      text-underline-offset: 3px;
+      letter-spacing: 1.5px;
+      font-size: 13px;
+    }
+
+    .location-temp {
+      opacity: 0.8;
+      letter-spacing: 1px;
+    }
+
+    .destination-prompt {
+      font-size: 16px;
+      color: var(--color-text-light);
+      margin-bottom: 20px;
+      opacity: 0;
+      animation: fadeInUp 0.8s ease forwards 0.7s;
+    }
+
+    .destination-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      max-width: 320px;
+      margin: 0 auto;
+      opacity: 0;
+      animation: fadeInUp 0.8s ease forwards 0.8s;
+    }
+
+    .destination-btn {
+      padding: 14px 24px;
+      border-radius: 50px;
+      font-family: var(--font-sans);
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: var(--transition-smooth);
+      border: none;
+      outline: none;
+    }
+
+    .destination-btn:focus-visible {
+      outline: 2px solid var(--color-gold);
+      outline-offset: 2px;
+    }
+
+    .destination-btn--default {
+      background: rgba(180, 175, 165, 0.85);
+      color: #3a3a3a;
+    }
+
+    .destination-btn--default:hover {
+      background: rgba(200, 195, 185, 0.95);
+      transform: translateY(-2px);
+    }
+
+    .destination-btn--active {
+      background: var(--color-gold);
+      color: white;
+    }
+
+    .destination-btn--active:hover {
+      background: var(--color-gold-light);
+      transform: translateY(-2px);
+    }
+
+    /* ==================== */
+    /* CHAT SCREEN */
+    /* ==================== */
+    .chat-screen {
+      background: var(--color-dark);
+    }
+
+    /* Header */
+    .chat-header {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      background: rgba(26, 21, 18, 0.95);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .header-logo {
+      font-family: var(--font-serif);
+      font-size: 13px;
+      font-weight: 400;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--color-text-light);
+    }
+
+    .header-profile {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 1.5px solid rgba(255, 255, 255, 0.6);
+      background: transparent;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: var(--transition-smooth);
+    }
+
+    .header-profile:hover {
+      border-color: var(--color-gold);
+    }
+
+    .header-profile svg {
+      width: 18px;
+      height: 18px;
+      stroke: rgba(255, 255, 255, 0.7);
+    }
+
+    /* Chat Body */
+    .chat-body {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Bartender Background with actual bar image */
+    .bartender-bg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 70%;
+      background: 
+        linear-gradient(180deg, 
+          rgba(26, 21, 18, 0) 0%,
+          rgba(26, 21, 18, 0.4) 60%,
+          rgba(26, 21, 18, 1) 100%
+        ),
+        url('../archive/examples/images/wallpaper-2.jpeg');
+      background-size: cover;
+      background-position: center 20%;
+      z-index: 0;
+    }
+
+    /* Warm ambient glow overlay */
+    .bartender-bg::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: 
+        radial-gradient(ellipse 80% 50% at 50% 40%, rgba(200, 150, 80, 0.08) 0%, transparent 60%),
+        linear-gradient(180deg, rgba(26, 21, 18, 0.3) 0%, transparent 30%);
+    }
+
+    /* Bartender silhouette overlay */
+    .bartender-silhouette {
+      position: absolute;
+      top: 45%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 220px;
+      height: 280px;
+      background: 
+        radial-gradient(ellipse 60% 35% at 50% 20%, rgba(15, 12, 10, 0.95) 0%, transparent 70%),
+        radial-gradient(ellipse 45% 60% at 50% 45%, rgba(15, 12, 10, 0.9) 0%, transparent 55%),
+        radial-gradient(ellipse 35% 25% at 50% 80%, rgba(15, 12, 10, 0.85) 0%, transparent 60%);
+      opacity: 0.9;
+    }
+
+    /* Chat Messages Container */
+    .chat-messages {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 2;
+      max-height: 55%;
+      overflow-y: auto;
+      padding: 20px;
+      padding-top: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      scroll-behavior: smooth;
+      background: linear-gradient(180deg, transparent 0%, rgba(26, 21, 18, 0.95) 15%);
+    }
+
+    .chat-messages::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .chat-messages::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .chat-messages::-webkit-scrollbar-thumb {
+      background: rgba(139, 115, 85, 0.3);
+      border-radius: 2px;
+    }
+
+    /* Message Bubbles */
+    .message {
+      max-width: 85%;
+      padding: 16px 20px;
+      border-radius: 20px;
+      font-size: 16px;
+      line-height: 1.5;
+      opacity: 0;
+      transform: translateY(20px);
+      animation: messageIn 0.4s ease forwards;
+    }
+
+    .message--ai {
+      align-self: flex-start;
+      background: var(--color-bubble-ai);
+      border-bottom-left-radius: 6px;
+      backdrop-filter: blur(10px);
+    }
+
+    .message--user {
+      align-self: flex-end;
+      background: var(--color-bubble-user);
+      border-bottom-right-radius: 6px;
+    }
+
+    /* Cocktail Cards */
+    .cocktail-cards {
+      display: flex;
+      gap: 14px;
+      padding: 8px 0;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      opacity: 0;
+      transform: translateY(20px);
+      animation: messageIn 0.4s ease forwards;
+    }
+
+    .cocktail-cards::-webkit-scrollbar {
+      display: none;
+    }
+
+    .cocktail-card {
+      flex-shrink: 0;
+      width: 155px;
+      background: rgba(255, 252, 248, 0.97);
+      border-radius: 18px;
+      padding: 20px 16px 18px;
+      text-align: center;
+      cursor: pointer;
+      transition: var(--transition-smooth);
+      border: 3px solid transparent;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    }
+
+    .cocktail-card:hover,
+    .cocktail-card:focus {
+      transform: translateY(-6px);
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.25);
+    }
+
+    .cocktail-card.selected {
+      border-color: var(--color-gold);
+      box-shadow: 0 8px 30px rgba(139, 115, 85, 0.3);
+    }
+
+    .cocktail-card__image {
+      width: 90px;
+      height: 130px;
+      margin: 0 auto 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .cocktail-card__image svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    .cocktail-card__name {
+      font-family: var(--font-serif);
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      color: var(--color-gold);
+      text-transform: uppercase;
+    }
+
+    /* CTA Button */
+    .experience-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 28px;
+      background: rgba(180, 170, 160, 0.9);
+      border-radius: 50px;
+      font-family: var(--font-sans);
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: #3a3a3a;
+      cursor: pointer;
+      border: none;
+      transition: var(--transition-smooth);
+      margin-top: 8px;
+      opacity: 0;
+      transform: translateY(20px);
+      animation: messageIn 0.4s ease forwards;
+    }
+
+    .experience-cta:hover {
+      background: var(--color-gold);
+      color: white;
+      transform: translateY(-2px);
+    }
+
+    .experience-cta svg {
+      width: 20px;
+      height: 20px;
+      transition: transform 0.3s ease;
+    }
+
+    .experience-cta:hover svg {
+      transform: translateX(4px);
+    }
+
+    /* Typing Indicator */
+    .typing-indicator {
+      display: flex;
+      gap: 4px;
+      padding: 16px 20px;
+      align-self: flex-start;
+    }
+
+    .typing-indicator span {
+      width: 8px;
+      height: 8px;
+      background: var(--color-gold);
+      border-radius: 50%;
+      animation: typingBounce 1.4s infinite ease-in-out;
+    }
+
+    .typing-indicator span:nth-child(1) { animation-delay: 0s; }
+    .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+    .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+
+    /* Chat Input */
+    .chat-input-container {
+      position: relative;
+      z-index: 10;
+      padding: 16px 20px 24px;
+      background: linear-gradient(180deg, transparent 0%, rgba(26, 21, 18, 1) 20%);
+    }
+
+    .chat-input-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 50px;
+      padding: 8px 12px 8px 24px;
+    }
+
+    .chat-input {
+      flex: 1;
+      border: none;
+      background: transparent;
+      font-family: var(--font-sans);
+      font-size: 16px;
+      color: #333;
+      outline: none;
+    }
+
+    .chat-input::placeholder {
+      color: #999;
+    }
+
+    .input-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: var(--transition-smooth);
+    }
+
+    .input-btn svg {
+      width: 22px;
+      height: 22px;
+      stroke: #666;
+      transition: stroke 0.2s ease;
+    }
+
+    .input-btn:hover svg {
+      stroke: var(--color-gold);
+    }
+
+    .input-btn--send {
+      background: transparent;
+    }
+
+    .input-btn--send svg {
+      stroke: #888;
+    }
+
+    /* ==================== */
+    /* IMMERSIVE SCREEN */
+    /* ==================== */
+    .immersive-screen {
+      background: linear-gradient(180deg, #FEFEFE 0%, #F8F6F2 100%);
+    }
+
+    .immersive-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      background: transparent;
+    }
+
+    .immersive-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      text-align: center;
+    }
+
+    .immersive-instruction {
+      font-family: var(--font-serif);
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--color-gold);
+      margin-bottom: 32px;
+      opacity: 0;
+      animation: fadeInUp 0.8s ease forwards 0.3s;
+    }
+
+    .immersive-drink {
+      width: 100%;
+      max-width: 320px;
+      height: auto;
+      aspect-ratio: 3/5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 40px;
+      opacity: 0;
+      animation: fadeInUp 0.8s ease forwards 0.5s;
+      cursor: pointer;
+      transition: transform 0.3s ease;
+    }
+
+    .immersive-drink:hover {
+      transform: scale(1.02);
+    }
+
+    .immersive-drink svg {
+      width: 100%;
+      height: 100%;
+      filter: drop-shadow(0 20px 40px rgba(139, 115, 85, 0.15));
+    }
+
+    .immersive-title {
+      font-family: var(--font-serif);
+      font-size: 26px;
+      font-weight: 400;
+      letter-spacing: 4px;
+      color: var(--color-gold);
+      text-transform: uppercase;
+      opacity: 0;
+      animation: fadeInUp 0.8s ease forwards 0.7s;
+    }
+
+    /* ==================== */
+    /* ANIMATIONS */
+    /* ==================== */
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes messageIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes typingBounce {
+      0%, 80%, 100% {
+        transform: translateY(0);
+      }
+      40% {
+        transform: translateY(-6px);
+      }
+    }
+
+    /* Animation delays for messages */
+    .message:nth-child(1) { animation-delay: 0.1s; }
+    .message:nth-child(2) { animation-delay: 0.3s; }
+    .message:nth-child(3) { animation-delay: 0.5s; }
+    .message:nth-child(4) { animation-delay: 0.7s; }
+    .message:nth-child(5) { animation-delay: 0.9s; }
+    .message:nth-child(6) { animation-delay: 1.1s; }
+    .cocktail-cards { animation-delay: 0.8s; }
+    .experience-cta { animation-delay: 1.2s; }
+
+    /* Utility */
+    .visually-hidden {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="app" role="main">
+    
+    <!-- LANDING SCREEN -->
+    <section class="screen landing-screen active" id="landingScreen" aria-label="Welcome screen">
+      <div class="landing-background" aria-hidden="true"></div>
+      
+      <div class="landing-content">
+        <p class="landing-subtitle">The House of Suntory</p>
+        <h1 class="landing-title">VIRTUAL<br>BARTENDER</h1>
+      </div>
+      
+      <footer class="landing-footer">
+        <div class="location-row">
+          <svg class="location-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          <span class="location-text">SANTA BARBARA, CA</span>
+          <span class="location-temp">| 72°</span>
+        </div>
+        
+        <p class="destination-prompt">Choose your destination to get started</p>
+        
+        <div class="destination-grid" role="group" aria-label="Destination selection">
+          <button 
+            class="destination-btn destination-btn--default" 
+            data-destination="izakaya"
+            aria-label="Select Izakaya"
+            tabindex="0"
+          >
+            Izakaya
+          </button>
+          <button 
+            class="destination-btn destination-btn--default" 
+            data-destination="omakase"
+            aria-label="Select Omakase"
+            tabindex="0"
+          >
+            Omakase
+          </button>
+          <button 
+            class="destination-btn destination-btn--active" 
+            data-destination="listening-bar"
+            aria-label="Select Listening Bar"
+            tabindex="0"
+          >
+            Listening Bar
+          </button>
+          <button 
+            class="destination-btn destination-btn--default" 
+            data-destination="tea-room"
+            aria-label="Select Tea Room"
+            tabindex="0"
+          >
+            Tea Room
+          </button>
+        </div>
+      </footer>
+    </section>
+    
+    <!-- CHAT SCREEN -->
+    <section class="screen chat-screen" id="chatScreen" aria-label="Chat with AI Bartender">
+      <header class="chat-header">
+        <span class="header-logo">The House of Suntory</span>
+        <button class="header-profile" aria-label="User profile" tabindex="0">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <circle cx="12" cy="8" r="4"/>
+            <path d="M4 20c0-4 4-6 8-6s8 2 8 6"/>
+          </svg>
+        </button>
+      </header>
+      
+      <div class="chat-body">
+        <div class="bartender-bg" aria-hidden="true">
+          <div class="bartender-silhouette"></div>
+        </div>
+        
+        <div class="chat-messages" id="chatMessages" role="log" aria-live="polite">
+          <!-- Messages will be added dynamically -->
+        </div>
+      </div>
+      
+      <div class="chat-input-container">
+        <div class="chat-input-wrapper">
+          <input 
+            type="text" 
+            class="chat-input" 
+            id="chatInput"
+            placeholder="Type your message..." 
+            aria-label="Message input"
+            autocomplete="off"
+          >
+          <button class="input-btn" aria-label="Voice input" tabindex="0">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="9" y="2" width="6" height="12" rx="3"/>
+              <path d="M5 10v2a7 7 0 0 0 14 0v-2"/>
+              <line x1="12" y1="22" x2="12" y2="19"/>
+            </svg>
+          </button>
+          <button class="input-btn input-btn--send" id="sendBtn" aria-label="Send message" tabindex="0">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="5" y1="12" x2="19" y2="12"/>
+              <polyline points="12 5 19 12 12 19"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </section>
+    
+    <!-- IMMERSIVE SCREEN -->
+    <section class="screen immersive-screen" id="immersiveScreen" aria-label="Immersive drink experience">
+      <header class="immersive-header">
+        <span class="header-logo" style="color: #333;">The House of Suntory</span>
+        <button class="header-profile" style="border-color: rgba(0,0,0,0.3);" aria-label="User profile" tabindex="0">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="1.5">
+            <circle cx="12" cy="8" r="4"/>
+            <path d="M4 20c0-4 4-6 8-6s8 2 8 6"/>
+          </svg>
+        </button>
+      </header>
+      
+      <div class="immersive-content">
+        <p class="immersive-instruction">Swirl to experience your highball</p>
+        <div class="immersive-drink" id="drinkContainer" role="img" aria-label="Toki Highball drink" tabindex="0">
+          <svg viewBox="0 0 200 380" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <!-- Glass outline -->
+            <path d="M30 50 L38 350 Q40 365 60 365 L140 365 Q160 365 162 350 L170 50 L30 50Z" 
+                  fill="url(#bigGlassGrad)" stroke="#E8E0D0" stroke-width="2"/>
+            <!-- Liquid fill -->
+            <path d="M36 70 L42 340 Q44 352 62 352 L138 352 Q156 352 158 340 L164 70 L36 70Z" 
+                  fill="url(#bigLiquidGrad)" opacity="0.9"/>
+            <!-- Ice cubes -->
+            <rect x="55" y="100" width="45" height="38" rx="8" fill="rgba(255,255,255,0.6)" stroke="rgba(255,255,255,0.8)" stroke-width="1"/>
+            <rect x="95" y="120" width="40" height="35" rx="7" fill="rgba(255,255,255,0.5)" stroke="rgba(255,255,255,0.7)" stroke-width="1"/>
+            <rect x="65" y="155" width="35" height="30" rx="6" fill="rgba(255,255,255,0.45)" stroke="rgba(255,255,255,0.6)" stroke-width="1"/>
+            <rect x="100" y="170" width="38" height="32" rx="6" fill="rgba(255,255,255,0.4)" stroke="rgba(255,255,255,0.55)" stroke-width="1"/>
+            <!-- Bubbles -->
+            <circle cx="70" cy="250" r="5" fill="rgba(255,255,255,0.6)"/>
+            <circle cx="120" cy="235" r="4" fill="rgba(255,255,255,0.5)"/>
+            <circle cx="90" cy="280" r="4.5" fill="rgba(255,255,255,0.55)"/>
+            <circle cx="135" cy="295" r="3.5" fill="rgba(255,255,255,0.45)"/>
+            <circle cx="75" cy="310" r="4" fill="rgba(255,255,255,0.5)"/>
+            <circle cx="110" cy="320" r="3" fill="rgba(255,255,255,0.4)"/>
+            <circle cx="85" cy="220" r="3" fill="rgba(255,255,255,0.45)"/>
+            <circle cx="130" cy="265" r="2.5" fill="rgba(255,255,255,0.4)"/>
+            <circle cx="60" cy="290" r="2" fill="rgba(255,255,255,0.35)"/>
+            <circle cx="145" cy="310" r="2.5" fill="rgba(255,255,255,0.38)"/>
+            <!-- Orange peel garnish -->
+            <path d="M130 60 Q160 48 175 85 Q180 105 168 120" 
+                  stroke="#E8A455" stroke-width="10" stroke-linecap="round" fill="none"/>
+            <path d="M130 60 Q160 48 175 85 Q180 105 168 120" 
+                  stroke="#D4903A" stroke-width="6" stroke-linecap="round" fill="none"/>
+            <!-- Reflection highlight -->
+            <path d="M42 80 L44 320" stroke="rgba(255,255,255,0.25)" stroke-width="8" stroke-linecap="round"/>
+            <defs>
+              <linearGradient id="bigGlassGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" style="stop-color:rgba(255,255,255,0.2)"/>
+                <stop offset="30%" style="stop-color:rgba(255,255,255,0.08)"/>
+                <stop offset="70%" style="stop-color:rgba(255,255,255,0.05)"/>
+                <stop offset="100%" style="stop-color:rgba(255,255,255,0.15)"/>
+              </linearGradient>
+              <linearGradient id="bigLiquidGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" style="stop-color:#F0E4C0"/>
+                <stop offset="50%" style="stop-color:#E8D8A8"/>
+                <stop offset="100%" style="stop-color:#D8C890"/>
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+        <h2 class="immersive-title">Toki Highball</h2>
+      </div>
+    </section>
+    
+  </div>
+
+  <script>
+    // ==================== 
+    // STATE MANAGEMENT
+    // ====================
+    const state = {
+      currentScreen: 'landing',
+      selectedDestination: 'listening-bar',
+      selectedCocktail: null,
+      chatHistory: [],
+      isTyping: false,
+      waitingForUserInput: false,
+      flowStep: 0
+    };
+
+    // Chat conversation flow
+    const chatFlow = {
+      greeting: {
+        messages: [
+          {
+            type: 'ai',
+            text: "Hi, I'm Kenji, your personal AI mixologist. Tell me what you want to drink and I'll turn it into an experience you'll never forget."
+          },
+          {
+            type: 'ai',
+            text: "What are you in the mood for?"
+          }
+        ],
+        waitForUser: true
+      },
+      userMood: {
+        messages: [
+          {
+            type: 'user',
+            text: "It's been a long day, I need something refreshing."
+          }
+        ]
+      },
+      recommendation: {
+        messages: [
+          {
+            type: 'ai',
+            text: "Sorry to hear about your day. I have two great options to help you relax this evening."
+          }
+        ],
+        showCocktails: true
+      },
+      story: {
+        messages: [
+          {
+            type: 'ai',
+            text: "Mixing whisky and soda is easy. Making a perfect highball? That's an art."
+          },
+          {
+            type: 'ai',
+            text: "Take ice for example. A perfect highball should stay effervescent, but rough ice causes bubbles to form and the drink to fizz out."
+          },
+          {
+            type: 'ai',
+            text: "So, I temper the ice by resting it at room temperature for a few minutes. As it begins to melt, surface imperfections are smoothed, helping the highball stay fizzy longer."
+          },
+          {
+            type: 'ai',
+            text: "Here's your highball"
+          }
+        ],
+        showCTA: true
+      }
+    };
+
+    // ==================== 
+    // DOM ELEMENTS
+    // ====================
+    const screens = {
+      landing: document.getElementById('landingScreen'),
+      chat: document.getElementById('chatScreen'),
+      immersive: document.getElementById('immersiveScreen')
+    };
+
+    const chatMessages = document.getElementById('chatMessages');
+    const chatInput = document.getElementById('chatInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const destinationBtns = document.querySelectorAll('.destination-btn');
+
+    // ==================== 
+    // SCREEN NAVIGATION
+    // ====================
+    const navigateTo = (screenName) => {
+      Object.values(screens).forEach(screen => screen.classList.remove('active'));
+      screens[screenName].classList.add('active');
+      state.currentScreen = screenName;
+
+      if (screenName === 'chat' && state.chatHistory.length === 0) {
+        startChatFlow();
+      }
+    };
+
+    // ==================== 
+    // CHAT FUNCTIONS
+    // ====================
+    const addMessage = (type, text, delay = 0) => {
+      return new Promise(resolve => {
+        setTimeout(() => {
+          const messageEl = document.createElement('div');
+          messageEl.className = `message message--${type}`;
+          messageEl.textContent = text;
+          messageEl.setAttribute('role', type === 'ai' ? 'status' : 'log');
+          chatMessages.appendChild(messageEl);
+          state.chatHistory.push({ type, text });
+          scrollToBottom();
+          resolve();
+        }, delay);
+      });
+    };
+
+    const addTypingIndicator = () => {
+      const typing = document.createElement('div');
+      typing.className = 'typing-indicator';
+      typing.id = 'typingIndicator';
+      typing.innerHTML = '<span></span><span></span><span></span>';
+      chatMessages.appendChild(typing);
+      scrollToBottom();
+    };
+
+    const removeTypingIndicator = () => {
+      const typing = document.getElementById('typingIndicator');
+      if (typing) typing.remove();
+    };
+
+    const addCocktailCards = () => {
+      const cardsContainer = document.createElement('div');
+      cardsContainer.className = 'cocktail-cards';
+      
+      // SVG drink illustrations
+      const tokiHighballSVG = `
+        <svg viewBox="0 0 80 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Glass -->
+          <path d="M15 25 L18 130 Q19 135 25 135 L55 135 Q61 135 62 130 L65 25 L15 25Z" fill="url(#glassGrad)" stroke="#d4c4a8" stroke-width="1"/>
+          <!-- Liquid -->
+          <path d="M18 35 L20 125 Q21 128 27 128 L53 128 Q59 128 60 125 L62 35 L18 35Z" fill="url(#liquidGrad)" opacity="0.85"/>
+          <!-- Ice cubes -->
+          <rect x="25" y="45" width="18" height="16" rx="3" fill="rgba(255,255,255,0.5)" stroke="rgba(255,255,255,0.7)"/>
+          <rect x="38" y="55" width="16" height="14" rx="3" fill="rgba(255,255,255,0.4)" stroke="rgba(255,255,255,0.6)"/>
+          <rect x="28" y="68" width="14" height="12" rx="2" fill="rgba(255,255,255,0.35)" stroke="rgba(255,255,255,0.5)"/>
+          <!-- Bubbles -->
+          <circle cx="30" cy="100" r="2" fill="rgba(255,255,255,0.6)"/>
+          <circle cx="45" cy="95" r="1.5" fill="rgba(255,255,255,0.5)"/>
+          <circle cx="38" cy="108" r="1.8" fill="rgba(255,255,255,0.55)"/>
+          <circle cx="50" cy="115" r="1.2" fill="rgba(255,255,255,0.4)"/>
+          <circle cx="32" cy="85" r="1" fill="rgba(255,255,255,0.45)"/>
+          <!-- Orange peel garnish -->
+          <path d="M52 32 Q62 28 68 40 Q70 48 65 52" stroke="#E8A455" stroke-width="4" stroke-linecap="round" fill="none"/>
+          <defs>
+            <linearGradient id="glassGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" style="stop-color:rgba(255,255,255,0.15)"/>
+              <stop offset="50%" style="stop-color:rgba(255,255,255,0.05)"/>
+              <stop offset="100%" style="stop-color:rgba(255,255,255,0.12)"/>
+            </linearGradient>
+            <linearGradient id="liquidGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" style="stop-color:#E8D4A0"/>
+              <stop offset="100%" style="stop-color:#D4C088"/>
+            </linearGradient>
+          </defs>
+        </svg>`;
+      
+      const rokuGinFizzSVG = `
+        <svg viewBox="0 0 80 140" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Glass -->
+          <path d="M15 25 L18 130 Q19 135 25 135 L55 135 Q61 135 62 130 L65 25 L15 25Z" fill="url(#glassGrad2)" stroke="#d4c4a8" stroke-width="1"/>
+          <!-- Liquid -->
+          <path d="M18 35 L20 125 Q21 128 27 128 L53 128 Q59 128 60 125 L62 35 L18 35Z" fill="url(#ginGrad)" opacity="0.8"/>
+          <!-- Ice cubes -->
+          <rect x="26" y="48" width="16" height="14" rx="3" fill="rgba(255,255,255,0.55)" stroke="rgba(255,255,255,0.7)"/>
+          <rect x="40" y="58" width="14" height="12" rx="2" fill="rgba(255,255,255,0.45)" stroke="rgba(255,255,255,0.6)"/>
+          <!-- Bubbles (fizz) -->
+          <circle cx="28" cy="90" r="2.2" fill="rgba(255,255,255,0.65)"/>
+          <circle cx="48" cy="85" r="1.8" fill="rgba(255,255,255,0.55)"/>
+          <circle cx="35" cy="100" r="1.5" fill="rgba(255,255,255,0.5)"/>
+          <circle cx="52" cy="105" r="1.3" fill="rgba(255,255,255,0.45)"/>
+          <circle cx="30" cy="115" r="1.6" fill="rgba(255,255,255,0.5)"/>
+          <circle cx="42" cy="118" r="1" fill="rgba(255,255,255,0.4)"/>
+          <!-- Lime wedge garnish -->
+          <ellipse cx="56" cy="38" rx="12" ry="8" fill="#9DC45F" stroke="#7BA33D" stroke-width="1"/>
+          <path d="M48 38 L56 32 L64 38 L56 44 Z" fill="#B8D977" stroke="#9DC45F" stroke-width="0.5"/>
+          <defs>
+            <linearGradient id="glassGrad2" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" style="stop-color:rgba(255,255,255,0.15)"/>
+              <stop offset="50%" style="stop-color:rgba(255,255,255,0.05)"/>
+              <stop offset="100%" style="stop-color:rgba(255,255,255,0.12)"/>
+            </linearGradient>
+            <linearGradient id="ginGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" style="stop-color:#E8F0E0"/>
+              <stop offset="100%" style="stop-color:#D8E8D0"/>
+            </linearGradient>
+          </defs>
+        </svg>`;
+      
+      const cocktails = [
+        { id: 'toki-highball', name: 'Toki Highball', svg: tokiHighballSVG },
+        { id: 'roku-gin-fizz', name: 'Roku Gin Fizz', svg: rokuGinFizzSVG }
+      ];
+
+      cocktails.forEach(cocktail => {
+        const card = document.createElement('button');
+        card.className = 'cocktail-card';
+        card.setAttribute('tabindex', '0');
+        card.setAttribute('aria-label', `Select ${cocktail.name}`);
+        card.innerHTML = `
+          <div class="cocktail-card__image">${cocktail.svg}</div>
+          <p class="cocktail-card__name">${cocktail.name}</p>
+        `;
+        
+        card.addEventListener('click', () => handleCocktailSelect(cocktail, card));
+        card.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            handleCocktailSelect(cocktail, card);
+          }
+        });
+        
+        cardsContainer.appendChild(card);
+      });
+
+      chatMessages.appendChild(cardsContainer);
+      scrollToBottom();
+    };
+
+    const handleCocktailSelect = (cocktail, cardEl) => {
+      // Remove previous selection
+      document.querySelectorAll('.cocktail-card').forEach(c => c.classList.remove('selected'));
+      cardEl.classList.add('selected');
+      state.selectedCocktail = cocktail;
+
+      // Continue to story
+      setTimeout(() => {
+        playChatSequence('story');
+      }, 500);
+    };
+
+    const addExperienceCTA = () => {
+      const ctaContainer = document.createElement('div');
+      ctaContainer.style.cssText = 'display: flex; justify-content: flex-start; padding: 8px 0;';
+      
+      const cta = document.createElement('button');
+      cta.className = 'experience-cta';
+      cta.setAttribute('tabindex', '0');
+      cta.setAttribute('aria-label', 'Experience your highball in immersive view');
+      cta.innerHTML = `
+        Experience Your Highball
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="5" y1="12" x2="19" y2="12"/>
+          <polyline points="12 5 19 12 12 19"/>
+        </svg>
+      `;
+      
+      cta.addEventListener('click', () => {
+        window.location.href = 'proto-toki.html';
+      });
+      
+      cta.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          window.location.href = 'proto-toki.html';
+        }
+      });
+
+      ctaContainer.appendChild(cta);
+      chatMessages.appendChild(ctaContainer);
+      scrollToBottom();
+    };
+
+    const playChatSequence = async (flowKey) => {
+      const flow = chatFlow[flowKey];
+      if (!flow) return;
+
+      for (let i = 0; i < flow.messages.length; i++) {
+        const msg = flow.messages[i];
+        
+        if (msg.type === 'ai') {
+          addTypingIndicator();
+          await wait(1200 + Math.random() * 800);
+          removeTypingIndicator();
+        }
+        
+        await addMessage(msg.type, msg.text, 100);
+        await wait(400);
+      }
+
+      if (flow.showCocktails) {
+        await wait(500);
+        addCocktailCards();
+      }
+
+      if (flow.showCTA) {
+        await wait(600);
+        addExperienceCTA();
+      }
+    };
+
+    const startChatFlow = async () => {
+      await wait(800);
+      await playChatSequence('greeting');
+      // Wait for user to send a message - flow continues in handleSendMessage
+      state.waitingForUserInput = true;
+    };
+
+    const scrollToBottom = () => {
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    };
+
+    const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+    // ==================== 
+    // EVENT HANDLERS
+    // ====================
+    const handleDestinationClick = (e) => {
+      const btn = e.currentTarget;
+      const destination = btn.dataset.destination;
+
+      // Update button states
+      destinationBtns.forEach(b => {
+        b.classList.remove('destination-btn--active');
+        b.classList.add('destination-btn--default');
+      });
+      btn.classList.remove('destination-btn--default');
+      btn.classList.add('destination-btn--active');
+
+      state.selectedDestination = destination;
+
+      // Navigate to chat after short delay
+      setTimeout(() => {
+        navigateTo('chat');
+      }, 300);
+    };
+
+    const handleSendMessage = async () => {
+      const text = chatInput.value.trim();
+      if (!text) return;
+
+      chatInput.value = '';
+
+      // Always use the default flow regardless of what user types
+      if (state.waitingForUserInput && state.flowStep === 0) {
+        state.waitingForUserInput = false;
+        state.flowStep = 1;
+        
+        // Show the default user message from the screens
+        await playChatSequence('userMood');
+        await wait(800);
+        await playChatSequence('recommendation');
+      }
+    };
+
+    const handleKeyDown = (e) => {
+      if (e.key === 'Enter') {
+        handleSendMessage();
+      }
+    };
+
+    // ==================== 
+    // INITIALIZATION
+    // ====================
+    const init = () => {
+      // Destination button events
+      destinationBtns.forEach(btn => {
+        btn.addEventListener('click', handleDestinationClick);
+        btn.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            handleDestinationClick(e);
+          }
+        });
+      });
+
+      // Chat input events
+      sendBtn.addEventListener('click', handleSendMessage);
+      chatInput.addEventListener('keydown', handleKeyDown);
+
+      // Immersive drink click - navigate to 3D experience
+      const drinkContainer = document.getElementById('drinkContainer');
+      drinkContainer.addEventListener('click', () => {
+        window.location.href = 'proto-toki.html';
+      });
+      drinkContainer.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          window.location.href = 'proto-toki.html';
+        }
+      });
+    };
+
+    // Start the app
+    init();
+  </script>
+</body>
+</html>
+
