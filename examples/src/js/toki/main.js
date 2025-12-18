@@ -1,7 +1,7 @@
 import * as THREE from 'three';
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
-import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
+		import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+		import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
+		import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
 import { setupLights, createLightGUI } from './lights-config.js';
 import { initScene, setupCameraControls, setupResizeHandler } from './scene-setup.js';
 import { setupPanelControls } from './controls.js';
@@ -18,19 +18,19 @@ import { initOrbitSystem, updateOrbitAnimation } from './orbit-system.js';
 import { spawnOrangePeel, updateOrangePeelAnimation } from './orange-peel.js';
 import { initDeviceMotion } from './device-motion.js';
 
-let renderer, scene, camera, controls;
+		let renderer, scene, camera, controls;
 let lights;
-let gui; // GUI panel
-let raycaster;
-const mouse = new THREE.Vector2();
+		let gui; // GUI panel
+			let raycaster;
+			const mouse = new THREE.Vector2();
 
-// Time tracking
-let elapsedTime = 0;
+			// Time tracking
+			let elapsedTime = 0;
 
 // Fizz intensity reference (shared with GUI)
 let fizzIntensityRef = { value: fizzIntensity };
 
-init();
+			init();
 
 function init() {
 	// Initialize scene, renderer, camera
@@ -53,7 +53,7 @@ function init() {
 	loadGlassModel(scene, (glassMaterial) => {
 		// Create glass GUI after model loads, if gui is already created
 		if (gui && glassMaterial) {
-			createGlassGUI(gui);
+				createGlassGUI(gui);
 		}
 	});
 
@@ -65,13 +65,13 @@ function init() {
 		}
 	});
 
-	// Load floor model (disabled)
-	// loadFloorModel(scene, (floorModel) => {
-	// 	// Create floor GUI after model loads, if gui is already created
-	// 	if (gui && floorModel) {
-	// 		createFloorGUI(gui);
-	// 	}
-	// });
+	// Load floor model
+	loadFloorModel(scene, (floorModel) => {
+		// Create floor GUI after model loads, if gui is already created
+		if (gui && floorModel) {
+			createFloorGUI(gui);
+		}
+	});
 
 	// Initialize orbiting ingredients system
 	initOrbitSystem(scene);
@@ -112,29 +112,29 @@ function init() {
 	// Initialize hotspots with callback
 	initHotspots(scene, camera, renderer, raycaster, mouse, onHotspotPanelClose);
 
-	renderer.domElement.addEventListener('pointermove', onPointerMove);
-	renderer.domElement.addEventListener('pointerdown', onPointerDown);
+				renderer.domElement.addEventListener('pointermove', onPointerMove);
+				renderer.domElement.addEventListener('pointerdown', onPointerDown);
 
 	// Setup window resize handler
 	setupResizeHandler(camera, renderer);
 
 	// Setup panel controls (for hotspot panels)
-	setupPanelControls();
-	
+			setupPanelControls();
+
 	// Store fizzIntensityRef globally for bubble system
 	window.fizzIntensityRef = fizzIntensityRef;
 
 	// Setup GUI
-	gui = new GUI({ width: 320 });
+			gui = new GUI({ width: 320 });
 	
 	// Add drink settings first (carbonation + orange peel) - this one stays open
 	createDrinkSettingsGUI(gui, fizzIntensityRef);
 	
-	// Add floor controls (if model has already loaded) - disabled
-	// const floorModel = getFloorModel();
-	// if (floorModel) {
-	// 	createFloorGUI(gui);
-	// }
+	// Add floor controls (if model has already loaded)
+	const floorModel = getFloorModel();
+	if (floorModel) {
+		createFloorGUI(gui);
+	}
 	
 	// Add glass material controls (if model has already loaded)
 	const glassMaterial = getGlassModelMaterial();
@@ -172,46 +172,46 @@ function init() {
 	});
 
 	renderer.setAnimationLoop(animate);
-}
+			}
 
-function onPointerMove(event) {
-	setMouseFromEvent(event);
-	checkHotspotHover();
-}
+			function onPointerMove(event) {
+				setMouseFromEvent(event);
+				checkHotspotHover();
+			}
 
-function onPointerDown(event) {
-	setMouseFromEvent(event);
+			function onPointerDown(event) {
+				setMouseFromEvent(event);
 
-	// Check hotspot click first
-	if (checkHotspotClick()) return;
+				// Check hotspot click first
+				if (checkHotspotClick()) return;
 
 	// Trigger ripple on liquid surface
 	triggerRipple(raycaster, mouse, camera);
-}
+			}
 
-function setMouseFromEvent(event) {
-	const rect = renderer.domElement.getBoundingClientRect();
-	mouse.set(
-		((event.clientX - rect.left) / rect.width) * 2 - 1,
-		-((event.clientY - rect.top) / rect.height) * 2 + 1
-	);
-}
+			function setMouseFromEvent(event) {
+				const rect = renderer.domElement.getBoundingClientRect();
+				mouse.set(
+					((event.clientX - rect.left) / rect.width) * 2 - 1,
+					-((event.clientY - rect.top) / rect.height) * 2 + 1
+				);
+			}
 
-function animate() {
-	const deltaTime = 1 / 60;
-	elapsedTime += deltaTime;
+			function animate() {
+				const deltaTime = 1 / 60;
+				elapsedTime += deltaTime;
 
 	// Update liquid animation
 	updateLiquidAnimation(deltaTime);
 
-	// Update animations
+			// Update animations
 	const currentFizzIntensity = window.fizzIntensityRef ? window.fizzIntensityRef.value : fizzIntensity;
 	updateBubbles(deltaTime, currentFizzIntensity);
-	updateIceAnimation(elapsedTime);
+			updateIceAnimation(elapsedTime);
 	updateOrangePeelAnimation(elapsedTime);
 	updateOrbitAnimation(elapsedTime);
-	updateHotspots(elapsedTime);
+			updateHotspots(elapsedTime);
 
-	controls.update();
-	renderer.render(scene, camera);
-}
+			controls.update();
+			renderer.render(scene, camera);
+			}
