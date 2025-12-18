@@ -2,7 +2,7 @@
 
 import * as THREE from '../../../../build/three.module.js';
 import { getIceObjects, getIceCubeMaterial } from './ice-system.js';
-import { getLiquidMeshes } from './liquid-system.js';
+import { getLiquidMeshes, getLiquidUniforms } from './liquid-system.js';
 import { getGlassModelMaterial } from './model-glass.js';
 import {
 	getOrbitConfig,
@@ -15,6 +15,16 @@ import {
 	setHoneyWobbleIntensity,
 	setHoneyWobbleSpeed,
 } from './orbit-system.js';
+import {
+	orangePeelConfig,
+	toggleOrangePeel,
+	setOrangePeelPositionX,
+	setOrangePeelPositionZ,
+	setOrangePeelRotationY,
+	setOrangePeelRotationZ,
+	isOrangePeelVisible,
+} from './orange-peel.js';
+import { fizzIntensity, MAX_FIZZ_INTENSITY } from './constants.js';
 
 function createFloorGUI(gui) {
   if (!floor || !floor.material) return;
@@ -576,7 +586,7 @@ export function createOrbitGUI(gui) {
     setOrbitRadius(value);
   });
   
-  orbitFolder.add(masterSettings, 'scale', 0.5, 3.0, 0.1).name('Ingredient Size').onChange((value) => {
+  orbitFolder.add(masterSettings, 'scale', 0.5, 10.0, 0.1).name('Ingredient Size').onChange((value) => {
     setOrbitScale(value);
   });
   
@@ -612,4 +622,71 @@ export function createOrbitGUI(gui) {
   
   // Keep folder collapsed by default
   orbitFolder.close();
+}
+
+// Create drink settings GUI controls (carbonation + orange peel)
+export function createDrinkSettingsGUI(gui, fizzIntensityRef) {
+  const liquidUniforms = getLiquidUniforms();
+  
+  const drinkFolder = gui.addFolder('Drink Settings');
+  
+  // Carbonation settings
+  const carbonationSettings = {
+    intensity: fizzIntensityRef.value * 100, // Convert to percentage
+  };
+  
+  drinkFolder.add(carbonationSettings, 'intensity', 0, MAX_FIZZ_INTENSITY * 100, 10)
+    .name('Carbonation %')
+    .onChange((value) => {
+      fizzIntensityRef.value = value / 100;
+      if (liquidUniforms && liquidUniforms.uFizz) {
+        liquidUniforms.uFizz.value = fizzIntensityRef.value;
+      }
+    });
+  
+  // Orange Peel settings
+  const orangePeelFolder = drinkFolder.addFolder('Orange Peel');
+  
+  const orangePeelSettings = {
+    visible: isOrangePeelVisible(),
+    positionX: orangePeelConfig.positionX,
+    positionZ: orangePeelConfig.positionZ,
+    rotationY: orangePeelConfig.rotationY,
+    rotationZ: orangePeelConfig.rotationZ,
+  };
+  
+  orangePeelFolder.add(orangePeelSettings, 'visible')
+    .name('Visible')
+    .onChange((value) => {
+      toggleOrangePeel(value);
+    });
+  
+  orangePeelFolder.add(orangePeelSettings, 'positionX', -1, 1, 0.01)
+    .name('Position X')
+    .onChange((value) => {
+      setOrangePeelPositionX(value);
+    });
+  
+  orangePeelFolder.add(orangePeelSettings, 'positionZ', -1, 1, 0.01)
+    .name('Position Z')
+    .onChange((value) => {
+      setOrangePeelPositionZ(value);
+    });
+  
+  orangePeelFolder.add(orangePeelSettings, 'rotationY', -Math.PI, Math.PI, 0.01)
+    .name('Rotation Y')
+    .onChange((value) => {
+      setOrangePeelRotationY(value);
+    });
+  
+  orangePeelFolder.add(orangePeelSettings, 'rotationZ', -Math.PI / 2, Math.PI / 2, 0.01)
+    .name('Rotation Z (Lean)')
+    .onChange((value) => {
+      setOrangePeelRotationZ(value);
+    });
+  
+  orangePeelFolder.open();
+  
+  // Keep drink folder open by default (it's the main control)
+  drinkFolder.open();
 }

@@ -4,16 +4,17 @@ import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
 import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
 import { setupLights, createLightGUI } from './lights-config.js';
 import { initScene, setupCameraControls, setupResizeHandler } from './scene-setup.js';
-import { setupPanelControls, setupControls } from './controls.js';
+import { setupPanelControls } from './controls.js';
 import { initHotspots, updateHotspots, checkHotspotHover, checkHotspotClick, closePanel, getActivePanel, getHotspotOverlay } from './hotspots.js';
 import { buildLiquid, updateLiquidAnimation, triggerRipple, getLiquidMeshes, getLiquidUniforms, animateLiquidHeight } from './liquid-system.js';
 import { spawnIce, updateIceAnimation, loadIceCubeGLB, getIceObjects } from './ice-system.js';
 import { initBubbleSystem, updateBubbles } from './bubble-system.js';
-import { createLiquidGUI, createIceCubeGUI, createGlassGUI, createOrbitGUI } from './gui.js';
+import { createLiquidGUI, createIceCubeGUI, createGlassGUI, createOrbitGUI, createDrinkSettingsGUI } from './gui.js';
 import { loadFloorModel } from './model-floor.js';
 import { loadGlassModel, getGlassModelMaterial } from './model-glass.js';
 import { iceConfig, fizzIntensity } from './constants.js';
 import { initOrbitSystem, updateOrbitAnimation } from './orbit-system.js';
+import { spawnOrangePeel, updateOrangePeelAnimation } from './orange-peel.js';
 
 let renderer, scene, camera, controls;
 let lights;
@@ -22,167 +23,13 @@ let floor = null; // Floor mesh reference
 let raycaster;
 const mouse = new THREE.Vector2();
 
-// Orange slice
-let orangeSlice;
-let orangeSliceVisible = false;
-
 // Time tracking
 let elapsedTime = 0;
 
-// Highball glass dimensions (taller and slender)
-const GLASS_RADIUS = 0.85;
-const GLASS_HEIGHT = 2.8;
-const GLASS_THICKNESS = 0.04;
-
-// Liquid configuration
-const LIQUID_RADIUS = GLASS_RADIUS - GLASS_THICKNESS - 0.02;
-const LIQUID_HEIGHT = 2.2;
-const LIQUID_BASE_Y = 0.1;
-const LIQUID_SURFACE_Y = LIQUID_BASE_Y + LIQUID_HEIGHT;
-
-// Toki Highball golden amber color (20% darker)
-const LIQUID_COLOR = 0xaf934a;
-const LIQUID_DEEP_COLOR = 0xa18033;
+// Fizz intensity reference (shared with GUI)
+let fizzIntensityRef = { value: fizzIntensity };
 
 init();
-
-// Orange peel creation (single strip peel)
-function createOrangeSlice() {
-	const group = new THREE.Group();
-
-	// Peel dimensions - shorter strip (half length)
-	const peelLength = 1.2;
-	const peelWidth = 0.18;
-	const peelThickness = 0.035;
-	const curveSegments = 16;
-
-	// Create a curved path for the peel - gentle S-curve
-	const curve = new THREE.CatmullRomCurve3([
-		new THREE.Vector3(0, 0, 0),
-		new THREE.Vector3(0.06, peelLength * 0.3, 0.03),
-		new THREE.Vector3(-0.04, peelLength * 0.6, 0.05),
-		new THREE.Vector3(0.02, peelLength, 0),
-	]);
-
-	// Create custom peel geometry by extruding along curve
-	const peelShape = new THREE.Shape();
-	peelShape.moveTo(-peelWidth / 2, 0);
-	peelShape.lineTo(peelWidth / 2, 0);
-	peelShape.lineTo(peelWidth / 2, peelThickness);
-	peelShape.lineTo(-peelWidth / 2, peelThickness);
-	peelShape.lineTo(-peelWidth / 2, 0);
-
-	const extrudeSettings = {
-		steps: curveSegments,
-		bevelEnabled: false,
-		extrudePath: curve,
-	};
-
-	const peelGeometry = new THREE.ExtrudeGeometry(peelShape, extrudeSettings);
-
-	// Orange rind (outer surface) - vibrant orange
-	const rindMaterial = new THREE.MeshStandardMaterial({
-		color: 0xf57c00,
-		metalness: 0.05,
-		roughness: 0.55,
-		side: THREE.FrontSide,
-	});
-
-	const peel = new THREE.Mesh(peelGeometry, rindMaterial);
-	group.add(peel);
-
-	// Inner pith layer (whitish-orange)
-	const pithGeometry = peelGeometry.clone();
-	const pithMaterial = new THREE.MeshStandardMaterial({
-		color: 0xffe4b5,
-		metalness: 0.0,
-		roughness: 0.85,
-		side: THREE.BackSide,
-	});
-
-	const pith = new THREE.Mesh(pithGeometry, pithMaterial);
-	group.add(pith);
-
-	// Add subtle texture detail with slight bumps along the peel
-	const detailCount = 6;
-	const detailMaterial = new THREE.MeshStandardMaterial({
-		color: 0xd46a00,
-		metalness: 0.0,
-		roughness: 0.7,
-	});
-
-	for (let i = 0; i < detailCount; i++) {
-		const t = (i + 0.5) / detailCount;
-		const point = curve.getPoint(t);
-
-		// Small bumps for orange peel texture
-		const bumpGeo = new THREE.SphereGeometry(0.012, 6, 6);
-		const bump = new THREE.Mesh(bumpGeo, detailMaterial);
-
-		// Offset slightly from center
-		const offsetX = (Math.random() - 0.5) * peelWidth * 0.5;
-		const offsetZ = peelThickness * 0.5;
-
-		bump.position.set(
-			point.x + offsetX,
-			point.y,
-			point.z + offsetZ
-		);
-
-		group.add(bump);
-	}
-
-	return group;
-}
-
-function spawnOrangeSlice() {
-	orangeSlice = createOrangeSlice();
-	
-	// Position inside glass at top, vertical orientation
-	// Leaning slightly against the inner glass wall
-	const peelX = 0.45;  // Near the inner edge of glass
-	const peelZ = 0.3;
-	const peelY = LIQUID_SURFACE_Y - 0.5;  // Bottom in liquid, top sticks out
-	
-	orangeSlice.position.set(peelX, peelY, peelZ);
-	
-	// Rotate to be vertical with slight lean toward glass edge
-	orangeSlice.rotation.x = 0;  // Upright
-	orangeSlice.rotation.y = -Math.PI * 0.3;  // Angled view
-	orangeSlice.rotation.z = Math.PI * 0.12;  // Slight lean against glass
-	
-	orangeSlice.renderOrder = 6;
-	orangeSlice.visible = orangeSliceVisible;
-	scene.add(orangeSlice);
-}
-
-function updateOrangeSliceAnimation(time) {
-	if (!orangeSlice || !orangeSliceVisible) return;
-
-	// Very subtle movement - peel is resting against inner glass wall
-	const gentleSway = Math.sin(time * 0.4) * 0.005;
-	const subtleBob = Math.sin(time * 0.6) * 0.008;
-
-	// Base position with subtle animation
-	const peelX = 0.45;
-	const peelZ = 0.3;
-	const peelY = LIQUID_SURFACE_Y - 0.5;
-	
-	orangeSlice.position.x = peelX + gentleSway;
-	orangeSlice.position.y = peelY + subtleBob;
-	orangeSlice.position.z = peelZ + gentleSway * 0.3;
-
-	// Very subtle rotation sway
-	orangeSlice.rotation.z = Math.PI * 0.12 + Math.sin(time * 0.3) * 0.015;
-}
-
-function toggleOrangeSlice(visible) {
-	orangeSliceVisible = visible;
-
-	if (orangeSlice) {
-		orangeSlice.visible = visible;
-	}
-}
 
 // Create floor GUI controls
 function createFloorGUI(gui) {
@@ -236,14 +83,13 @@ function init() {
 
 	// Setup lights from config file
 	lights = setupLights(scene);
-	// console.log('Lights configured from lights-config.js');
 
-	// Default floor removed - using floor-01.glb model instead
+	// Build liquid and bubbles
 	buildLiquid(scene, fizzIntensity);
 	initBubbleSystem(scene);
 
-	// Spawn orange slice
-	spawnOrangeSlice();
+	// Spawn orange peel
+	spawnOrangePeel(scene);
 
 	// Load glass model
 	loadGlassModel(scene, (glassMaterial) => {
@@ -290,21 +136,17 @@ function init() {
 	// Setup window resize handler
 	setupResizeHandler(camera, renderer);
 
-	// Setup controls
-	// Wrap fizzIntensity and orangeSliceVisible in objects for pass-by-reference
-	const fizzIntensityRef = { value: fizzIntensity };
-	const orangeSliceVisibleRef = { value: orangeSliceVisible };
-	
-	setupControls(fizzIntensityRef, getLiquidUniforms(), orangeSliceVisibleRef, toggleOrangeSlice);
+	// Setup panel controls (for hotspot panels)
 	setupPanelControls();
 	
-	// Store refs for use in other functions
+	// Store fizzIntensityRef globally for bubble system
 	window.fizzIntensityRef = fizzIntensityRef;
-	window.orangeSliceVisibleRef = orangeSliceVisibleRef;
 
-	// Setup GUI for light controls
+	// Setup GUI
 	gui = new GUI({ width: 320 });
-	gui.close(); // Start collapsed
+	
+	// Add drink settings first (carbonation + orange peel) - this one stays open
+	createDrinkSettingsGUI(gui, fizzIntensityRef);
 	
 	// Add floor controls
 	createFloorGUI(gui);
@@ -367,7 +209,7 @@ function animate() {
 	const currentFizzIntensity = window.fizzIntensityRef ? window.fizzIntensityRef.value : fizzIntensity;
 	updateBubbles(deltaTime, currentFizzIntensity);
 	updateIceAnimation(elapsedTime);
-	updateOrangeSliceAnimation(elapsedTime);
+	updateOrangePeelAnimation(elapsedTime);
 	updateOrbitAnimation(elapsedTime);
 	updateHotspots(elapsedTime);
 

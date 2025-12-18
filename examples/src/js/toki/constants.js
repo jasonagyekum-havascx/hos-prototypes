@@ -20,7 +20,8 @@ export const iceConfig = {
 };
 
 export const MAX_BUBBLES = 500;
-export const fizzIntensity = 3.0;
+export const fizzIntensity = 5.0;  // Default carbonation level (0-5)
+export const MAX_FIZZ_INTENSITY = 5.0;  // Maximum carbonation level
 
 // Orbit system defaults
 export const ORBIT_DEFAULTS = {

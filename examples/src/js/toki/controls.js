@@ -26,33 +26,3 @@ export function setupPanelControls() {
 		}
 	});
 }
-
-// Setup UI controls (fizz slider, orange slice toggle)
-export function setupControls(fizzIntensityRef, liquidUniforms, orangeSliceVisibleRef, toggleOrangeSlice) {
-	const fizzSlider = document.getElementById('fizzSlider');
-	const fizzValue = document.getElementById('fizzValue');
-	const sliceToggle = document.getElementById('sliceToggle');
-
-	const handleFizzChange = () => {
-		fizzIntensityRef.value = parseFloat(fizzSlider.value) / 100;
-		fizzValue.textContent = fizzSlider.value + '%';
-		liquidUniforms.uFizz.value = fizzIntensityRef.value;
-	};
-
-	const handleSliceToggle = () => {
-		orangeSliceVisibleRef.value = !orangeSliceVisibleRef.value;
-		toggleOrangeSlice(orangeSliceVisibleRef.value);
-		sliceToggle.textContent = orangeSliceVisibleRef.value ? 'Visible' : 'Hidden';
-		sliceToggle.classList.toggle('active', orangeSliceVisibleRef.value);
-		sliceToggle.setAttribute('aria-pressed', orangeSliceVisibleRef.value);
-	};
-
-	fizzSlider.addEventListener('input', handleFizzChange);
-	sliceToggle.addEventListener('click', handleSliceToggle);
-
-	// Keyboard support
-	sliceToggle.addEventListener('keydown', (e) => {
-		if (e.key === 'Enter' || e.key === ' ') handleSliceToggle();
-	});
-}
-

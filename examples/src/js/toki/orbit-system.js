@@ -19,7 +19,7 @@ const orbitConfig = {
 	enabled: true,
 	globalSpeed: 1.0,
 	globalRadiusMultiplier: 1.0,
-	globalScaleMultiplier: 1.0,
+	globalScaleMultiplier: 7.0,  // Default scale for ingredients (except honey)
 	honeyWobbleIntensity: 0.15,
 	honeyWobbleSpeed: 1.5,
 };
@@ -522,6 +522,12 @@ export const initOrbitSystem = (scene) => {
 			angle: config.phaseOffset,
 		};
 		
+		// Apply initial scale multiplier (except for honey)
+		if (key !== 'honey') {
+			const scaledSize = config.scale * orbitConfig.globalScaleMultiplier;
+			mesh.scale.setScalar(scaledSize);
+		}
+		
 		mesh.visible = config.visible;
 		orbitGroup.add(mesh);
 	});
@@ -604,14 +610,15 @@ export const setOrbitRadius = (multiplier) => {
 };
 
 /**
- * Set global scale multiplier for all ingredients
- * @param {number} multiplier - Scale multiplier (0.5 - 3.0)
+ * Set global scale multiplier for all ingredients (except honey)
+ * @param {number} multiplier - Scale multiplier (0.5 - 10.0)
  */
 export const setOrbitScale = (multiplier) => {
 	orbitConfig.globalScaleMultiplier = multiplier;
 	
-	// Apply scale to all ingredients immediately
+	// Apply scale to all ingredients immediately (except honey which has its own scale)
 	Object.entries(ingredients).forEach(([key, data]) => {
+		if (key === 'honey') return; // Skip honey - it has its own fixed scale
 		const baseScale = ingredientConfigs[key].scale;
 		const newScale = baseScale * multiplier;
 		data.mesh.scale.setScalar(newScale);
