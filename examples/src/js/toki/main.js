@@ -7,7 +7,7 @@ import { initScene, setupCameraControls, setupResizeHandler } from './scene-setu
 import { setupPanelControls, setupControls } from './controls.js';
 import { initHotspots, updateHotspots, checkHotspotHover, checkHotspotClick, closePanel, getActivePanel, getHotspotOverlay } from './hotspots.js';
 import { buildLiquid, updateLiquidAnimation, triggerRipple, getLiquidMeshes, getLiquidUniforms, animateLiquidHeight } from './liquid-system.js';
-import { spawnIce, updateIceAnimation, loadIceCubeGLB, getIceObjects } from './ice-system.js';
+import { spawnIce, updateIceAnimation, loadIceCubeGLB, getIceObjects, animateIceDown, stopIceAnimation } from './ice-system.js';
 import { initBubbleSystem, updateBubbles } from './bubble-system.js';
 import { createLiquidGUI, createIceCubeGUI, createGlassGUI } from './gui.js';
 import { loadFloorModel } from './model-floor.js';
@@ -264,6 +264,7 @@ function init() {
 	// Track hotspot interactions for liquid animation
 	let hotspotInteractionCount = 0;
 	const hotspotTargets = [0.75, 0.50, 0.25, 0.05];
+	let hasAnimatedIceDown = false;
 	
 	// Callback when a panel is closed
 	function onHotspotPanelClose() {
@@ -272,6 +273,13 @@ function init() {
 			if (hotspotInteractionCount < hotspotTargets.length) {
 				const targetScale = hotspotTargets[hotspotInteractionCount];
 				animateLiquidHeight(targetScale);
+				
+				// Animate ice cubes down on the first panel close only
+				if (!hasAnimatedIceDown && hotspotInteractionCount === 0) {
+					animateIceDown(0.4, 1.0); // Move down by 0.4 units over 1 second
+					hasAnimatedIceDown = true;
+				}
+				
 				hotspotInteractionCount++;
 			}
 		}, 500);
