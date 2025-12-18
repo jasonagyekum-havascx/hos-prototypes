@@ -9,52 +9,37 @@ let scene, camera, renderer, raycaster, mouse;
 let hotspotLabel, hotspotOverlay;
 let onPanelCloseCallback = null;
 
-// Create a hotspot
-function createHotspot(position, label, panelId, color = 0x7ec8e8) {
+// Texture loader
+const textureLoader = new THREE.TextureLoader();
+
+// Create a hotspot with icon button
+function createHotspot(position, label, panelId, iconPath) {
 	const group = new THREE.Group();
 	group.position.copy(position);
 
-	// Inner pulsing dot
-	const dotGeometry = new THREE.SphereGeometry(0.06, 16, 16);
-	const dotMaterial = new THREE.MeshBasicMaterial({
-		color: color,
-		transparent: true,
-		opacity: 0.9,
-	});
-	const dot = new THREE.Mesh(dotGeometry, dotMaterial);
-	group.add(dot);
+	// Load icon texture
+	const texture = textureLoader.load(iconPath);
+	texture.colorSpace = THREE.SRGBColorSpace;
 
-	// Outer ring
-	const ringGeometry = new THREE.RingGeometry(0.1, 0.14, 32);
-	const ringMaterial = new THREE.MeshBasicMaterial({
-		color: color,
+	// Create sprite material with the icon
+	const spriteMaterial = new THREE.SpriteMaterial({
+		map: texture,
 		transparent: true,
-		opacity: 0.6,
-		side: THREE.DoubleSide,
+		opacity: 1,
+		depthTest: true,
+		depthWrite: false,
 	});
-	const ring = new THREE.Mesh(ringGeometry, ringMaterial);
-	ring.lookAt(camera.position);
-	group.add(ring);
 
-	// Pulse ring (animated)
-	const pulseGeometry = new THREE.RingGeometry(0.08, 0.1, 32);
-	const pulseMaterial = new THREE.MeshBasicMaterial({
-		color: color,
-		transparent: true,
-		opacity: 0.5,
-		side: THREE.DoubleSide,
-	});
-	const pulseRing = new THREE.Mesh(pulseGeometry, pulseMaterial);
-	pulseRing.lookAt(camera.position);
-	group.add(pulseRing);
+	// Create sprite (always faces camera)
+	const sprite = new THREE.Sprite(spriteMaterial);
+	sprite.scale.set(0.5, 0.5, 1); // Adjust size as needed
+	group.add(sprite);
 
 	group.userData = {
 		label: label,
 		panelId: panelId,
-		dot: dot,
-		ring: ring,
-		pulseRing: pulseRing,
-		baseScale: 1,
+		sprite: sprite,
+		baseScale: 0.5,
 		hovered: false,
 	};
 
@@ -74,57 +59,52 @@ export function initHotspots(sceneRef, cameraRef, rendererRef, raycasterRef, mou
 	hotspotLabel = document.getElementById('hotspotLabel');
 	hotspotOverlay = document.getElementById('hotspotOverlay');
 
-	// Whisky hotspot - at the liquid level
+	// Video hotspot - play button at the top (rim level)
 	createHotspot(
-		new THREE.Vector3(0.9, 1.5, 0.4),
-		'About Toki Whisky',
-		'panelWhisky',
-		0xdbb85c
+		new THREE.Vector3(0.0, 3.0, 1.0),
+		'Watch the Perfect Serve',
+		'panelVideo',
+		'../images/assets/play-sign.png'
 	);
 
-	// Ice hotspot - near the ice cubes
+	// Glass hotspot - plus button upper area
 	createHotspot(
-		new THREE.Vector3(-0.5, 2.2, 0.7),
-		'The Perfect Ice',
-		'panelIce',
-		0xaaddff
-	);
-
-	// Glass hotspot - on the glass rim
-	createHotspot(
-		new THREE.Vector3(0.6, 2.8, -0.5),
+		new THREE.Vector3(1.1, 2.4, -0.8),
 		'Highball Glass',
 		'panelGlass',
-		0x7ec8e8
+		'../images/assets/plus-sign.png'
 	);
 
-	// Video hotspot - near the base
+	// Ice hotspot - plus button middle (ice level)
 	createHotspot(
-		new THREE.Vector3(-0.8, 0.6, -0.6),
-		'Watch the Ritual',
-		'panelVideo',
-		0xff9f43
+		new THREE.Vector3(-1.0, 1.8, 0.9),
+		'The Perfect Ice',
+		'panelIce',
+		'../images/assets/plus-sign.png'
+	);
+
+	// Whisky hotspot - plus button lower (liquid level)
+	createHotspot(
+		new THREE.Vector3(1.2, 1.2, 0.6),
+		'About Toki Whisky',
+		'panelWhisky',
+		'../images/assets/plus-sign.png'
 	);
 }
 
 // Update hotspots animation
 export function updateHotspots(time) {
 	for (const hotspot of hotspots) {
-		const { ring, pulseRing, hovered } = hotspot.userData;
+		const { sprite, hovered, baseScale } = hotspot.userData;
 
-		// Make rings face camera
-		ring.lookAt(camera.position);
-		pulseRing.lookAt(camera.position);
-
-		// Pulse animation
-		const pulse = 1 + Math.sin(time * 3) * 0.15;
-		pulseRing.scale.set(pulse, pulse, pulse);
-		pulseRing.material.opacity = 0.5 * (1 - (pulse - 1) / 0.15 * 0.5);
-
-		// Hover effect
-		const targetScale = hovered ? 1.3 : 1;
-		hotspot.userData.baseScale += (targetScale - hotspot.userData.baseScale) * 0.1;
-		hotspot.scale.setScalar(hotspot.userData.baseScale);
+		// Subtle pulse animation for the sprite
+		const pulse = 1 + Math.sin(time * 2) * 0.08;
+		
+		// Hover effect - scale up when hovered
+		const targetScale = hovered ? baseScale * 1.2 : baseScale;
+		const currentScale = sprite.scale.x;
+		const newScale = currentScale + (targetScale * pulse - currentScale) * 0.1;
+		sprite.scale.set(newScale, newScale, 1);
 	}
 }
 
@@ -204,6 +184,13 @@ export function closePanel() {
 	const wasOpen = activePanel !== null;
 	
 	if (activePanel) {
+		// Pause video if it exists in the panel
+		const video = activePanel.querySelector('video');
+		if (video) {
+			video.pause();
+			video.currentTime = 0;
+		}
+		
 		activePanel.classList.remove('active');
 		activePanel = null;
 	}

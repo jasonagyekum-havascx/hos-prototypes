@@ -723,6 +723,125 @@ text-transform: uppercase;
       animation: fadeInUp 0.8s ease forwards 0.7s;
     }
 
+    /* Video Hotspot Button */
+    .video-hotspot {
+      position: absolute;
+      bottom: 180px;
+      right: 40px;
+      width: 64px;
+      height: 64px;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      transition: var(--transition-smooth);
+      opacity: 0;
+      animation: fadeInUp 0.8s ease forwards 0.9s;
+      padding: 0;
+      z-index: 10;
+    }
+
+    .video-hotspot:hover {
+      transform: scale(1.1);
+    }
+
+    .video-hotspot:focus-visible {
+      outline: 2px solid var(--color-gold);
+      outline-offset: 4px;
+      border-radius: 50%;
+    }
+
+    .video-hotspot img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .video-hotspot-label {
+      position: absolute;
+      bottom: -24px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-family: var(--font-sans);
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--color-gold);
+      white-space: nowrap;
+    }
+
+    /* Video Modal Overlay */
+    .video-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.95);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      opacity: 0;
+      visibility: hidden;
+      transition: var(--transition-smooth);
+    }
+
+    .video-modal.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .video-modal__close {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      width: 44px;
+      height: 44px;
+      border: none;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: var(--transition-smooth);
+    }
+
+    .video-modal__close:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    .video-modal__close svg {
+      width: 24px;
+      height: 24px;
+      stroke: white;
+    }
+
+    .video-modal__content {
+      width: 100%;
+      max-width: 430px;
+      padding: 0 20px;
+    }
+
+    .video-modal__video {
+      width: 100%;
+      border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    }
+
+    .video-modal__title {
+      font-family: var(--font-serif);
+      font-size: 18px;
+      font-weight: 400;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--color-gold);
+      text-align: center;
+      margin-top: 24px;
+    }
+
     /* ==================== */
     /* ANIMATIONS */
     /* ==================== */
@@ -905,6 +1024,18 @@ text-transform: uppercase;
       
       <div class="immersive-content">
         <p class="immersive-instruction">Swirl to experience your highball</p>
+        
+        <!-- Video Hotspot Button -->
+        <button 
+          class="video-hotspot" 
+          id="videoHotspot"
+          aria-label="Watch Perfect Serve video"
+          tabindex="0"
+        >
+          <img src="../images/assets/play-sign.png" alt="Play video" />
+          <span class="video-hotspot-label">Perfect Serve</span>
+        </button>
+        
         <div class="immersive-drink" id="drinkContainer" role="img" aria-label="Toki Highball drink" tabindex="0">
           <svg viewBox="0 0 200 380" fill="none" xmlns="http://www.w3.org/2000/svg">
             <!-- Glass outline -->
@@ -954,6 +1085,29 @@ text-transform: uppercase;
         <h2 class="immersive-title">Toki Highball</h2>
       </div>
     </section>
+    
+    <!-- Video Modal -->
+    <div class="video-modal" id="videoModal" role="dialog" aria-modal="true" aria-labelledby="videoModalTitle">
+      <button class="video-modal__close" id="videoModalClose" aria-label="Close video" tabindex="0">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+      <div class="video-modal__content">
+        <video 
+          class="video-modal__video" 
+          id="perfectServeVideo"
+          src="../images/perfect-serve.mp4"
+          controls
+          playsinline
+          preload="metadata"
+        >
+          Your browser does not support the video tag.
+        </video>
+        <h3 class="video-modal__title" id="videoModalTitle">The Perfect Serve</h3>
+      </div>
+    </div>
     
   </div>
 
@@ -1268,6 +1422,33 @@ text-transform: uppercase;
     };
 
     // ==================== 
+    // VIDEO MODAL HANDLERS
+    // ====================
+    const videoModal = document.getElementById('videoModal');
+    const videoModalClose = document.getElementById('videoModalClose');
+    const videoHotspot = document.getElementById('videoHotspot');
+    const perfectServeVideo = document.getElementById('perfectServeVideo');
+
+    const handleOpenVideoModal = () => {
+      videoModal.classList.add('active');
+      document.body.style.overflow = 'hidden';
+      perfectServeVideo.play();
+    };
+
+    const handleCloseVideoModal = () => {
+      videoModal.classList.remove('active');
+      document.body.style.overflow = '';
+      perfectServeVideo.pause();
+      perfectServeVideo.currentTime = 0;
+    };
+
+    const handleVideoModalKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        handleCloseVideoModal();
+      }
+    };
+
+    // ==================== 
     // INITIALIZATION
     // ====================
     const init = () => {
@@ -1297,6 +1478,34 @@ text-transform: uppercase;
           window.location.href = 'proto-toki.html';
         }
       });
+
+      // Video hotspot events
+      videoHotspot.addEventListener('click', handleOpenVideoModal);
+      videoHotspot.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          handleOpenVideoModal();
+        }
+      });
+
+      // Video modal close events
+      videoModalClose.addEventListener('click', handleCloseVideoModal);
+      videoModalClose.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          handleCloseVideoModal();
+        }
+      });
+
+      // Close modal on backdrop click
+      videoModal.addEventListener('click', (e) => {
+        if (e.target === videoModal) {
+          handleCloseVideoModal();
+        }
+      });
+
+      // Close modal on Escape key
+      document.addEventListener('keydown', handleVideoModalKeyDown);
     };
 
     // Start the app

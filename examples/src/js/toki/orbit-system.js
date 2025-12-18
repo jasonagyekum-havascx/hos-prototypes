@@ -16,7 +16,7 @@ const orbitRings = [
 
 // Master orbit configuration (mutable for GUI)
 const orbitConfig = {
-	enabled: true,
+	enabled: false,  // Disabled by default - enable via GUI
 	globalSpeed: 1.0,
 	globalRadiusMultiplier: 1.0,
 	globalScaleMultiplier: 7.0,  // Default scale for ingredients (except honey)
@@ -500,6 +500,7 @@ const createOakMesh = () => {
 export const initOrbitSystem = (scene) => {
 	orbitGroup = new THREE.Group();
 	orbitGroup.name = 'orbitingIngredients';
+	orbitGroup.visible = orbitConfig.enabled; // Hidden by default
 	
 	// Create all ingredient meshes
 	const meshCreators = {
