@@ -680,6 +680,188 @@ text-transform: uppercase;
     }
 
     /* ==================== */
+    /* SWIRL INTRO SCREEN */
+    /* ==================== */
+    .swirl-screen {
+      background: #FFFFFF;
+      position: relative;
+    }
+
+    .swirl-header {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding: 16px 20px;
+      background: transparent;
+    }
+
+    .swirl-header .header-logo {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      color: #1A1512;
+      font-size: 12px;
+      letter-spacing: 2px;
+    }
+
+    .swirl-header .header-profile {
+      border-color: rgba(0, 0, 0, 0.3);
+    }
+
+    .swirl-header .header-profile svg {
+      stroke: #333;
+    }
+
+    .swirl-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      text-align: center;
+    }
+
+    .swirl-instruction {
+      font-family: var(--font-serif);
+      font-size: 14px;
+      font-weight: 500;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--color-gold);
+      margin-bottom: 24px;
+      opacity: 0;
+      animation: fadeInUp 0.8s ease forwards 0.3s;
+    }
+
+    .swirl-drink-image {
+      width: 100%;
+      max-width: 300px;
+      height: auto;
+      margin-bottom: 32px;
+      opacity: 0;
+      animation: fadeInUp 0.8s ease forwards 0.5s;
+    }
+
+    .swirl-drink-image img {
+      width: 100%;
+      height: auto;
+      object-fit: contain;
+      filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.1));
+    }
+
+    .swirl-title {
+      font-family: var(--font-serif);
+      font-size: 28px;
+      font-weight: 400;
+      letter-spacing: 5px;
+      color: var(--color-gold);
+      text-transform: uppercase;
+      opacity: 0;
+      animation: fadeInUp 0.8s ease forwards 0.7s;
+    }
+
+    /* 3D Experience Overlay (fades in on swirl) */
+    .experience-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 100;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+
+    .experience-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .experience-overlay iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    /* Swirl progress indicator */
+    .swirl-progress {
+      position: absolute;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      opacity: 0;
+      animation: fadeInUp 0.8s ease forwards 0.9s;
+    }
+
+    .swirl-progress-bar {
+      width: 120px;
+      height: 4px;
+      background: rgba(139, 115, 85, 0.2);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .swirl-progress-fill {
+      height: 100%;
+      width: 0%;
+      background: var(--color-gold);
+      border-radius: 2px;
+      transition: width 0.15s ease-out;
+    }
+
+    .swirl-progress-text {
+      font-family: var(--font-sans);
+      font-size: 11px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: rgba(139, 115, 85, 0.7);
+    }
+
+    /* Desktop fallback - click to continue */
+    .swirl-fallback {
+      display: none;
+      margin-top: 24px;
+      opacity: 0;
+      animation: fadeInUp 0.8s ease forwards 1s;
+    }
+
+    .swirl-fallback-btn {
+      padding: 14px 32px;
+      background: var(--color-gold);
+      border: none;
+      border-radius: 50px;
+      font-family: var(--font-sans);
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: white;
+      cursor: pointer;
+      transition: var(--transition-smooth);
+    }
+
+    .swirl-fallback-btn:hover {
+      background: var(--color-gold-light);
+      transform: translateY(-2px);
+    }
+
+    /* Show fallback on desktop */
+    @media (hover: hover) and (pointer: fine) {
+      .swirl-fallback {
+        display: block;
+      }
+      .swirl-progress {
+        display: none;
+      }
+    }
+
+    /* ==================== */
     /* IMMERSIVE SCREEN */
     /* ==================== */
     .immersive-screen {
@@ -1056,6 +1238,49 @@ text-transform: uppercase;
       </div>
     </section>
     
+    <!-- SWIRL INTRO SCREEN -->
+    <section class="screen swirl-screen" id="swirlScreen" aria-label="Swirl to experience your highball">
+      <header class="swirl-header">
+        <span class="header-logo">The House of Suntory</span>
+        <button class="header-profile" aria-label="User profile" tabindex="0">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <circle cx="12" cy="8" r="4"/>
+            <path d="M4 20c0-4 4-6 8-6s8 2 8 6"/>
+          </svg>
+        </button>
+      </header>
+      
+      <div class="swirl-content">
+        <p class="swirl-instruction">Swirl to experience your highball</p>
+        
+        <div class="swirl-drink-image">
+          <img src="../images/toki-big.png" alt="Toki Highball" />
+        </div>
+        
+        <h2 class="swirl-title">Toki Highball</h2>
+        
+        <!-- Desktop fallback button -->
+        <div class="swirl-fallback">
+          <button class="swirl-fallback-btn" id="swirlFallbackBtn" tabindex="0">
+            Continue to Experience
+          </button>
+        </div>
+      </div>
+      
+      <!-- Progress indicator for mobile -->
+      <div class="swirl-progress" id="swirlProgress">
+        <div class="swirl-progress-bar">
+          <div class="swirl-progress-fill" id="swirlProgressFill"></div>
+        </div>
+        <span class="swirl-progress-text">Swirl your device</span>
+      </div>
+      
+      <!-- 3D Experience Overlay -->
+      <div class="experience-overlay" id="experienceOverlay">
+        <iframe src="proto-toki.html" title="Interactive Toki Highball Experience"></iframe>
+      </div>
+    </section>
+    
     <!-- IMMERSIVE SCREEN -->
     <section class="screen immersive-screen" id="immersiveScreen" aria-label="Immersive drink experience">
       <header class="immersive-header">
@@ -1234,6 +1459,7 @@ text-transform: uppercase;
     const screens = {
       landing: document.getElementById('landingScreen'),
       chat: document.getElementById('chatScreen'),
+      swirl: document.getElementById('swirlScreen'),
       immersive: document.getElementById('immersiveScreen')
     };
 
@@ -1288,6 +1514,27 @@ text-transform: uppercase;
 
       if (screenName === 'chat' && state.chatHistory.length === 0) {
         startChatFlow();
+      }
+
+      // Start swirl detection when entering swirl screen
+      if (screenName === 'swirl') {
+        // Reset swirl state
+        swirlState.progress = 0;
+        swirlState.cumulativeMotion = 0;
+        if (swirlProgressFill) {
+          swirlProgressFill.style.width = '0%';
+        }
+        if (experienceOverlay) {
+          experienceOverlay.style.opacity = '0';
+          experienceOverlay.classList.remove('active');
+        }
+        // Start detection after a brief delay
+        setTimeout(() => {
+          startSwirlDetection();
+        }, 500);
+      } else {
+        // Stop swirl detection when leaving
+        stopSwirlDetection();
       }
     };
 
@@ -1408,13 +1655,13 @@ text-transform: uppercase;
       `;
       
       cta.addEventListener('click', () => {
-        window.location.href = 'proto-toki.html';
+        navigateTo('swirl');
       });
       
       cta.addEventListener('keydown', (e) => {
         if (e.key === 'Enter' || e.key === ' ') {
           e.preventDefault();
-          window.location.href = 'proto-toki.html';
+          navigateTo('swirl');
         }
       });
 
@@ -1539,6 +1786,159 @@ text-transform: uppercase;
     };
 
     // ==================== 
+    // SWIRL DETECTION SYSTEM
+    // ====================
+    const swirlState = {
+      isActive: false,
+      progress: 0,
+      lastBeta: null,
+      lastGamma: null,
+      cumulativeMotion: 0,
+      motionThreshold: 100, // Total motion needed to complete reveal
+      permissionGranted: false
+    };
+
+    const swirlProgressFill = document.getElementById('swirlProgressFill');
+    const experienceOverlay = document.getElementById('experienceOverlay');
+    const swirlFallbackBtn = document.getElementById('swirlFallbackBtn');
+    const swirlProgressText = document.querySelector('.swirl-progress-text');
+
+    // Check if device supports motion
+    const supportsDeviceMotion = () => {
+      return 'DeviceOrientationEvent' in window;
+    };
+
+    // Request permission for iOS 13+
+    const requestSwirlPermission = async () => {
+      if (typeof DeviceOrientationEvent !== 'undefined' &&
+          typeof DeviceOrientationEvent.requestPermission === 'function') {
+        try {
+          const permission = await DeviceOrientationEvent.requestPermission();
+          return permission === 'granted';
+        } catch (error) {
+          console.error('Motion permission error:', error);
+          return false;
+        }
+      }
+      return true; // No permission needed (Android, etc.)
+    };
+
+    // Handle device orientation for swirl detection
+    const handleSwirlOrientation = (event) => {
+      if (!swirlState.isActive || swirlState.progress >= 100) return;
+
+      const beta = event.beta || 0;  // Front-back tilt
+      const gamma = event.gamma || 0; // Left-right tilt
+
+      if (swirlState.lastBeta !== null && swirlState.lastGamma !== null) {
+        // Calculate delta movement
+        const deltaBeta = Math.abs(beta - swirlState.lastBeta);
+        const deltaGamma = Math.abs(gamma - swirlState.lastGamma);
+        
+        // Combine movements (swirl detection)
+        const movement = deltaBeta + deltaGamma;
+        
+        // Only count significant movements (filter out noise)
+        if (movement > 2) {
+          swirlState.cumulativeMotion += movement * 0.5;
+          
+          // Calculate progress percentage
+          swirlState.progress = Math.min(100, (swirlState.cumulativeMotion / swirlState.motionThreshold) * 100);
+          
+          // Update UI
+          updateSwirlProgress();
+        }
+      }
+
+      swirlState.lastBeta = beta;
+      swirlState.lastGamma = gamma;
+    };
+
+    // Update swirl progress UI
+    const updateSwirlProgress = () => {
+      if (swirlProgressFill) {
+        swirlProgressFill.style.width = `${swirlState.progress}%`;
+      }
+
+      // Update progress text based on progress
+      if (swirlProgressText) {
+        if (swirlState.progress < 30) {
+          swirlProgressText.textContent = 'Swirl your device';
+        } else if (swirlState.progress < 70) {
+          swirlProgressText.textContent = 'Keep swirling...';
+        } else if (swirlState.progress < 100) {
+          swirlProgressText.textContent = 'Almost there!';
+        }
+      }
+
+      // Start fading in the experience overlay at 50%
+      if (swirlState.progress >= 50 && experienceOverlay) {
+        const fadeProgress = (swirlState.progress - 50) / 50; // 0 to 1
+        experienceOverlay.style.opacity = fadeProgress;
+      }
+
+      // Complete the reveal at 100%
+      if (swirlState.progress >= 100) {
+        completeSwirl();
+      }
+    };
+
+    // Complete the swirl reveal
+    const completeSwirl = () => {
+      swirlState.isActive = false;
+      window.removeEventListener('deviceorientation', handleSwirlOrientation);
+      
+      if (experienceOverlay) {
+        experienceOverlay.classList.add('active');
+      }
+
+      // Update progress text
+      if (swirlProgressText) {
+        swirlProgressText.textContent = 'Experience ready!';
+      }
+    };
+
+    // Start swirl detection
+    const startSwirlDetection = async () => {
+      if (!supportsDeviceMotion()) {
+        console.log('Device motion not supported');
+        return;
+      }
+
+      // Request permission if needed
+      if (!swirlState.permissionGranted) {
+        swirlState.permissionGranted = await requestSwirlPermission();
+        if (!swirlState.permissionGranted) {
+          console.log('Motion permission denied');
+          return;
+        }
+      }
+
+      // Reset state
+      swirlState.isActive = true;
+      swirlState.progress = 0;
+      swirlState.cumulativeMotion = 0;
+      swirlState.lastBeta = null;
+      swirlState.lastGamma = null;
+
+      // Start listening
+      window.addEventListener('deviceorientation', handleSwirlOrientation);
+    };
+
+    // Stop swirl detection
+    const stopSwirlDetection = () => {
+      swirlState.isActive = false;
+      window.removeEventListener('deviceorientation', handleSwirlOrientation);
+    };
+
+    // Handle fallback button for desktop
+    const handleSwirlFallback = () => {
+      swirlState.progress = 100;
+      updateSwirlProgress();
+      completeSwirl();
+    };
+
+    // ==================== 
     // INITIALIZATION
     // ====================
     const init = () => {
@@ -1596,6 +1996,17 @@ text-transform: uppercase;
 
       // Close modal on Escape key
       document.addEventListener('keydown', handleVideoModalKeyDown);
+
+      // Swirl fallback button (desktop)
+      if (swirlFallbackBtn) {
+        swirlFallbackBtn.addEventListener('click', handleSwirlFallback);
+        swirlFallbackBtn.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            handleSwirlFallback();
+          }
+        });
+      }
     };
 
     // Start the app
