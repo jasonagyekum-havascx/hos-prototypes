@@ -310,3 +310,10 @@ export function getNextHeightTarget() {
 	return target;
 }
 
+// Set liquid tilt from device motion (x = left-right, z = front-back)
+export function setLiquidTilt(x, z) {
+	if (liquidUniforms) {
+		liquidUniforms.uTilt.value.set(x, z);
+	}
+}
+

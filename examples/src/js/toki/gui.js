@@ -12,8 +12,6 @@ import {
 	setOrbitRadius,
 	setOrbitScale,
 	setIngredientVisible,
-	setHoneyWobbleIntensity,
-	setHoneyWobbleSpeed,
 } from './orbit-system.js';
 import {
 	orangePeelConfig,
@@ -586,7 +584,7 @@ export function createOrbitGUI(gui) {
     setOrbitRadius(value);
   });
   
-  orbitFolder.add(masterSettings, 'scale', 0.5, 10.0, 0.1).name('Ingredient Size').onChange((value) => {
+  orbitFolder.add(masterSettings, 'scale', 0.5, 5.0, 0.1).name('Ingredient Size').onChange((value) => {
     setOrbitScale(value);
   });
   
@@ -601,24 +599,6 @@ export function createOrbitGUI(gui) {
   });
   
   ingredientsFolder.close();
-  
-  // Honey effects subfolder
-  const honeyFolder = orbitFolder.addFolder('Honey Effects');
-  
-  const honeySettings = {
-    wobbleIntensity: orbitConfig.honeyWobbleIntensity,
-    wobbleSpeed: orbitConfig.honeyWobbleSpeed,
-  };
-  
-  honeyFolder.add(honeySettings, 'wobbleIntensity', 0, 0.5, 0.01).name('Wobble Intensity').onChange((value) => {
-    setHoneyWobbleIntensity(value);
-  });
-  
-  honeyFolder.add(honeySettings, 'wobbleSpeed', 0.1, 4.0, 0.1).name('Wobble Speed').onChange((value) => {
-    setHoneyWobbleSpeed(value);
-  });
-  
-  honeyFolder.close();
   
   // Keep folder collapsed by default
   orbitFolder.close();
