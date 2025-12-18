@@ -8,7 +8,7 @@ import { setupPanelControls } from './controls.js';
 import { initHotspots, updateHotspots, checkHotspotHover, checkHotspotClick, closePanel, getActivePanel, getHotspotOverlay } from './hotspots.js';
 import { buildLiquid, updateLiquidAnimation, triggerRipple, getLiquidMeshes, getLiquidUniforms, animateLiquidHeight } from './liquid-system.js';
 import { spawnIce, updateIceAnimation, loadIceCubeGLB, getIceObjects, animateIceDown, stopIceAnimation } from './ice-system.js';
-import { initBubbleSystem, updateBubbles } from './bubble-system.js';
+import { initBubbleSystem, updateBubbles, animateBubbleSurfaceHeight } from './bubble-system.js';
 import { createLiquidGUI, createIceCubeGUI, createGlassGUI, createOrbitGUI, createDrinkSettingsGUI } from './gui.js';
 import { loadFloorModel } from './model-floor.js';
 import { loadGlassModel, getGlassModelMaterial } from './model-glass.js';
@@ -124,6 +124,9 @@ function init() {
 				const targetScale = hotspotTargets[hotspotInteractionCount];
 				animateLiquidHeight(targetScale);
 				
+				// Animate bubbles/carbonation surface down to match liquid
+				animateBubbleSurfaceHeight(targetScale);
+				
 				// Animate ice cubes down on the first panel close only
 				if (!hasAnimatedIceDown && hotspotInteractionCount === 0) {
 					animateIceDown(0.4, 1.0); // Move down by 0.4 units over 1 second
@@ -179,6 +182,9 @@ function init() {
 
 	// Load ice cube GLB model (after GUI is created so it can add controls)
 	loadIceCubeGLB(scene, gui, createIceCubeGUI);
+
+	// Close GUI by default
+	gui.close();
 
 	renderer.setAnimationLoop(animate);
 }

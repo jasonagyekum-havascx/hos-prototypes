@@ -1,12 +1,24 @@
 // Bubble System - handles bubble creation, spawning, and animation
 
 import * as THREE from '../../../../build/three.module.js';
-import { MAX_BUBBLES, LIQUID_BASE_Y, LIQUID_SURFACE_Y, LIQUID_RADIUS } from './constants.js';
+import { MAX_BUBBLES, LIQUID_BASE_Y, LIQUID_SURFACE_Y, LIQUID_RADIUS, LIQUID_HEIGHT } from './constants.js';
 
 // Bubble system state
 let bubbleGeometry, bubbleMaterial;
 let bubbleInstances = [];
 let bubbleMesh;
+
+// Dynamic surface height for bubbles (starts at default LIQUID_SURFACE_Y)
+let currentBubbleSurfaceY = LIQUID_SURFACE_Y;
+
+// Animation state for bubble surface height
+let bubbleHeightAnimation = {
+	isAnimating: false,
+	startSurfaceY: LIQUID_SURFACE_Y,
+	targetSurfaceY: LIQUID_SURFACE_Y,
+	startTime: 0,
+	duration: 1.0, // 1 second animation
+};
 
 // Initialize bubble system
 export function initBubbleSystem(scene) {
@@ -75,6 +87,23 @@ export function spawnBubble() {
 export function updateBubbles(deltaTime, fizzIntensity = 3.0) {
 	if (!bubbleMesh) return;
 
+	// Update bubble surface height animation if active
+	if (bubbleHeightAnimation.isAnimating) {
+		const elapsed = (Date.now() - bubbleHeightAnimation.startTime) / 1000;
+		const progress = Math.min(elapsed / bubbleHeightAnimation.duration, 1.0);
+		
+		// Easing function (ease-out cubic)
+		const eased = 1 - Math.pow(1 - progress, 3);
+		
+		// Interpolate surface Y
+		currentBubbleSurfaceY = bubbleHeightAnimation.startSurfaceY + 
+			(bubbleHeightAnimation.targetSurfaceY - bubbleHeightAnimation.startSurfaceY) * eased;
+		
+		if (progress >= 1.0) {
+			bubbleHeightAnimation.isAnimating = false;
+		}
+	}
+
 	// Spawn bubbles based on fizz intensity
 	const spawnRate = fizzIntensity * 30;
 	const spawnChance = spawnRate * deltaTime;
@@ -100,7 +129,8 @@ export function updateBubbles(deltaTime, fizzIntensity = 3.0) {
 
 		bubble.life += deltaTime;
 
-		if (bubble.life > bubble.maxLife || bubble.position.y > LIQUID_SURFACE_Y) {
+		// Use dynamic surface Y instead of static LIQUID_SURFACE_Y
+		if (bubble.life > bubble.maxLife || bubble.position.y > currentBubbleSurfaceY) {
 			bubble.active = false;
 			scale.set(0, 0, 0);
 			matrix.compose(bubble.position, quaternion, scale);
@@ -142,5 +172,21 @@ export function updateBubbles(deltaTime, fizzIntensity = 3.0) {
 	}
 
 	bubbleMesh.instanceMatrix.needsUpdate = true;
+}
+
+// Animate bubble surface height to match the liquid level
+export function animateBubbleSurfaceHeight(targetScale) {
+	// Calculate the target surface Y based on the liquid scale
+	// Height reduction = LIQUID_HEIGHT * (1.0 - targetScale)
+	const heightReduction = LIQUID_HEIGHT * (1.0 - targetScale);
+	const targetSurfaceY = LIQUID_SURFACE_Y - heightReduction;
+	
+	// Start animation from current position
+	bubbleHeightAnimation.startSurfaceY = currentBubbleSurfaceY;
+	bubbleHeightAnimation.targetSurfaceY = targetSurfaceY;
+	bubbleHeightAnimation.startTime = Date.now();
+	bubbleHeightAnimation.isAnimating = true;
+	
+	console.log('Bubble surface animation - Current Y:', currentBubbleSurfaceY.toFixed(3), 'Target Y:', targetSurfaceY.toFixed(3));
 }
 
