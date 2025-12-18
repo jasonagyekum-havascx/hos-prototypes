@@ -5,7 +5,7 @@ import { LIQUID_SURFACE_Y } from './constants.js';
 
 // Orange peel state
 let orangeSlice = null;
-let orangeSliceVisible = false;
+let orangeSliceVisible = true;  // Visible by default
 
 // Orange peel position and rotation config (exposed for GUI)
 export const orangePeelConfig = {

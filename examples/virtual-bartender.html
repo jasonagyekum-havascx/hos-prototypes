@@ -99,28 +99,31 @@
       padding: 60px 24px 48px;
     }
 
-    /* Nature background with actual Japanese garden image */
+    /* Video background container */
     .landing-background {
       position: absolute;
       top: 0;
       left: 0;
       width: 100%;
       height: 100%;
-      background: 
-        linear-gradient(180deg, 
-          rgba(20, 40, 30, 0.25) 0%, 
-          rgba(15, 30, 22, 0.35) 40%,
-          rgba(10, 20, 15, 0.7) 100%
-        ),
-        url('../archive/examples/images/wallpaper.jpg');
-      background-size: cover;
-      background-position: center top;
       z-index: 0;
-      filter: blur(2px);
-      transform: scale(1.02);
+      overflow: hidden;
     }
 
-    /* Soft vignette overlay */
+    .landing-video {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      min-width: 100%;
+      min-height: 100%;
+      width: auto;
+      height: auto;
+      transform: translate(-50%, -50%) scale(1.02);
+      object-fit: cover;
+      filter: blur(2px);
+    }
+
+    /* Gradient overlay on video */
     .landing-background::before {
       content: '';
       position: absolute;
@@ -128,7 +131,13 @@
       left: 0;
       right: 0;
       bottom: 0;
+      z-index: 1;
       background: 
+        linear-gradient(180deg, 
+          rgba(20, 40, 30, 0.25) 0%, 
+          rgba(15, 30, 22, 0.35) 40%,
+          rgba(10, 20, 15, 0.7) 100%
+        ),
         radial-gradient(ellipse 120% 80% at 50% 30%, transparent 0%, rgba(10, 20, 15, 0.4) 100%);
     }
 
@@ -140,6 +149,7 @@
       left: 0;
       right: 0;
       height: 50%;
+      z-index: 1;
       background: 
         linear-gradient(0deg, 
           rgba(10, 15, 12, 0.85) 0%, 
@@ -352,7 +362,7 @@ text-transform: uppercase;
           rgba(26, 21, 18, 0.4) 60%,
           rgba(26, 21, 18, 1) 100%
         ),
-        url('../archive/examples/images/wallpaper-2.jpeg');
+        url('/images/assets/AI-bar-background.jpg');
       background-size: cover;
       background-position: center 20%;
       z-index: 0;
@@ -371,31 +381,50 @@ text-transform: uppercase;
         linear-gradient(180deg, rgba(26, 21, 18, 0.3) 0%, transparent 30%);
     }
 
-    /* Bartender silhouette overlay */
-    .bartender-silhouette {
+    /* Bartender container */
+    .bartender-container {
       position: absolute;
-      top: 45%;
+      top: 8%;
       left: 50%;
-      transform: translate(-50%, -50%);
-      width: 220px;
-      height: 280px;
-      background: 
-        radial-gradient(ellipse 60% 35% at 50% 20%, rgba(15, 12, 10, 0.95) 0%, transparent 70%),
-        radial-gradient(ellipse 45% 60% at 50% 45%, rgba(15, 12, 10, 0.9) 0%, transparent 55%),
-        radial-gradient(ellipse 35% 25% at 50% 80%, rgba(15, 12, 10, 0.85) 0%, transparent 60%);
-      opacity: 0.9;
+      transform: translateX(-50%);
+      width: 320px;
+      height: 360px;
+      z-index: 1;
+    }
+
+    /* Bartender images */
+    .bartender-image {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      opacity: 0;
+      transition: opacity 0.6s ease-in-out;
+    }
+
+    .bartender-image.active {
+      opacity: 1;
+    }
+
+    /* Shaking animation class */
+    .bartender-container.shaking .bartender-image {
+      transition: opacity 0.5s ease-in-out;
     }
 
     /* Chat Messages Container */
     .chat-messages {
       position: absolute;
+      top: 299px;
       bottom: 0;
       left: 0;
       right: 0;
       z-index: 2;
+      height: 340px;
       max-height: 65%;
       overflow-y: auto;
-      padding: 20px;
+      padding: 20px 20px 0px 20px;
       padding-top: 40px;
       display: flex;
       flex-direction: column;
@@ -654,7 +683,7 @@ text-transform: uppercase;
     /* IMMERSIVE SCREEN */
     /* ==================== */
     .immersive-screen {
-      background: linear-gradient(180deg, #FEFEFE 0%, #F8F6F2 100%);
+      background: url('../images/mr-background.jpg') center center / cover no-repeat;
     }
 
     .immersive-header {
@@ -905,7 +934,11 @@ text-transform: uppercase;
     
     <!-- LANDING SCREEN -->
     <section class="screen landing-screen active" id="landingScreen" aria-label="Welcome screen">
-      <div class="landing-background" aria-hidden="true"></div>
+      <div class="landing-background" aria-hidden="true">
+        <video class="landing-video" autoplay muted loop playsinline>
+          <source src="../images/landing-bg.mp4" type="video/mp4">
+        </video>
+      </div>
       
       <div class="landing-content">
         <p class="landing-subtitle">The House of Suntory</p>
@@ -975,7 +1008,20 @@ text-transform: uppercase;
       
       <div class="chat-body">
         <div class="bartender-bg" aria-hidden="true">
-          <div class="bartender-silhouette"></div>
+          <div class="bartender-container" id="bartenderContainer">
+            <img 
+              src="/images/assets/AI-bartender1.png" 
+              alt="" 
+              class="bartender-image bartender-image--1 active" 
+              aria-hidden="true"
+            >
+            <img 
+              src="/images/assets/AI-bartender2.png" 
+              alt="" 
+              class="bartender-image bartender-image--2" 
+              aria-hidden="true"
+            >
+          </div>
         </div>
         
         <div class="chat-messages" id="chatMessages" role="log" aria-live="polite">
@@ -1122,7 +1168,9 @@ text-transform: uppercase;
       chatHistory: [],
       isTyping: false,
       waitingForUserInput: false,
-      flowStep: 0
+      flowStep: 0,
+      bartenderAnimationInterval: null,
+      isBartenderShaking: false
     };
 
     // Chat conversation flow
@@ -1193,6 +1241,42 @@ text-transform: uppercase;
     const chatInput = document.getElementById('chatInput');
     const sendBtn = document.getElementById('sendBtn');
     const destinationBtns = document.querySelectorAll('.destination-btn');
+    const bartenderContainer = document.getElementById('bartenderContainer');
+    const bartenderImages = bartenderContainer.querySelectorAll('.bartender-image');
+
+    // ==================== 
+    // BARTENDER ANIMATION
+    // ====================
+    const startBartenderShaking = () => {
+      if (state.isBartenderShaking) return;
+      
+      state.isBartenderShaking = true;
+      bartenderContainer.classList.add('shaking');
+      
+      let currentImage = 0;
+      
+      state.bartenderAnimationInterval = setInterval(() => {
+        bartenderImages.forEach(img => img.classList.remove('active'));
+        currentImage = currentImage === 0 ? 1 : 0;
+        bartenderImages[currentImage].classList.add('active');
+      }, 800);
+    };
+
+    const stopBartenderShaking = () => {
+      if (!state.isBartenderShaking) return;
+      
+      state.isBartenderShaking = false;
+      bartenderContainer.classList.remove('shaking');
+      
+      if (state.bartenderAnimationInterval) {
+        clearInterval(state.bartenderAnimationInterval);
+        state.bartenderAnimationInterval = null;
+      }
+      
+      // Reset to first image
+      bartenderImages.forEach(img => img.classList.remove('active'));
+      bartenderImages[0].classList.add('active');
+    };
 
     // ==================== 
     // SCREEN NAVIGATION
@@ -1295,6 +1379,9 @@ text-transform: uppercase;
       cardEl.classList.add('selected');
       state.selectedCocktail = cocktail;
 
+      // Start bartender shaking animation
+      startBartenderShaking();
+
       // Continue to story
       setTimeout(() => {
         playChatSequence('story');
@@ -1302,6 +1389,9 @@ text-transform: uppercase;
     };
 
     const addExperienceCTA = () => {
+      // Stop bartender shaking animation when drink is ready
+      stopBartenderShaking();
+      
       const ctaContainer = document.createElement('div');
       ctaContainer.style.cssText = 'display: flex; justify-content: flex-start; padding: 8px 0;';
       

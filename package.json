@@ -4,8 +4,9 @@
   "description": "House of Suntory - Toki Highball Interactive Experience",
   "type": "module",
   "scripts": {
-    "dev": "npx live-server --port=3000 --open=examples/proto-toki.html --watch=examples,build",
-    "start": "npx live-server --port=3000 --open=examples/proto-toki.html"
+    "dev": "npx live-server --port=3000 --open=examples/virtual-bartender.html --watch=examples,build",
+    "start": "npx live-server --port=3000 --open=examples/virtual-bartender.html",
+    "build": "echo 'Static site - no build required'"
   },
   "keywords": [
     "three.js",

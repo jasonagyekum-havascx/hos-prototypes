@@ -6,7 +6,7 @@ import { setupLights, createLightGUI } from './lights-config.js';
 import { initScene, setupCameraControls, setupResizeHandler } from './scene-setup.js';
 import { setupPanelControls } from './controls.js';
 import { initHotspots, updateHotspots, checkHotspotHover, checkHotspotClick, closePanel, getActivePanel, getHotspotOverlay } from './hotspots.js';
-import { buildLiquid, updateLiquidAnimation, triggerRipple, getLiquidMeshes, getLiquidUniforms, animateLiquidHeight } from './liquid-system.js';
+import { buildLiquid, updateLiquidAnimation, triggerRipple, getLiquidMeshes, getLiquidUniforms, animateLiquidHeight, setLiquidTilt } from './liquid-system.js';
 import { spawnIce, updateIceAnimation, loadIceCubeGLB, getIceObjects, animateIceDown, stopIceAnimation } from './ice-system.js';
 import { initBubbleSystem, updateBubbles, animateBubbleSurfaceHeight } from './bubble-system.js';
 import { createLiquidGUI, createIceCubeGUI, createGlassGUI, createGlassBottomGUI, createFloorGUI, createOrbitGUI, createDrinkSettingsGUI } from './gui.js';
@@ -16,6 +16,7 @@ import { loadGlassBottomModel, getGlassBottomModelMaterial } from './model-glass
 import { iceConfig, fizzIntensity } from './constants.js';
 import { initOrbitSystem, updateOrbitAnimation } from './orbit-system.js';
 import { spawnOrangePeel, updateOrangePeelAnimation } from './orange-peel.js';
+import { initDeviceMotion } from './device-motion.js';
 
 let renderer, scene, camera, controls;
 let lights;
@@ -164,6 +165,11 @@ function init() {
 
 	// Close GUI by default
 	gui.close();
+
+	// Initialize device motion for mobile tilt-based liquid sloshing
+	initDeviceMotion((tiltX, tiltZ) => {
+		setLiquidTilt(tiltX, tiltZ);
+	});
 
 	renderer.setAnimationLoop(animate);
 }
