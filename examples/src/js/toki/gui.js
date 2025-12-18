@@ -68,6 +68,7 @@ export function createFloorGUI(gui) {
     // Environment map intensity
     materialFolder.add(materialSettings, 'envMapIntensity', 0, 3, 0.1).name('Reflection Intensity').onChange((value) => {
       material.envMapIntensity = value;
+      material.needsUpdate = true; // Ensure material updates
     });
 
     // Visibility toggle

@@ -39,6 +39,9 @@ export function loadFloorModel(scene, onModelReady) {
 			floorMaterials = [];
 			
 			// Ensure all meshes in the model have proper settings
+			// Get the scene's environment map to apply to materials
+			const sceneEnvMap = scene.environment;
+			
 			floorModel.traverse((child) => {
 				if (child.isMesh) {
 					child.castShadow = true;
@@ -71,8 +74,8 @@ export function loadFloorModel(scene, onModelReady) {
 							// Get material config using mesh name (fallback to defaults)
 							const materialConfig = floorMaterialConfig[meshName] || { 
 								roughness: 0.3, 
-								metalness: 0.0, 
-								envMapIntensity: 1.0 
+								metalness: 0.28, 
+								envMapIntensity: 0.7 
 							};
 							
 							// Debug logging
@@ -102,6 +105,7 @@ export function loadFloorModel(scene, onModelReady) {
 									roughness: materialConfig.roughness,
 									metalness: materialConfig.metalness,
 									envMapIntensity: materialConfig.envMapIntensity,
+									envMap: sceneEnvMap, // Use scene's environment map
 								});
 							} else {
 								floorMat = originalMaterial;
@@ -120,6 +124,8 @@ export function loadFloorModel(scene, onModelReady) {
 								floorMat.roughness = materialConfig.roughness;
 								floorMat.metalness = materialConfig.metalness;
 								floorMat.envMapIntensity = materialConfig.envMapIntensity;
+								// Ensure material uses scene's environment map
+								if (sceneEnvMap) floorMat.envMap = sceneEnvMap;
 								
 								// If there's a roughnessMap, we need to disable it or it will override roughness
 								if (floorMat.roughnessMap) {
