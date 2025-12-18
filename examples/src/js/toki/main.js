@@ -6,7 +6,7 @@ import { setupLights, createLightGUI } from './lights-config.js';
 import { initScene, setupCameraControls, setupResizeHandler } from './scene-setup.js';
 import { setupPanelControls, setupControls } from './controls.js';
 import { initHotspots, updateHotspots, checkHotspotHover, checkHotspotClick, closePanel, getActivePanel, getHotspotOverlay } from './hotspots.js';
-import { buildLiquid, updateLiquidAnimation, triggerRipple, getLiquidMeshes, getLiquidUniforms } from './liquid-system.js';
+import { buildLiquid, updateLiquidAnimation, triggerRipple, getLiquidMeshes, getLiquidUniforms, animateLiquidHeight } from './liquid-system.js';
 import { spawnIce, updateIceAnimation, loadIceCubeGLB, getIceObjects } from './ice-system.js';
 import { initBubbleSystem, updateBubbles } from './bubble-system.js';
 import { createLiquidGUI, createIceCubeGUI, createGlassGUI, createOrbitGUI } from './gui.js';
@@ -265,8 +265,24 @@ function init() {
 	// Create raycaster before initializing hotspots
 	raycaster = new THREE.Raycaster();
 	
-	// Initialize hotspots
-	initHotspots(scene, camera, renderer, raycaster, mouse);
+	// Track hotspot interactions for liquid animation
+	let hotspotInteractionCount = 0;
+	const hotspotTargets = [0.75, 0.50, 0.25, 0.05];
+	
+	// Callback when a panel is closed
+	function onHotspotPanelClose() {
+		// Wait 0.5 seconds, then trigger animation
+		setTimeout(() => {
+			if (hotspotInteractionCount < hotspotTargets.length) {
+				const targetScale = hotspotTargets[hotspotInteractionCount];
+				animateLiquidHeight(targetScale);
+				hotspotInteractionCount++;
+			}
+		}, 500);
+	}
+	
+	// Initialize hotspots with callback
+	initHotspots(scene, camera, renderer, raycaster, mouse, onHotspotPanelClose);
 
 	renderer.domElement.addEventListener('pointermove', onPointerMove);
 	renderer.domElement.addEventListener('pointerdown', onPointerDown);

@@ -7,6 +7,7 @@ let hotspots = [];
 let activePanel = null;
 let scene, camera, renderer, raycaster, mouse;
 let hotspotLabel, hotspotOverlay;
+let onPanelCloseCallback = null;
 
 // Create a hotspot
 function createHotspot(position, label, panelId, color = 0x7ec8e8) {
@@ -62,12 +63,13 @@ function createHotspot(position, label, panelId, color = 0x7ec8e8) {
 }
 
 // Initialize hotspots
-export function initHotspots(sceneRef, cameraRef, rendererRef, raycasterRef, mouseRef) {
+export function initHotspots(sceneRef, cameraRef, rendererRef, raycasterRef, mouseRef, onPanelClose = null) {
 	scene = sceneRef;
 	camera = cameraRef;
 	renderer = rendererRef;
 	raycaster = raycasterRef;
 	mouse = mouseRef;
+	onPanelCloseCallback = onPanelClose;
 	
 	hotspotLabel = document.getElementById('hotspotLabel');
 	hotspotOverlay = document.getElementById('hotspotOverlay');
@@ -199,12 +201,19 @@ function openPanel(panelId) {
 
 // Close panel
 export function closePanel() {
+	const wasOpen = activePanel !== null;
+	
 	if (activePanel) {
 		activePanel.classList.remove('active');
 		activePanel = null;
 	}
 
 	hotspotOverlay.classList.remove('active');
+	
+	// Trigger callback if panel was actually open
+	if (wasOpen && onPanelCloseCallback) {
+		onPanelCloseCallback();
+	}
 }
 
 // Export for use in controls.js

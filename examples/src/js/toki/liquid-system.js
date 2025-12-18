@@ -10,6 +10,22 @@ let liquidBody = null;
 let liquidUniforms = null;
 let waterPlane = null;
 
+// Animation state for liquid height
+let heightAnimation = {
+	isAnimating: false,
+	startHeight: 1.0,
+	targetHeight: 1.0,
+	currentHeight: 1.0,
+	startTime: 0,
+	duration: 1.0, // 1 second animation
+	pinnedBottomY: 0, // Bottom Y position that stays fixed during animation
+	startSurfaceY: 0, // Surface Y position when animation starts
+	targetSurfaceY: 0, // Target surface Y position
+	startWaterPlaneY: 0, // Water plane Y position when animation starts
+	targetWaterPlaneY: 0, // Target water plane Y position
+	currentTargetIndex: 0 // Track which target we're on (0 = 75%, 1 = 50%, 2 = 25%, 3 = 5%)
+};
+
 // Build liquid geometry and materials
 export function buildLiquid(scene, fizzIntensity) {
 	liquidUniforms = {
@@ -105,7 +121,7 @@ export function buildLiquid(scene, fizzIntensity) {
 		liquidConfig.geometry.heightSegments,
 		true
 	);
-	bodyGeometry.translate(0, LIQUID_BASE_Y + LIQUID_HEIGHT * 0.5, 0);
+	// Don't translate geometry - keep it centered at origin for easier scaling from bottom
 
 	const bodyMaterial = new THREE.MeshStandardMaterial({
 		color: liquidConfig.body.color,
@@ -124,6 +140,10 @@ export function buildLiquid(scene, fizzIntensity) {
 
 	liquidBody = new THREE.Mesh(bodyGeometry, bodyMaterial);
 	liquidBody.renderOrder = 1;
+	// Position mesh so bottom is at LIQUID_BASE_Y
+	// Geometry center is at 0, so we need: position.y = LIQUID_BASE_Y + (LIQUID_HEIGHT * scale) * 0.5
+	// Initially scale = 1.0, so: position.y = LIQUID_BASE_Y + LIQUID_HEIGHT * 0.5
+	liquidBody.position.set(0, LIQUID_BASE_Y + LIQUID_HEIGHT * 0.5, 0);
 	scene.add(liquidBody);
 
 	// Liquid bottom (matches bottom radius of tapered cylinder)
@@ -155,6 +175,10 @@ export function buildLiquid(scene, fizzIntensity) {
 	waterPlane.rotation.x = -Math.PI * 0.5;
 	waterPlane.position.y = LIQUID_SURFACE_Y;
 	scene.add(waterPlane);
+	
+	// Store initial state for animation (after all objects are created)
+	heightAnimation.startHeight = 1.0;
+	heightAnimation.currentHeight = 1.0;
 }
 
 // Update liquid animation
@@ -162,6 +186,51 @@ export function updateLiquidAnimation(deltaTime) {
 	if (liquidUniforms) {
 		liquidUniforms.uTime.value += deltaTime;
 		liquidUniforms.uRippleStrength.value *= 0.95;
+	}
+	
+	// Update height animation if active
+	if (heightAnimation.isAnimating && liquidBody && liquidSurface && waterPlane) {
+		const elapsed = (Date.now() - heightAnimation.startTime) / 1000;
+		const progress = Math.min(elapsed / heightAnimation.duration, 1.0);
+		
+		// Easing function (ease-out cubic)
+		const eased = 1 - Math.pow(1 - progress, 3);
+		
+		// Interpolate height
+		heightAnimation.currentHeight = heightAnimation.startHeight + 
+			(heightAnimation.targetHeight - heightAnimation.startHeight) * eased;
+		
+		// Calculate the new mesh position to keep bottom at LIQUID_BASE_Y
+		// Geometry is centered at origin (0, 0, 0) in local space
+		// World bottom = mesh.position.y - (LIQUID_HEIGHT * scale) * 0.5
+		// We want: world bottom = LIQUID_BASE_Y (always)
+		// So: LIQUID_BASE_Y = mesh.position.y - (LIQUID_HEIGHT * scale) * 0.5
+		// Therefore: mesh.position.y = LIQUID_BASE_Y + (LIQUID_HEIGHT * scale) * 0.5
+		const scaledHeight = LIQUID_HEIGHT * heightAnimation.currentHeight;
+		
+		// Position mesh so bottom stays at LIQUID_BASE_Y
+		const newBodyY = LIQUID_BASE_Y + scaledHeight * 0.5;
+		
+		// Interpolate surface and water plane positions from start to target
+		const newSurfaceY = heightAnimation.startSurfaceY + 
+			(heightAnimation.targetSurfaceY - heightAnimation.startSurfaceY) * eased;
+		const newWaterPlaneY = heightAnimation.startWaterPlaneY + 
+			(heightAnimation.targetWaterPlaneY - heightAnimation.startWaterPlaneY) * eased;
+		
+		// Update liquid body scale and position (bottom stays fixed at LIQUID_BASE_Y)
+		liquidBody.scale.y = heightAnimation.currentHeight;
+		liquidBody.position.y = newBodyY;
+		
+		// Move the surface circle to stay at the top of the cylinder
+		liquidSurface.position.y = newSurfaceY;
+		
+		// Move the water plane to match the surface
+		waterPlane.position.y = newWaterPlaneY;
+		
+		// Check if animation is complete
+		if (progress >= 1.0) {
+			heightAnimation.isAnimating = false;
+		}
 	}
 }
 
@@ -193,5 +262,51 @@ export function getLiquidMeshes() {
 // Get liquid uniforms for animation updates
 export function getLiquidUniforms() {
 	return liquidUniforms;
+}
+
+// Animate liquid height to a target scale (1.0 = 100%, 0.75 = 75%, etc.)
+export function animateLiquidHeight(targetScale) {
+	if (!liquidBody || !liquidSurface || !waterPlane) return;
+	
+	// Capture current state (scale and positions) when animation starts
+	// Ensure we're starting from the actual current scale (should be 1.0 initially)
+	const currentScale = liquidBody.scale.y || 1.0;
+	heightAnimation.startHeight = currentScale;
+	heightAnimation.currentHeight = currentScale;
+	heightAnimation.targetHeight = targetScale;
+	heightAnimation.startTime = Date.now();
+	heightAnimation.isAnimating = true;
+	
+	// The bottom should always be at LIQUID_BASE_Y
+	// Geometry center in local space is at: LIQUID_BASE_Y + LIQUID_HEIGHT * 0.5
+	// World center = mesh.position.y + (LIQUID_BASE_Y + LIQUID_HEIGHT * 0.5)
+	// World bottom = world center - (LIQUID_HEIGHT * scale) * 0.5
+	// We want world bottom to always be LIQUID_BASE_Y
+	heightAnimation.pinnedBottomY = LIQUID_BASE_Y;
+	
+	// Capture the ACTUAL current positions (not calculated)
+	heightAnimation.startSurfaceY = liquidSurface.position.y;
+	heightAnimation.startWaterPlaneY = waterPlane.position.y;
+	
+	// Calculate how much to move down based on the scale change
+	// Current height = LIQUID_HEIGHT * currentScale
+	// Target height = LIQUID_HEIGHT * targetScale
+	// Height reduction = LIQUID_HEIGHT * (currentScale - targetScale)
+	// Move surface down by that amount
+	const heightReduction = LIQUID_HEIGHT * (currentScale - targetScale);
+	heightAnimation.targetSurfaceY = heightAnimation.startSurfaceY - heightReduction;
+	heightAnimation.targetWaterPlaneY = heightAnimation.startWaterPlaneY - heightReduction;
+	
+	console.log('Animation start - Current scale:', currentScale, 'Target scale:', targetScale);
+	console.log('Surface Y - Start:', heightAnimation.startSurfaceY.toFixed(3), 'Target:', heightAnimation.targetSurfaceY.toFixed(3));
+	console.log('Moving down by:', heightReduction.toFixed(3));
+}
+
+// Get the next target scale in the sequence
+export function getNextHeightTarget() {
+	const targets = [0.75, 0.50, 0.25, 0.05];
+	const target = targets[heightAnimation.currentTargetIndex];
+	heightAnimation.currentTargetIndex = (heightAnimation.currentTargetIndex + 1) % targets.length;
+	return target;
 }
 
