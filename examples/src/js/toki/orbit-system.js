@@ -9,9 +9,9 @@ import * as THREE from '../../../../build/three.module.js';
 
 // Orbit rings at different radii and heights
 const orbitRings = [
-	{ radius: 1.8, height: 1.8, speed: 0.4 },   // Ring 1 - Inner
-	{ radius: 2.4, height: 2.2, speed: 0.3 },   // Ring 2 - Middle
-	{ radius: 3.0, height: 1.5, speed: 0.25 },  // Ring 3 - Outer
+	{ radius: 1.0, height: 1.8, speed: 0.4 },   // Ring 1 - Inner
+	{ radius: 1.3, height: 2.2, speed: 0.3 },   // Ring 2 - Middle
+	{ radius: 1.6, height: 1.5, speed: 0.25 },  // Ring 3 - Outer
 ];
 
 // Master orbit configuration (mutable for GUI)

@@ -163,8 +163,8 @@ function init() {
 	// Load ice cube GLB model (after GUI is created so it can add controls)
 	loadIceCubeGLB(scene, gui, createIceCubeGUI);
 
-	// Close GUI by default
-	gui.close();
+	// Hide GUI by default
+	gui.hide();
 
 	// Initialize device motion for mobile tilt-based liquid sloshing
 	initDeviceMotion((tiltX, tiltZ) => {
