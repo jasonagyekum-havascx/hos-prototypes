@@ -160,6 +160,11 @@ function openPanel(panelId) {
 		panel.classList.add('active');
 		hotspotOverlay.classList.add('active');
 
+		// Notify parent window that modal is open (for z-index handling)
+		if (window.parent !== window) {
+			window.parent.postMessage({ type: 'hotspotPanelOpen' }, '*');
+		}
+
 		// Focus trap for accessibility
 		const closeBtn = panel.querySelector('.hotspot-panel-close');
 		if (closeBtn) closeBtn.focus();
@@ -183,6 +188,11 @@ export function closePanel() {
 	}
 
 	hotspotOverlay.classList.remove('active');
+	
+	// Notify parent window that modal is closed (for z-index handling)
+	if (wasOpen && window.parent !== window) {
+		window.parent.postMessage({ type: 'hotspotPanelClose' }, '*');
+	}
 	
 	// Trigger callback if panel was actually open
 	if (wasOpen && onPanelCloseCallback) {

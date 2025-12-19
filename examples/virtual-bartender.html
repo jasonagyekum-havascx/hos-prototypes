@@ -2501,6 +2501,20 @@ text-transform: uppercase;
       document.addEventListener('keydown', handleRecipeModalKeyDown);
     };
 
+    // Listen for messages from iframe (proto-toki.html) for hotspot panel visibility
+    window.addEventListener('message', (event) => {
+      const shareBtnContainer = document.getElementById('shareBtnContainer');
+      if (!shareBtnContainer) return;
+      
+      if (event.data?.type === 'hotspotPanelOpen') {
+        shareBtnContainer.style.opacity = '0';
+        shareBtnContainer.style.pointerEvents = 'none';
+      } else if (event.data?.type === 'hotspotPanelClose') {
+        shareBtnContainer.style.opacity = '';
+        shareBtnContainer.style.pointerEvents = '';
+      }
+    });
+
     // Start the app
     init();
   </script>
