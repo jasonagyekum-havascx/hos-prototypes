@@ -780,7 +780,7 @@ text-transform: uppercase;
       bottom: 80px;
       left: 50%;
       transform: translateX(-50%);
-      z-index: 101;
+      z-index: 150;
       opacity: 0;
       pointer-events: none;
       transition: opacity 0.5s ease, transform 0.5s ease;
@@ -792,6 +792,13 @@ text-transform: uppercase;
     .share-btn-container.visible {
       opacity: 1;
       pointer-events: auto;
+    }
+
+    /* Hide share buttons when modal is active */
+    .video-modal.active ~ .share-btn-container,
+    .recipe-modal.active ~ .share-btn-container {
+      opacity: 0;
+      pointer-events: none;
     }
 
     .share-btn {
@@ -831,7 +838,7 @@ text-transform: uppercase;
       font-weight: 500;
       letter-spacing: 2px;
       text-transform: uppercase;
-      color: #000;
+      color: var(--color-gold);
       cursor: pointer;
       transition: var(--transition-smooth);
       margin-top: 20px;
@@ -843,7 +850,7 @@ text-transform: uppercase;
     }
 
     .mix-another-btn:focus-visible {
-      outline: 2px solid #000;
+      outline: 2px solid var(--color-gold);
       outline-offset: 2px;
     }
 
@@ -1143,7 +1150,7 @@ text-transform: uppercase;
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0, 0, 0, 0.7);
+      background: rgba(0, 0, 0, 0.4);
       z-index: 1000;
       display: flex;
       align-items: center;
@@ -1152,6 +1159,7 @@ text-transform: uppercase;
       opacity: 0;
       visibility: hidden;
       transition: var(--transition-smooth);
+      padding: 40px 24px;
     }
 
     .video-modal.active {
@@ -1159,15 +1167,26 @@ text-transform: uppercase;
       visibility: visible;
     }
 
+    .video-modal__panel {
+      position: relative;
+      background: rgba(255, 255, 255, 0.88);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-radius: 4px;
+      padding: 48px 20px 24px;
+      max-width: 340px;
+      width: 100%;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+    }
+
     .video-modal__close {
       position: absolute;
-      top: 20px;
-      right: 20px;
-      width: 44px;
-      height: 44px;
+      top: 12px;
+      right: 12px;
+      width: 32px;
+      height: 32px;
       border: none;
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 50%;
+      background: transparent;
       cursor: pointer;
       display: flex;
       align-items: center;
@@ -1176,36 +1195,130 @@ text-transform: uppercase;
     }
 
     .video-modal__close:hover {
-      background: rgba(255, 255, 255, 0.2);
+      opacity: 0.7;
     }
 
     .video-modal__close svg {
-      width: 24px;
-      height: 24px;
-      stroke: white;
+      width: 18px;
+      height: 18px;
+      stroke: #333;
+      stroke-width: 1.5;
+    }
+
+    .video-modal__header {
+      margin-bottom: 12px;
+    }
+
+    .video-modal__header-title {
+      font-family: var(--font-serif);
+      font-size: 22px;
+      font-weight: 400;
+      color: #1A1512;
+      margin-bottom: 8px;
+    }
+
+    .video-modal__header-desc {
+      font-family: var(--font-sans);
+      font-size: 14px;
+      line-height: 1.5;
+      color: #333;
+    }
+
+    .video-modal__header-desc a {
+      color: var(--color-gold);
+      text-decoration: none;
     }
 
     .video-modal__content {
-      width: 80%;
-      max-width: 430px;
-      padding: 0 20px;
+      width: 100%;
     }
 
     .video-modal__video {
       width: 100%;
-      border-radius: 16px;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+      border-radius: 4px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
     }
 
     .video-modal__title {
       font-family: var(--font-serif);
-      font-size: 18px;
+      font-size: 16px;
       font-weight: 400;
-      letter-spacing: 3px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: #1A1512;
+      text-align: center;
+      margin-top: 16px;
+    }
+
+    .video-modal__actions {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      margin-top: 20px;
+    }
+
+    .video-modal__add-btn {
+      width: 48px;
+      height: 48px;
+      border: 1.5px solid rgba(139, 115, 85, 0.4);
+      border-radius: 50%;
+      background: transparent;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: var(--transition-smooth);
+    }
+
+    .video-modal__add-btn:hover {
+      border-color: var(--color-gold);
+      background: rgba(139, 115, 85, 0.1);
+    }
+
+    .video-modal__add-btn svg {
+      width: 20px;
+      height: 20px;
+      stroke: var(--color-gold);
+    }
+
+    .video-modal__share-btn {
+      width: 100%;
+      max-width: 160px;
+      padding: 14px 24px;
+      background: rgba(26, 21, 18, 0.95);
+      border: none;
+      border-radius: 0;
+      font-family: var(--font-sans);
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: white;
+      cursor: pointer;
+      transition: var(--transition-smooth);
+    }
+
+    .video-modal__share-btn:hover {
+      background: #231815;
+    }
+
+    .video-modal__mix-btn {
+      background: transparent;
+      border: none;
+      font-family: var(--font-sans);
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 2px;
       text-transform: uppercase;
       color: var(--color-gold);
-      text-align: center;
-      margin-top: 24px;
+      cursor: pointer;
+      transition: var(--transition-smooth);
+      padding: 8px 0;
+    }
+
+    .video-modal__mix-btn:hover {
+      color: var(--color-gold-light);
     }
 
     /* ==================== */
@@ -1525,24 +1638,40 @@ text-transform: uppercase;
     
     <!-- Video Modal -->
     <div class="video-modal" id="videoModal" role="dialog" aria-modal="true" aria-labelledby="videoModalTitle">
-      <button class="video-modal__close" id="videoModalClose" aria-label="Close video" tabindex="0">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <line x1="18" y1="6" x2="6" y2="18"/>
-          <line x1="6" y1="6" x2="18" y2="18"/>
-        </svg>
-      </button>
-      <div class="video-modal__content">
-        <video 
-          class="video-modal__video" 
-          id="perfectServeVideo"
-          src="../images/perfect-serve.mp4"
-          controls
-          playsinline
-          preload="metadata"
-        >
-          Your browser does not support the video tag.
-        </video>
-        <h3 class="video-modal__title" id="videoModalTitle">The Perfect Serve</h3>
+      <div class="video-modal__panel">
+        <button class="video-modal__close" id="videoModalClose" aria-label="Close video" tabindex="0">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+        
+        <div class="video-modal__header">
+          <h3 class="video-modal__header-title" id="videoModalTitle">The Perfect Serve</h3>
+          <p class="video-modal__header-desc">Watch how Japanese bartenders craft the <a href="#">perfect Toki Highball</a>—a ritual of precision and care.</p>
+        </div>
+        
+        <div class="video-modal__content">
+          <video 
+            class="video-modal__video" 
+            id="perfectServeVideo"
+            src="../images/perfect-serve.mp4"
+            controls
+            playsinline
+            preload="metadata"
+          >
+            Your browser does not support the video tag.
+          </video>
+        </div>
+        
+        <div class="video-modal__actions">
+          <button class="video-modal__share-btn" id="videoShareBtn" aria-label="Share" tabindex="0">
+            SHARE
+          </button>
+          <button class="video-modal__mix-btn" id="videoMixBtn" aria-label="Mix another cocktail" tabindex="0">
+            MIX ANOTHER COCKTAIL →
+          </button>
+        </div>
       </div>
     </div>
     
@@ -1968,11 +2097,13 @@ text-transform: uppercase;
     const videoModalClose = document.getElementById('videoModalClose');
     const videoHotspot = document.getElementById('videoHotspot');
     const perfectServeVideo = document.getElementById('perfectServeVideo');
+    const videoShareBtn = document.getElementById('videoShareBtn');
+    const videoMixBtn = document.getElementById('videoMixBtn');
 
     const handleOpenVideoModal = () => {
       videoModal.classList.add('active');
       document.body.style.overflow = 'hidden';
-      perfectServeVideo.play();
+      // Don't auto-play, let user control
     };
 
     const handleCloseVideoModal = () => {
@@ -1986,6 +2117,16 @@ text-transform: uppercase;
       if (e.key === 'Escape') {
         handleCloseVideoModal();
       }
+    };
+
+    const handleVideoShare = () => {
+      handleCloseVideoModal();
+      handleOpenRecipeModal();
+    };
+
+    const handleVideoMixAnother = () => {
+      handleCloseVideoModal();
+      navigateToRepeatability();
     };
 
     // ==================== 
@@ -2250,15 +2391,36 @@ text-transform: uppercase;
         }
       });
 
-      // Close modal on backdrop click
+      // Close modal on Escape key
+      document.addEventListener('keydown', handleVideoModalKeyDown);
+
+      // Video modal share and mix buttons
+      if (videoShareBtn) {
+        videoShareBtn.addEventListener('click', handleVideoShare);
+        videoShareBtn.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            handleVideoShare();
+          }
+        });
+      }
+
+      if (videoMixBtn) {
+        videoMixBtn.addEventListener('click', handleVideoMixAnother);
+        videoMixBtn.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            handleVideoMixAnother();
+          }
+        });
+      }
+
+      // Close video modal on panel outside click
       videoModal.addEventListener('click', (e) => {
         if (e.target === videoModal) {
           handleCloseVideoModal();
         }
       });
-
-      // Close modal on Escape key
-      document.addEventListener('keydown', handleVideoModalKeyDown);
 
       // Tap to continue on swirl screen
       if (swirlContent) {
