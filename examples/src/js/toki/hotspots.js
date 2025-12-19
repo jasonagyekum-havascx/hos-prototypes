@@ -121,17 +121,6 @@ export function checkHotspotHover() {
 		if (intersects.length > 0 && intersects[0].distance < 10) {
 			hotspot.userData.hovered = true;
 			foundHover = true;
-
-			// Show label
-			const screenPos = hotspot.position.clone().project(camera);
-			const x = (screenPos.x * 0.5 + 0.5) * window.innerWidth;
-			const y = (-screenPos.y * 0.5 + 0.5) * window.innerHeight;
-
-			hotspotLabel.textContent = hotspot.userData.label;
-			hotspotLabel.style.left = x + 'px';
-			hotspotLabel.style.top = (y - 50) + 'px';
-			hotspotLabel.classList.add('visible');
-
 			renderer.domElement.style.cursor = 'pointer';
 		} else {
 			hotspot.userData.hovered = false;
@@ -139,7 +128,6 @@ export function checkHotspotHover() {
 	}
 
 	if (!foundHover) {
-		hotspotLabel.classList.remove('visible');
 		renderer.domElement.style.cursor = 'grab';
 	}
 }
@@ -171,7 +159,6 @@ function openPanel(panelId) {
 		activePanel = panel;
 		panel.classList.add('active');
 		hotspotOverlay.classList.add('active');
-		hotspotLabel.classList.remove('visible');
 
 		// Focus trap for accessibility
 		const closeBtn = panel.querySelector('.hotspot-panel-close');
