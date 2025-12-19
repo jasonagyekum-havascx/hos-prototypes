@@ -1,8 +1,8 @@
 // Device Motion System - handles device orientation for liquid tilt effect on mobile
+// Note: Permission should already be granted from the swirl intro screen
 
 // Motion system state
 let isMotionEnabled = false;
-let motionButton = null;
 let onTiltUpdateCallback = null;
 
 // Smoothing state for tilt values
@@ -20,12 +20,6 @@ export function isMobileDevice() {
 // Check if DeviceOrientation is supported
 function isOrientationSupported() {
 	return 'DeviceOrientationEvent' in window;
-}
-
-// Check if permission API is required (iOS 13+)
-function requiresPermission() {
-	return typeof DeviceOrientationEvent !== 'undefined' &&
-		typeof DeviceOrientationEvent.requestPermission === 'function';
 }
 
 // Handle device orientation event
@@ -51,91 +45,28 @@ function handleDeviceOrientation(event) {
 	onTiltUpdateCallback(currentTiltX, currentTiltZ);
 }
 
-// Request motion permission (required for iOS 13+)
-export async function requestMotionPermission() {
-	if (!requiresPermission()) {
-		// Permission not required (Android, older iOS)
-		enableMotionTracking();
-		return true;
-	}
-
-	try {
-		const permission = await DeviceOrientationEvent.requestPermission();
-		if (permission === 'granted') {
-			enableMotionTracking();
-			return true;
-		} else {
-			console.warn('Device motion permission denied');
-			return false;
-		}
-	} catch (error) {
-		console.error('Error requesting motion permission:', error);
-		return false;
-	}
-}
-
-// Enable motion tracking after permission granted
+// Enable motion tracking (permission should already be granted from swirl screen)
 function enableMotionTracking() {
 	if (isMotionEnabled) return;
 
 	isMotionEnabled = true;
 	window.addEventListener('deviceorientation', handleDeviceOrientation);
-
-	// Update button state
-	if (motionButton) {
-		motionButton.textContent = 'Motion Enabled';
-		motionButton.classList.add('enabled');
-		motionButton.disabled = true;
-		motionButton.setAttribute('aria-pressed', 'true');
-	}
-
 	console.log('Device motion tracking enabled');
 }
 
-// Handle button click
-async function handleMotionButtonClick() {
-	const success = await requestMotionPermission();
-	if (!success && motionButton) {
-		// Show error state briefly
-		motionButton.textContent = 'Permission Denied';
-		motionButton.classList.add('error');
-		setTimeout(() => {
-			motionButton.textContent = 'Enable Motion';
-			motionButton.classList.remove('error');
-		}, 2000);
-	}
-}
-
-// Initialize device motion system
+// Initialize device motion system - auto-enables on mobile
 export function initDeviceMotion(onTiltUpdate) {
 	onTiltUpdateCallback = onTiltUpdate;
 
-	// Only show on mobile devices with orientation support
+	// Only enable on mobile devices with orientation support
 	if (!isMobileDevice() || !isOrientationSupported()) {
 		console.log('Device motion not available on this device');
-		return null;
+		return;
 	}
 
-	// Get the button element (should already exist in HTML)
-	motionButton = document.getElementById('motionButton');
-	if (!motionButton) {
-		console.warn('Motion button element not found');
-		return null;
-	}
-
-	// Setup button click handler
-	motionButton.addEventListener('click', handleMotionButtonClick);
-	motionButton.addEventListener('keydown', (e) => {
-		if (e.key === 'Enter' || e.key === ' ') {
-			e.preventDefault();
-			handleMotionButtonClick();
-		}
-	});
-
-	// Show the button
-	motionButton.style.display = 'flex';
-
-	return motionButton;
+	// Auto-enable motion tracking
+	// Permission should already be granted from the swirl intro screen
+	enableMotionTracking();
 }
 
 // Cleanup function
@@ -143,10 +74,6 @@ export function disposeDeviceMotion() {
 	if (isMotionEnabled) {
 		window.removeEventListener('deviceorientation', handleDeviceOrientation);
 		isMotionEnabled = false;
-	}
-
-	if (motionButton) {
-		motionButton.removeEventListener('click', handleMotionButtonClick);
 	}
 
 	currentTiltX = 0;
@@ -158,4 +85,3 @@ export function disposeDeviceMotion() {
 export function isMotionActive() {
 	return isMotionEnabled;
 }
-

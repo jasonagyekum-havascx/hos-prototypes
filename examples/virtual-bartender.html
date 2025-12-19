@@ -1897,8 +1897,13 @@ text-transform: uppercase;
       window.removeEventListener('deviceorientation', handleSwirlOrientation);
     };
 
-    // Handle fallback button for desktop
-    const handleSwirlFallback = () => {
+    // Handle tap to continue (also requests motion permission)
+    const handleSwirlFallback = async () => {
+      // Request motion permission before transitioning
+      if (!swirlState.permissionGranted) {
+        swirlState.permissionGranted = await requestSwirlPermission();
+      }
+      
       swirlState.progress = 100;
       updateSwirlProgress();
       completeSwirl();

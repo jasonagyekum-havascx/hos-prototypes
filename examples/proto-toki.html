@@ -353,64 +353,6 @@
 		display: none !important;
 	}
 
-	/* Motion Button Styles */
-	#motionButton {
-		display: none; /* Hidden by default, shown via JS on mobile */
-		position: fixed;
-		bottom: 20px;
-		left: 20px;
-		background: rgba(20, 40, 60, 0.85);
-		border: 1px solid rgba(126, 200, 232, 0.4);
-		border-radius: 12px;
-		padding: 12px 18px;
-		color: #7ec8e8;
-		font-family: 'Noto Sans JP', sans-serif;
-		font-size: 13px;
-		font-weight: 500;
-		cursor: pointer;
-		z-index: 100;
-		backdrop-filter: blur(12px);
-		transition: all 0.25s ease;
-		align-items: center;
-		gap: 8px;
-		touch-action: manipulation;
-		-webkit-tap-highlight-color: transparent;
-	}
-
-	#motionButton:hover {
-		background: rgba(20, 40, 60, 0.95);
-		border-color: rgba(126, 200, 232, 0.6);
-		transform: translateY(-2px);
-	}
-
-	#motionButton:active {
-		transform: scale(0.96);
-	}
-
-	#motionButton.enabled {
-		background: rgba(126, 200, 232, 0.2);
-		border-color: #7ec8e8;
-		color: #7ec8e8;
-		cursor: default;
-	}
-
-	#motionButton.enabled:hover {
-		transform: none;
-	}
-
-	#motionButton.error {
-		background: rgba(200, 80, 80, 0.2);
-		border-color: rgba(200, 80, 80, 0.6);
-		color: #e07070;
-	}
-
-	#motionButton svg {
-		width: 18px;
-		height: 18px;
-		fill: currentColor;
-		flex-shrink: 0;
-	}
-
 	</style>
 	</head>
 	<body>
@@ -446,20 +388,6 @@
 		</div>
 
 	<div id="brandLabel">TOKI</div>
-
-	<!-- Motion Control Button (mobile only) -->
-	<button 
-		id="motionButton" 
-		type="button"
-		aria-label="Enable device motion to swirl drink"
-		aria-pressed="false"
-		tabindex="0"
-	>
-		<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" aria-hidden="true">
-			<path d="M17 1.01L7 1c-1.1 0-2 .9-2 2v18c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V3c0-1.1-.9-1.99-2-1.99zM17 19H7V5h10v14zm-4.2-5.78v1.75l3.2-2.99-3.2-2.99v1.7c-3.11.43-4.35 2.56-4.8 4.7 1.11-1.5 2.58-2.18 4.8-2.17z"/>
-		</svg>
-		Enable Motion
-	</button>
 
 	<!-- Keyboard Shortcuts Hint -->
 	<div id="keyboardHints">

@@ -73,11 +73,16 @@ export function setupCameraControls(camera, renderer) {
 	controls.enableDamping = true;
 	controls.dampingFactor = 0.05;
 	controls.target.set(0, 1.2, 0);
-	// Zoom constraints removed - can zoom freely
-	// controls.minDistance = 2.5;
-	// controls.maxDistance = 8;
-	controls.minPolarAngle = 0; // Allow viewing from above
-	controls.maxPolarAngle = Math.PI / 2; // Prevent viewing from below (horizontal is the limit)
+	
+	// Disable zoom - lock the scale
+	controls.enableZoom = false;
+	
+	// Limit polar angle to prevent top-down view
+	// minPolarAngle = ~25° from vertical (prevents looking straight down)
+	// maxPolarAngle = ~85° (slightly above horizontal, prevents viewing from below)
+	controls.minPolarAngle = Math.PI / 7;  // ~25 degrees from top
+	controls.maxPolarAngle = Math.PI / 2.1; // ~85 degrees (just above horizontal)
+	
 	return controls;
 }
 
