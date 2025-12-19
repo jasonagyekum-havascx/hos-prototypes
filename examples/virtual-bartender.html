@@ -1,0 +1,2347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>House of Suntory - Virtual Bartender</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+  <!-- Adobe Fonts - Futura PT -->
+  <link rel="stylesheet" href="https://use.typekit.net/yfq5vqz.css">
+  
+  <style>
+    /* CSS Variables */
+    :root {
+      --color-gold: #8B7355;
+      --color-gold-light: #A89070;
+      --color-cream: #F5F0E8;
+      --color-dark: #1A1512;
+      --color-text-light: rgba(255, 255, 255, 0.95);
+      --color-text-muted: rgba(255, 255, 255, 0.7);
+      --color-bubble-ai: rgba(45, 35, 28, 0.92);
+      --color-bubble-user: #8B7355;
+      --font-serif: 'Cormorant Garamond', Georgia, serif;
+      --font-sans: 'futura-pt', 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      --transition-smooth: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* Reset */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      height: 100%;
+      overflow: hidden;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background-color: var(--color-dark);
+      color: var(--color-text-light);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* App Container */
+    .app {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      max-width: 430px;
+      margin: 0 auto;
+      overflow: hidden;
+    }
+
+    @media (min-width: 431px) {
+      body {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, #0a0a0a 0%, #1a1512 100%);
+      }
+      
+      .app {
+        height: 100%;
+        max-height: 932px;
+        border-radius: 0;
+        box-shadow: 0 25px 80px rgba(0, 0, 0, 0.5);
+      }
+    }
+
+    /* Screen Base */
+    .screen {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      visibility: hidden;
+      transition: var(--transition-smooth);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .screen.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    /* ==================== */
+    /* LANDING SCREEN */
+    /* ==================== */
+    .landing-screen {
+      justify-content: space-between;
+      padding: 60px 24px 48px;
+    }
+
+    /* Video background container */
+    .landing-background {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      overflow: hidden;
+    }
+
+    .landing-video {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      min-width: 100%;
+      min-height: 100%;
+      width: auto;
+      height: auto;
+      transform: translate(-50%, -50%) scale(1.02);
+      object-fit: cover;
+      filter: blur(2px);
+    }
+
+    /* Gradient overlay on video */
+    .landing-background::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 1;
+      background: 
+        linear-gradient(180deg, 
+          rgba(20, 40, 30, 0.25) 0%, 
+          rgba(15, 30, 22, 0.35) 40%,
+          rgba(10, 20, 15, 0.7) 100%
+        ),
+        radial-gradient(ellipse 120% 80% at 50% 30%, transparent 0%, rgba(10, 20, 15, 0.4) 100%);
+    }
+
+    /* Bottom fade for text readability */
+    .landing-background::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 50%;
+      z-index: 1;
+      background: 
+        linear-gradient(0deg, 
+          rgba(10, 15, 12, 0.85) 0%, 
+          rgba(15, 25, 20, 0.5) 50%,
+          transparent 100%
+        );
+    }
+
+    .landing-content {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+      padding-top: 80px;
+    }
+
+    .landing-logo {
+      max-width: 270px;
+      width: 100%;
+      height: auto;
+      margin-bottom: 8px;
+      opacity: 0;
+      transform: translateY(20px);
+      animation: fadeInUp 0.8s ease forwards 0.2s;
+    }
+
+    .landing-title {
+      color: #FFF;
+text-align: center;
+text-shadow: 0 4px 4px rgba(0, 0, 0, 0.25);
+font-family: "SUNTORY Sabon";
+font-size: 44px;
+font-style: normal;
+font-weight: 700;
+line-height: normal;
+letter-spacing: 0.88px;
+text-transform: uppercase;
+      transform: translateY(20px);
+      animation: fadeInUp 0.8s ease forwards 0.4s;
+    }
+
+    .landing-footer {
+      position: relative;
+      z-index: 1;
+    }
+
+    .location-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 20px;
+      font-size: 14px;
+      color: var(--color-text-light);
+      opacity: 0;
+      animation: fadeInUp 0.8s ease forwards 0.6s;
+    }
+
+    .location-icon {
+      width: 16px;
+      height: 16px;
+      opacity: 0.9;
+    }
+
+    .location-text {
+      text-decoration: underline;
+      text-underline-offset: 3px;
+      letter-spacing: 1.5px;
+      font-size: 13px;
+    }
+
+    .location-temp {
+      opacity: 0.8;
+      letter-spacing: 1px;
+    }
+
+    .destination-prompt {
+      font-size: 16px;
+      text-align: center;
+      color: var(--color-text-light);
+      margin-bottom: 20px;
+      opacity: 0;
+      animation: fadeInUp 0.8s ease forwards 0.7s;
+    }
+
+    .destination-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      max-width: 320px;
+      margin: 0 auto;
+      opacity: 0;
+      animation: fadeInUp 0.8s ease forwards 0.8s;
+    }
+
+    .destination-btn {
+      padding: 14px 15px;
+      border-radius: 50px;
+      font-family: var(--font-sans);
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: var(--transition-smooth);
+      border: none;
+      outline: none;
+    }
+
+    .destination-btn:focus-visible {
+      outline: 2px solid var(--color-gold);
+      outline-offset: 2px;
+    }
+
+    .destination-btn--default {
+      background: rgba(180, 175, 165, 0.85);
+      color: #3a3a3a;
+    }
+
+    .destination-btn--default:hover {
+      background: rgba(200, 195, 185, 0.95);
+      transform: translateY(-2px);
+    }
+
+    .destination-btn--active {
+      background: rgba(150, 105, 55, 1);
+      color: white;
+    }
+
+    .destination-btn--active:hover {
+      background: var(--color-gold-light);
+      transform: translateY(-2px);
+    }
+
+    /* ==================== */
+    /* CHAT SCREEN */
+    /* ==================== */
+    .chat-screen {
+      background: var(--color-dark);
+    }
+
+    /* Header */
+    .chat-header {
+      position: relative;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding: 16px 20px;
+    }
+
+    .header-logo {
+      font-family: var(--font-serif);
+      font-size: 13px;
+      font-weight: 400;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--color-text-light);
+    }
+
+    .header-logo-img {
+      max-width: 160px;
+      width: 100%;
+      height: auto;
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+
+    .chat-header .header-logo {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      text-align: center;
+    }
+
+    .header-profile {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      border: 1.5px solid rgba(255, 255, 255, 0.6);
+      background: transparent;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: var(--transition-smooth);
+    }
+
+    .header-profile:hover {
+      border-color: var(--color-gold);
+    }
+
+    .header-profile svg {
+      width: 18px;
+      height: 18px;
+      stroke: rgba(255, 255, 255, 0.7);
+    }
+
+    /* Chat Body */
+    .chat-body {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Bartender Background with actual bar image */
+    .bartender-bg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 55%;
+      background: 
+        linear-gradient(180deg, 
+          rgba(26, 21, 18, 0) 0%,
+          rgba(26, 21, 18, 0.4) 50%,
+          rgba(26, 21, 18, 1) 100%
+        ),
+        url('/images/assets/AI-bar-background.jpg');
+      background-size: cover;
+      background-position: center 20%;
+      z-index: 0;
+    }
+
+    /* Warm ambient glow overlay */
+    .bartender-bg::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: 
+        radial-gradient(ellipse 80% 50% at 50% 40%, rgba(200, 150, 80, 0.08) 0%, transparent 60%),
+        linear-gradient(180deg, rgba(26, 21, 18, 0.3) 0%, transparent 30%);
+    }
+
+    /* Bartender container */
+    .bartender-container {
+      position: absolute;
+      top: 2%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 280px;
+      height: 300px;
+      z-index: 1;
+    }
+
+    /* Bartender images */
+    .bartender-image {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      opacity: 0;
+      transition: opacity 0.6s ease-in-out;
+    }
+
+    .bartender-image.active {
+      opacity: 1;
+    }
+
+    /* Shaking animation class */
+    .bartender-container.shaking .bartender-image {
+      transition: opacity 0.5s ease-in-out;
+    }
+
+    /* Chat Messages Container */
+    .chat-messages {
+      position: absolute;
+      top: 260px;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 2;
+      overflow-y: auto;
+      padding: 30px 20px 20px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      scroll-behavior: smooth;
+      background: linear-gradient(180deg, transparent 0%, rgba(26, 21, 18, 0.95) 10%);
+      /* Smooth fade-out effect at the top */
+      -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 6%);
+      mask-image: linear-gradient(to bottom, transparent 0%, black 6%);
+    }
+
+    .chat-messages::-webkit-scrollbar {
+      width: 4px;
+    }
+
+    .chat-messages::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .chat-messages::-webkit-scrollbar-thumb {
+      background: rgba(139, 115, 85, 0.3);
+      border-radius: 2px;
+    }
+
+    /* Extra padding at the bottom for content visibility */
+    .chat-messages::after {
+      content: '';
+      display: block;
+      min-height: 10px;
+      flex-shrink: 0;
+    }
+
+    /* Message Bubbles */
+    .message {
+      max-width: 85%;
+      padding: 14px 18px;
+      border-radius: 18px;
+      font-size: 15px;
+      line-height: 1.45;
+      opacity: 0;
+      transform: translateY(20px);
+      animation: messageIn 0.4s ease forwards;
+    }
+
+    .message--ai {
+      align-self: flex-start;
+      background: var(--color-bubble-ai);
+      border-bottom-left-radius: 6px;
+      backdrop-filter: blur(10px);
+    }
+
+    .message--user {
+      align-self: flex-end;
+      background: var(--color-bubble-user);
+      border-bottom-right-radius: 6px;
+    }
+
+    /* Cocktail Cards */
+    .cocktail-cards {
+      display: flex;
+      gap: 14px;
+      padding: 10px 0 12px;
+      overflow-x: auto;
+      overflow-y: visible;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      opacity: 0;
+      transform: translateY(20px);
+      animation: messageIn 0.4s ease forwards;
+      min-height: 190px;
+    }
+
+    .cocktail-cards::-webkit-scrollbar {
+      display: none;
+    }
+
+    .cocktail-card {
+      flex-shrink: 0;
+      background: transparent;
+      border: none;
+      padding: 0;
+      cursor: pointer;
+      transition: var(--transition-smooth);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+
+    .cocktail-card:hover,
+    .cocktail-card:focus {
+      transform: translateY(-6px);
+    }
+
+    .cocktail-card.selected {
+      outline: 3px solid var(--color-gold);
+      outline-offset: 2px;
+    }
+
+    .cocktail-card img {
+      display: block;
+      height: 180px;
+      width: auto;
+      border-radius: 16px;
+    }
+
+    /* CTA Button */
+    .experience-cta {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      width: 100%;
+      padding: 16px 28px;
+      background: rgba(180, 170, 160, 0.9);
+      border-radius: 50px;
+      font-family: var(--font-sans);
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: #3a3a3a;
+      cursor: pointer;
+      border: none;
+      transition: var(--transition-smooth);
+      margin-top: 8px;
+      opacity: 0;
+      transform: translateY(20px);
+      animation: messageIn 0.4s ease forwards;
+    }
+
+    .experience-cta:hover {
+      background: var(--color-gold);
+      color: white;
+      transform: translateY(-2px);
+    }
+
+    .experience-cta svg {
+      width: 20px;
+      height: 20px;
+      transition: transform 0.3s ease;
+    }
+
+    .experience-cta:hover svg {
+      transform: translateX(4px);
+    }
+
+    /* Typing Indicator */
+    .typing-indicator {
+      display: flex;
+      gap: 4px;
+      padding: 16px 20px;
+      align-self: flex-start;
+    }
+
+    .typing-indicator span {
+      width: 8px;
+      height: 8px;
+      background: var(--color-gold);
+      border-radius: 50%;
+      animation: typingBounce 1.4s infinite ease-in-out;
+    }
+
+    .typing-indicator span:nth-child(1) { animation-delay: 0s; }
+    .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+    .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+
+    /* Chat Input */
+    .chat-input-container {
+      position: relative;
+      z-index: 10;
+      padding: 12px 20px 20px;
+      background: rgba(26, 21, 18, 1);
+      flex-shrink: 0;
+    }
+
+    .chat-input-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 50px;
+      padding: 8px 12px 8px 24px;
+    }
+
+    .chat-input {
+      flex: 1;
+      border: none;
+      background: transparent;
+      font-family: var(--font-sans);
+      font-size: 16px;
+      color: #333;
+      outline: none;
+    }
+
+    .chat-input::placeholder {
+      color: #999;
+    }
+
+    .input-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: var(--transition-smooth);
+    }
+
+    .input-btn svg {
+      width: 22px;
+      height: 22px;
+      stroke: #666;
+      transition: stroke 0.2s ease;
+    }
+
+    .input-btn:hover svg {
+      stroke: var(--color-gold);
+    }
+
+    .input-btn--send {
+      background: transparent;
+    }
+
+    .input-btn--send svg {
+      stroke: #888;
+    }
+
+    /* ==================== */
+    /* SWIRL INTRO SCREEN */
+    /* ==================== */
+    .swirl-screen {
+      background: #FFFFFF;
+      position: relative;
+    }
+
+    .swirl-header {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding: 16px 20px;
+      background: transparent;
+    }
+
+    .swirl-header .header-logo {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      color: #1A1512;
+      font-size: 12px;
+      letter-spacing: 2px;
+    }
+
+    .swirl-header .header-profile {
+      border-color: rgba(0, 0, 0, 0.3);
+    }
+
+    .swirl-header .header-profile svg {
+      stroke: #333;
+    }
+
+    .swirl-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 24px 24px 60px;
+      text-align: center;
+      overflow: hidden;
+    }
+
+    .swirl-instruction {
+      font-family: var(--font-sans);
+      font-size: 14px;
+      font-weight: 500;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: #000000;
+      margin-bottom: 16px;
+      flex-shrink: 0;
+      opacity: 0;
+      animation: fadeInUp 0.8s ease forwards 0.3s;
+    }
+
+    .swirl-drink-image {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      max-width: 320px;
+      min-height: 0;
+      margin-bottom: 24px;
+      opacity: 0;
+      animation: fadeInUp 0.8s ease forwards 0.5s;
+    }
+
+    .swirl-drink-image img {
+      width: 100%;
+      height: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.1));
+    }
+
+    .swirl-title {
+      font-family: var(--font-serif);
+      font-size: 28px;
+      font-weight: 400;
+      letter-spacing: 8px;
+      color: var(--color-gold);
+      text-transform: uppercase;
+      flex-shrink: 0;
+      opacity: 0;
+      animation: fadeInUp 0.8s ease forwards 0.7s;
+    }
+
+    /* 3D Experience Overlay (fades in on swirl) */
+    .experience-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 100;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+
+    .experience-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .experience-overlay iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+
+    /* Share Button */
+    .share-btn-container {
+      position: absolute;
+      bottom: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 101;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.5s ease, transform 0.5s ease;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .share-btn-container.visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .share-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 18px 24px;
+      background: rgba(26, 21, 18, 0.95);
+      border: none;
+      border-radius: 0px;
+      font-family: var(--font-sans);
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: white;
+      cursor: pointer;
+      transition: var(--transition-smooth);
+    }
+
+    .share-btn:hover {
+      background-color: #231815;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+    }
+
+    .share-btn:focus-visible {
+      outline: 2px solid white;
+      outline-offset: 2px;
+    }
+
+    .mix-another-btn {
+      background: transparent;
+      border: none;
+      font-family: var(--font-sans);
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: #000;
+      cursor: pointer;
+      transition: var(--transition-smooth);
+      margin-top: 20px;
+      padding: 8px 0;
+    }
+
+    .mix-another-btn:hover {
+      color: var(--color-gold-light);
+    }
+
+    .mix-another-btn:focus-visible {
+      outline: 2px solid #000;
+      outline-offset: 2px;
+    }
+
+    /* ==================== */
+    /* RECIPE CARD MODAL */
+    /* ==================== */
+    .recipe-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 2000;
+      opacity: 0;
+      visibility: hidden;
+      transition: var(--transition-smooth);
+      overflow: hidden;
+    }
+
+    .recipe-modal.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .recipe-modal__background {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: url('../images/assets/recipe-card-background.jpg') center center / cover no-repeat;
+      opacity: 1;
+    }
+
+
+    .recipe-modal__container {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      height: 100%;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .recipe-modal__header {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding: 12px 16px;
+      flex-shrink: 0;
+    }
+
+    .recipe-modal__header .header-logo {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      color: #4A3F35;
+      font-size: 11px;
+      letter-spacing: 2px;
+    }
+
+    .recipe-modal__close {
+      width: 32px;
+      height: 32px;
+      border: 1.5px solid rgba(74, 63, 53, 0.4);
+      border-radius: 50%;
+      background: transparent;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: var(--transition-smooth);
+    }
+
+    .recipe-modal__close:hover {
+      border-color: var(--color-gold);
+      background: rgba(139, 115, 85, 0.1);
+    }
+
+    .recipe-modal__close svg {
+      width: 16px;
+      height: 16px;
+      stroke: #4A3F35;
+    }
+
+    .recipe-modal__content {
+      flex: 1;
+      padding: 12px 16px 16px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      overflow: hidden;
+      min-height: 0;
+    }
+
+    /* Recipe Card Image */
+    .recipe-card-image {
+      width: 100%;
+      max-width: 100%;
+      height: auto;
+      max-height: calc(100vh - 200px);
+      object-fit: contain;
+      border-radius: 4px;
+      box-shadow: 0 8px 40px rgba(0, 0, 0, 0.15);
+      flex-shrink: 1;
+      min-height: 0;
+    }
+
+    /* Recipe Modal Actions */
+    .recipe-modal__actions {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+      max-width: 320px;
+      flex-shrink: 0;
+      padding-top: 8px;
+    }
+
+    .recipe-share-btn {
+      width: 100%;
+      padding: 16px 24px;
+      background: rgba(74, 63, 53, 0.9);
+      border: none;
+      border-radius: 4px;
+      font-family: var(--font-sans);
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: white;
+      cursor: pointer;
+      transition: var(--transition-smooth);
+    }
+
+    .recipe-share-btn:hover {
+      background: rgba(74, 63, 53, 1);
+    }
+
+    .recipe-save-btn {
+      background: transparent;
+      border: none;
+      font-family: var(--font-sans);
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: #4A3F35;
+      cursor: pointer;
+      transition: var(--transition-smooth);
+    }
+
+    .recipe-save-btn:hover {
+      color: var(--color-gold);
+    }
+
+    /* Tap hint for swirl content */
+    .swirl-content {
+      cursor: pointer;
+    }
+
+    .swirl-content:focus-visible {
+      outline: 2px solid var(--color-gold);
+      outline-offset: -4px;
+      border-radius: 8px;
+    }
+
+    /* ==================== */
+    /* IMMERSIVE SCREEN */
+    /* ==================== */
+    .immersive-screen {
+      background: url('../images/mr-background.jpg') center center / cover no-repeat;
+    }
+
+    .immersive-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      background: transparent;
+    }
+
+    .immersive-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      text-align: center;
+    }
+
+    .immersive-instruction {
+      font-family: var(--font-serif);
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--color-gold);
+      margin-bottom: 32px;
+      opacity: 0;
+      animation: fadeInUp 0.8s ease forwards 0.3s;
+    }
+
+    .immersive-drink {
+      width: 100%;
+      max-width: 320px;
+      height: auto;
+      aspect-ratio: 3/5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 40px;
+      opacity: 0;
+      animation: fadeInUp 0.8s ease forwards 0.5s;
+      cursor: pointer;
+      transition: transform 0.3s ease;
+    }
+
+    .immersive-drink:hover {
+      transform: scale(1.02);
+    }
+
+    .immersive-drink svg {
+      width: 100%;
+      height: 100%;
+      filter: drop-shadow(0 20px 40px rgba(139, 115, 85, 0.15));
+    }
+
+    .immersive-title {
+      font-family: var(--font-serif);
+      font-size: 26px;
+      font-weight: 400;
+      letter-spacing: 4px;
+      color: var(--color-gold);
+      text-transform: uppercase;
+      opacity: 0;
+      animation: fadeInUp 0.8s ease forwards 0.7s;
+    }
+
+    /* Video Hotspot Button */
+    .video-hotspot {
+      position: absolute;
+      bottom: 180px;
+      right: 40px;
+      width: 64px;
+      height: 64px;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      transition: var(--transition-smooth);
+      opacity: 0;
+      animation: fadeInUp 0.8s ease forwards 0.9s;
+      padding: 0;
+      z-index: 10;
+    }
+
+    .video-hotspot:hover {
+      transform: scale(1.1);
+    }
+
+    .video-hotspot:focus-visible {
+      outline: 2px solid var(--color-gold);
+      outline-offset: 4px;
+      border-radius: 50%;
+    }
+
+    .video-hotspot img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .video-hotspot-label {
+      position: absolute;
+      bottom: -24px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-family: var(--font-sans);
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--color-gold);
+      white-space: nowrap;
+    }
+
+    /* Video Modal Overlay */
+    .video-modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 1000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      opacity: 0;
+      visibility: hidden;
+      transition: var(--transition-smooth);
+    }
+
+    .video-modal.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .video-modal__close {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      width: 44px;
+      height: 44px;
+      border: none;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 50%;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: var(--transition-smooth);
+    }
+
+    .video-modal__close:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    .video-modal__close svg {
+      width: 24px;
+      height: 24px;
+      stroke: white;
+    }
+
+    .video-modal__content {
+      width: 80%;
+      max-width: 430px;
+      padding: 0 20px;
+    }
+
+    .video-modal__video {
+      width: 100%;
+      border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    }
+
+    .video-modal__title {
+      font-family: var(--font-serif);
+      font-size: 18px;
+      font-weight: 400;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--color-gold);
+      text-align: center;
+      margin-top: 24px;
+    }
+
+    /* ==================== */
+    /* ANIMATIONS */
+    /* ==================== */
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes messageIn {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes typingBounce {
+      0%, 80%, 100% {
+        transform: translateY(0);
+      }
+      40% {
+        transform: translateY(-6px);
+      }
+    }
+
+    /* Animation delays for messages */
+    .message:nth-child(1) { animation-delay: 0.1s; }
+    .message:nth-child(2) { animation-delay: 0.3s; }
+    .message:nth-child(3) { animation-delay: 0.5s; }
+    .message:nth-child(4) { animation-delay: 0.7s; }
+    .message:nth-child(5) { animation-delay: 0.9s; }
+    .message:nth-child(6) { animation-delay: 1.1s; }
+    .cocktail-cards { animation-delay: 0.8s; }
+    .experience-cta { animation-delay: 1.2s; }
+
+    /* Utility */
+    .visually-hidden {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="app" role="main">
+    
+    <!-- LANDING SCREEN -->
+    <section class="screen landing-screen active" id="landingScreen" aria-label="Welcome screen">
+      <div class="landing-background" aria-hidden="true">
+        <video class="landing-video" autoplay muted loop playsinline>
+          <source src="../images/landing-bg.mp4" type="video/mp4">
+        </video>
+      </div>
+      
+      <div class="landing-content">
+        <img src="../images/assets/logo-landing.png" alt="The House of Suntory" class="landing-logo" />
+        <h1 class="landing-title">VIRTUAL<br>BARTENDER</h1>
+      </div>
+      
+      <footer class="landing-footer">
+        <div class="location-row">
+          <svg class="location-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+            <circle cx="12" cy="10" r="3"/>
+          </svg>
+          <span class="location-text">SANTA BARBARA, CA</span>
+          <span class="location-temp">| 72°</span>
+        </div>
+        
+        <p class="destination-prompt">Choose your destination to get started</p>
+        
+        <div class="destination-grid" role="group" aria-label="Destination selection">
+          <button 
+            class="destination-btn destination-btn--default" 
+            data-destination="izakaya"
+            aria-label="Select Izakaya"
+            tabindex="0"
+          >
+            Izakaya
+          </button>
+          <button 
+            class="destination-btn destination-btn--default" 
+            data-destination="omakase"
+            aria-label="Select Omakase"
+            tabindex="0"
+          >
+            Omakase
+          </button>
+          <button 
+            class="destination-btn destination-btn--active" 
+            data-destination="listening-bar"
+            aria-label="Select Listening Bar"
+            tabindex="0"
+          >
+            Listening Bar
+          </button>
+          <button 
+            class="destination-btn destination-btn--default" 
+            data-destination="tea-room"
+            aria-label="Select Tea Room"
+            tabindex="0"
+          >
+            Tea Room
+          </button>
+        </div>
+      </footer>
+    </section>
+    
+    <!-- CHAT SCREEN -->
+    <section class="screen chat-screen" id="chatScreen" aria-label="Chat with AI Bartender">
+      <header class="chat-header">
+        <img src="../images/assets/logo-chat.png" alt="The House of Suntory" class="header-logo-img" />
+        <button class="header-profile" aria-label="User profile" tabindex="0">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+            <circle cx="12" cy="8" r="4"/>
+            <path d="M4 20c0-4 4-6 8-6s8 2 8 6"/>
+          </svg>
+        </button>
+      </header>
+      
+      <div class="chat-body">
+        <div class="bartender-bg" aria-hidden="true">
+          <div class="bartender-container" id="bartenderContainer">
+            <img 
+              src="/images/assets/AI-bartender1.png" 
+              alt="" 
+              class="bartender-image bartender-image--1 active" 
+              aria-hidden="true"
+            >
+            <img 
+              src="/images/assets/AI-bartender2.png" 
+              alt="" 
+              class="bartender-image bartender-image--2" 
+              aria-hidden="true"
+            >
+            <img 
+              src="/images/assets/AI-bartender3.png" 
+              alt="" 
+              class="bartender-image bartender-image--3" 
+              aria-hidden="true"
+            >
+          </div>
+        </div>
+        
+        <div class="chat-messages" id="chatMessages" role="log" aria-live="polite">
+          <!-- Messages will be added dynamically -->
+        </div>
+      </div>
+      
+      <div class="chat-input-container">
+        <div class="chat-input-wrapper">
+          <input 
+            type="text" 
+            class="chat-input" 
+            id="chatInput"
+            placeholder="Type your message..." 
+            aria-label="Message input"
+            autocomplete="off"
+          >
+          <button class="input-btn" aria-label="Voice input" tabindex="0">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="9" y="2" width="6" height="12" rx="3"/>
+              <path d="M5 10v2a7 7 0 0 0 14 0v-2"/>
+              <line x1="12" y1="22" x2="12" y2="19"/>
+            </svg>
+          </button>
+          <button class="input-btn input-btn--send" id="sendBtn" aria-label="Send message" tabindex="0">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="5" y1="12" x2="19" y2="12"/>
+              <polyline points="12 5 19 12 12 19"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </section>
+    
+    <!-- SWIRL INTRO SCREEN -->
+    <section class="screen swirl-screen" id="swirlScreen" aria-label="Swirl to experience your highball">
+      <header class="swirl-header">
+        <span class="header-logo">The House of Suntory</span>
+        <button class="header-profile" aria-label="User profile" tabindex="0">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <circle cx="12" cy="8" r="4"/>
+            <path d="M4 20c0-4 4-6 8-6s8 2 8 6"/>
+          </svg>
+        </button>
+      </header>
+      
+      <div class="swirl-content" id="swirlContent" role="button" tabindex="0" aria-label="Tap to continue to experience">
+        <p class="swirl-instruction">Swirl to experience your highball</p>
+        
+        <div class="swirl-drink-image">
+          <img src="../images/toki-big.png" alt="Toki Highball" />
+        </div>
+        
+        <h2 class="swirl-title">Toki Highball</h2>
+      </div>
+      
+      <!-- 3D Experience Overlay -->
+      <div class="experience-overlay" id="experienceOverlay">
+        <iframe src="proto-toki.html" title="Interactive Toki Highball Experience"></iframe>
+      </div>
+      
+      <!-- Share Button -->
+      <div class="share-btn-container" id="shareBtnContainer">
+        <button 
+          class="share-btn" 
+          id="shareBtn"
+          aria-label="Share recipe card"
+          tabindex="0"
+        >
+          SHARE
+        </button>
+        <button 
+          class="mix-another-btn" 
+          id="mixAnotherBtn"
+          aria-label="Mix another cocktail"
+          tabindex="0"
+        >
+          MIX ANOTHER COCKTAIL →
+        </button>
+      </div>
+    </section>
+    
+    <!-- IMMERSIVE SCREEN -->
+    <section class="screen immersive-screen" id="immersiveScreen" aria-label="Immersive drink experience">
+      <header class="immersive-header">
+        <span class="header-logo" style="color: #333;">The House of Suntory</span>
+        <button class="header-profile" style="border-color: rgba(0,0,0,0.3);" aria-label="User profile" tabindex="0">
+          <svg viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="1.5">
+            <circle cx="12" cy="8" r="4"/>
+            <path d="M4 20c0-4 4-6 8-6s8 2 8 6"/>
+          </svg>
+        </button>
+      </header>
+      
+      <div class="immersive-content">
+        <p class="immersive-instruction">Swirl to experience your highball</p>
+        
+        <!-- Video Hotspot Button -->
+        <button 
+          class="video-hotspot" 
+          id="videoHotspot"
+          aria-label="Watch Perfect Serve video"
+          tabindex="0"
+        >
+          <img src="../images/assets/play-sign.png" alt="Play video" />
+          <span class="video-hotspot-label">Perfect Serve</span>
+        </button>
+        
+        <div class="immersive-drink" id="drinkContainer" role="img" aria-label="Toki Highball drink" tabindex="0">
+          <svg viewBox="0 0 200 380" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <!-- Glass outline -->
+            <path d="M30 50 L38 350 Q40 365 60 365 L140 365 Q160 365 162 350 L170 50 L30 50Z" 
+                  fill="url(#bigGlassGrad)" stroke="#E8E0D0" stroke-width="2"/>
+            <!-- Liquid fill -->
+            <path d="M36 70 L42 340 Q44 352 62 352 L138 352 Q156 352 158 340 L164 70 L36 70Z" 
+                  fill="url(#bigLiquidGrad)" opacity="0.9"/>
+            <!-- Ice cubes -->
+            <rect x="55" y="100" width="45" height="38" rx="8" fill="rgba(255,255,255,0.6)" stroke="rgba(255,255,255,0.8)" stroke-width="1"/>
+            <rect x="95" y="120" width="40" height="35" rx="7" fill="rgba(255,255,255,0.5)" stroke="rgba(255,255,255,0.7)" stroke-width="1"/>
+            <rect x="65" y="155" width="35" height="30" rx="6" fill="rgba(255,255,255,0.45)" stroke="rgba(255,255,255,0.6)" stroke-width="1"/>
+            <rect x="100" y="170" width="38" height="32" rx="6" fill="rgba(255,255,255,0.4)" stroke="rgba(255,255,255,0.55)" stroke-width="1"/>
+            <!-- Bubbles -->
+            <circle cx="70" cy="250" r="5" fill="rgba(255,255,255,0.6)"/>
+            <circle cx="120" cy="235" r="4" fill="rgba(255,255,255,0.5)"/>
+            <circle cx="90" cy="280" r="4.5" fill="rgba(255,255,255,0.55)"/>
+            <circle cx="135" cy="295" r="3.5" fill="rgba(255,255,255,0.45)"/>
+            <circle cx="75" cy="310" r="4" fill="rgba(255,255,255,0.5)"/>
+            <circle cx="110" cy="320" r="3" fill="rgba(255,255,255,0.4)"/>
+            <circle cx="85" cy="220" r="3" fill="rgba(255,255,255,0.45)"/>
+            <circle cx="130" cy="265" r="2.5" fill="rgba(255,255,255,0.4)"/>
+            <circle cx="60" cy="290" r="2" fill="rgba(255,255,255,0.35)"/>
+            <circle cx="145" cy="310" r="2.5" fill="rgba(255,255,255,0.38)"/>
+            <!-- Orange peel garnish -->
+            <path d="M130 60 Q160 48 175 85 Q180 105 168 120" 
+                  stroke="#E8A455" stroke-width="10" stroke-linecap="round" fill="none"/>
+            <path d="M130 60 Q160 48 175 85 Q180 105 168 120" 
+                  stroke="#D4903A" stroke-width="6" stroke-linecap="round" fill="none"/>
+            <!-- Reflection highlight -->
+            <path d="M42 80 L44 320" stroke="rgba(255,255,255,0.25)" stroke-width="8" stroke-linecap="round"/>
+            <defs>
+              <linearGradient id="bigGlassGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" style="stop-color:rgba(255,255,255,0.2)"/>
+                <stop offset="30%" style="stop-color:rgba(255,255,255,0.08)"/>
+                <stop offset="70%" style="stop-color:rgba(255,255,255,0.05)"/>
+                <stop offset="100%" style="stop-color:rgba(255,255,255,0.15)"/>
+              </linearGradient>
+              <linearGradient id="bigLiquidGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" style="stop-color:#F0E4C0"/>
+                <stop offset="50%" style="stop-color:#E8D8A8"/>
+                <stop offset="100%" style="stop-color:#D8C890"/>
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+        <h2 class="immersive-title">Toki Highball</h2>
+      </div>
+    </section>
+    
+    <!-- Video Modal -->
+    <div class="video-modal" id="videoModal" role="dialog" aria-modal="true" aria-labelledby="videoModalTitle">
+      <button class="video-modal__close" id="videoModalClose" aria-label="Close video" tabindex="0">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="18" y1="6" x2="6" y2="18"/>
+          <line x1="6" y1="6" x2="18" y2="18"/>
+        </svg>
+      </button>
+      <div class="video-modal__content">
+        <video 
+          class="video-modal__video" 
+          id="perfectServeVideo"
+          src="../images/perfect-serve.mp4"
+          controls
+          playsinline
+          preload="metadata"
+        >
+          Your browser does not support the video tag.
+        </video>
+        <h3 class="video-modal__title" id="videoModalTitle">The Perfect Serve</h3>
+      </div>
+    </div>
+    
+    <!-- Recipe Card Modal -->
+    <div class="recipe-modal" id="recipeModal" role="dialog" aria-modal="true" aria-labelledby="recipeModalTitle">
+      <div class="recipe-modal__background"></div>
+      <div class="recipe-modal__container">
+        <header class="recipe-modal__header">
+          <span class="header-logo">The House of Suntory</span>
+          <button class="recipe-modal__close" id="recipeModalClose" aria-label="Close recipe card" tabindex="0">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </header>
+        
+        <div class="recipe-modal__content">
+          <!-- Recipe Card Image -->
+          <img 
+            src="../images/assets/recipe-card-toki.png" 
+            alt="Toki Highball Recipe Card" 
+            class="recipe-card-image"
+            id="recipeModalTitle"
+          />
+          
+          <!-- Action Buttons -->
+          <div class="recipe-modal__actions">
+            <button class="recipe-share-btn" id="recipeShareBtn" aria-label="Share recipe" tabindex="0">
+              Share Recipe
+            </button>
+            <button class="recipe-save-btn" id="recipeSaveBtn" aria-label="Save to profile" tabindex="0">
+              Save to Profile
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+  </div>
+
+  <script>
+    // ==================== 
+    // STATE MANAGEMENT
+    // ====================
+    const state = {
+      currentScreen: 'landing',
+      selectedDestination: 'listening-bar',
+      selectedCocktail: null,
+      chatHistory: [],
+      isTyping: false,
+      waitingForUserInput: false,
+      flowStep: 0,
+      bartenderAnimationInterval: null,
+      isBartenderShaking: false
+    };
+
+    // Chat conversation flow
+    const chatFlow = {
+      greeting: {
+        messages: [
+          {
+            type: 'ai',
+            text: "Hi, I'm Kenji, your personal AI mixologist. Tell me what you want to drink and I'll turn it into an experience you'll never forget."
+          },
+          {
+            type: 'ai',
+            text: "What are you in the mood for?"
+          }
+        ],
+        waitForUser: true
+      },
+      userMood: {
+        messages: [
+          {
+            type: 'user',
+            text: "It's been a long day, I need something refreshing."
+          }
+        ]
+      },
+      recommendation: {
+        messages: [
+          {
+            type: 'ai',
+            text: "Sorry to hear about your day. I have two great options to help you relax this evening."
+          }
+        ],
+        showCocktails: true
+      },
+      story: {
+        messages: [
+          {
+            type: 'ai',
+            text: "Mixing whisky and soda is easy. Making a perfect highball? That's an art."
+          },
+          {
+            type: 'ai',
+            text: "Take ice for example. A perfect highball should stay effervescent, but rough ice causes bubbles to form and the drink to fizz out."
+          },
+          {
+            type: 'ai',
+            text: "So, I temper the ice by resting it at room temperature for a few minutes. As it begins to melt, surface imperfections are smoothed, helping the highball stay fizzy longer."
+          },
+          {
+            type: 'ai',
+            text: "Here's your highball"
+          }
+        ],
+        showCTA: true
+      },
+      repeatability: {
+        messages: [
+          {
+            type: 'ai',
+            text: "I told you it would be an experience!"
+          },
+          {
+            type: 'ai',
+            text: "What are you drinking next?"
+          }
+        ],
+        waitForUser: true
+      }
+    };
+
+    // ==================== 
+    // DOM ELEMENTS
+    // ====================
+    const screens = {
+      landing: document.getElementById('landingScreen'),
+      chat: document.getElementById('chatScreen'),
+      swirl: document.getElementById('swirlScreen'),
+      immersive: document.getElementById('immersiveScreen')
+    };
+
+    const chatMessages = document.getElementById('chatMessages');
+    const chatInput = document.getElementById('chatInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const destinationBtns = document.querySelectorAll('.destination-btn');
+    const bartenderContainer = document.getElementById('bartenderContainer');
+    const bartenderImages = bartenderContainer.querySelectorAll('.bartender-image');
+
+    // ==================== 
+    // BARTENDER ANIMATION
+    // ====================
+    const startBartenderShaking = () => {
+      if (state.isBartenderShaking) return;
+      
+      state.isBartenderShaking = true;
+      bartenderContainer.classList.add('shaking');
+      
+      let currentImage = 0;
+      
+      state.bartenderAnimationInterval = setInterval(() => {
+        bartenderImages.forEach(img => img.classList.remove('active'));
+        currentImage = currentImage === 0 ? 1 : 0;
+        bartenderImages[currentImage].classList.add('active');
+      }, 800);
+    };
+
+    const stopBartenderShaking = () => {
+      if (!state.isBartenderShaking) return;
+      
+      state.isBartenderShaking = false;
+      bartenderContainer.classList.remove('shaking');
+      
+      if (state.bartenderAnimationInterval) {
+        clearInterval(state.bartenderAnimationInterval);
+        state.bartenderAnimationInterval = null;
+      }
+      
+      // Reset to first image
+      bartenderImages.forEach(img => img.classList.remove('active'));
+      bartenderImages[0].classList.add('active');
+    };
+
+    // ==================== 
+    // SCREEN NAVIGATION
+    // ====================
+    const navigateTo = (screenName) => {
+      Object.values(screens).forEach(screen => screen.classList.remove('active'));
+      screens[screenName].classList.add('active');
+      state.currentScreen = screenName;
+
+      if (screenName === 'chat' && state.chatHistory.length === 0) {
+        startChatFlow();
+      }
+
+      // Start swirl detection when entering swirl screen
+      if (screenName === 'swirl') {
+        // Reset swirl state
+        swirlState.progress = 0;
+        swirlState.cumulativeMotion = 0;
+        if (experienceOverlay) {
+          experienceOverlay.style.opacity = '0';
+          experienceOverlay.classList.remove('active');
+        }
+        // Start detection after a brief delay
+        setTimeout(() => {
+          startSwirlDetection();
+        }, 500);
+      } else {
+        // Stop swirl detection when leaving
+        stopSwirlDetection();
+      }
+    };
+
+    // ==================== 
+    // CHAT FUNCTIONS
+    // ====================
+    const addMessage = (type, text, delay = 0) => {
+      return new Promise(resolve => {
+        setTimeout(() => {
+          const messageEl = document.createElement('div');
+          messageEl.className = `message message--${type}`;
+          messageEl.textContent = text;
+          messageEl.setAttribute('role', type === 'ai' ? 'status' : 'log');
+          chatMessages.appendChild(messageEl);
+          state.chatHistory.push({ type, text });
+          scrollToBottom();
+          resolve();
+        }, delay);
+      });
+    };
+
+    const addTypingIndicator = () => {
+      const typing = document.createElement('div');
+      typing.className = 'typing-indicator';
+      typing.id = 'typingIndicator';
+      typing.innerHTML = '<span></span><span></span><span></span>';
+      chatMessages.appendChild(typing);
+      scrollToBottom();
+    };
+
+    const removeTypingIndicator = () => {
+      const typing = document.getElementById('typingIndicator');
+      if (typing) typing.remove();
+    };
+
+    const addCocktailCards = () => {
+      const cardsContainer = document.createElement('div');
+      cardsContainer.className = 'cocktail-cards';
+      
+      const cocktails = [
+        { 
+          id: 'toki-highball', 
+          name: 'Toki Highball', 
+          imageSrc: '../images/toki-thumbnail.png',
+          imageAlt: 'Toki Highball cocktail thumbnail'
+        },
+        { 
+          id: 'roku-gin-fizz', 
+          name: 'Roku Gin Fizz', 
+          imageSrc: '../images/roku-thumbnail.png',
+          imageAlt: 'Roku Gin Fizz cocktail thumbnail'
+        }
+      ];
+
+      cocktails.forEach(cocktail => {
+        const card = document.createElement('button');
+        card.className = 'cocktail-card';
+        card.setAttribute('tabindex', '0');
+        card.setAttribute('aria-label', `Select ${cocktail.name}`);
+        card.innerHTML = `<img src="${cocktail.imageSrc}" alt="${cocktail.imageAlt}" />`;
+        
+        card.addEventListener('click', () => handleCocktailSelect(cocktail, card));
+        card.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            handleCocktailSelect(cocktail, card);
+          }
+        });
+        
+        cardsContainer.appendChild(card);
+      });
+
+      chatMessages.appendChild(cardsContainer);
+      scrollToBottom();
+    };
+
+    const handleCocktailSelect = (cocktail, cardEl) => {
+      // Remove previous selection
+      document.querySelectorAll('.cocktail-card').forEach(c => c.classList.remove('selected'));
+      cardEl.classList.add('selected');
+      state.selectedCocktail = cocktail;
+
+      // Start bartender shaking animation
+      startBartenderShaking();
+
+      // Continue to story
+      setTimeout(() => {
+        playChatSequence('story');
+      }, 500);
+    };
+
+    const addExperienceCTA = () => {
+      // Stop bartender shaking animation when drink is ready
+      stopBartenderShaking();
+      
+      const ctaContainer = document.createElement('div');
+      ctaContainer.style.cssText = 'display: flex; justify-content: flex-start; padding: 8px 0;';
+      
+      const cta = document.createElement('button');
+      cta.className = 'experience-cta';
+      cta.setAttribute('tabindex', '0');
+      cta.setAttribute('aria-label', 'Experience your highball in immersive view');
+      cta.innerHTML = `
+        Experience Your Highball
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <line x1="5" y1="12" x2="19" y2="12"/>
+          <polyline points="12 5 19 12 12 19"/>
+        </svg>
+      `;
+      
+      cta.addEventListener('click', () => {
+        navigateTo('swirl');
+      });
+      
+      cta.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          navigateTo('swirl');
+        }
+      });
+
+      ctaContainer.appendChild(cta);
+      chatMessages.appendChild(ctaContainer);
+      scrollToBottom();
+    };
+
+    const playChatSequence = async (flowKey) => {
+      const flow = chatFlow[flowKey];
+      if (!flow) return;
+
+      for (let i = 0; i < flow.messages.length; i++) {
+        const msg = flow.messages[i];
+        
+        if (msg.type === 'ai') {
+          addTypingIndicator();
+          await wait(1200 + Math.random() * 800);
+          removeTypingIndicator();
+        }
+        
+        await addMessage(msg.type, msg.text, 100);
+        await wait(400);
+      }
+
+      if (flow.showCocktails) {
+        await wait(500);
+        addCocktailCards();
+      }
+
+      if (flow.showCTA) {
+        await wait(600);
+        addExperienceCTA();
+      }
+    };
+
+    const startChatFlow = async () => {
+      await wait(800);
+      await playChatSequence('greeting');
+      // Wait for user to send a message - flow continues in handleSendMessage
+      state.waitingForUserInput = true;
+    };
+
+    const scrollToBottom = () => {
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    };
+
+    const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+    // ==================== 
+    // EVENT HANDLERS
+    // ====================
+    const handleDestinationClick = (e) => {
+      const btn = e.currentTarget;
+      const destination = btn.dataset.destination;
+
+      // Update button states
+      destinationBtns.forEach(b => {
+        b.classList.remove('destination-btn--active');
+        b.classList.add('destination-btn--default');
+      });
+      btn.classList.remove('destination-btn--default');
+      btn.classList.add('destination-btn--active');
+
+      state.selectedDestination = destination;
+
+      // Navigate to chat after short delay
+      setTimeout(() => {
+        navigateTo('chat');
+      }, 300);
+    };
+
+    const handleSendMessage = async () => {
+      const text = chatInput.value.trim();
+      if (!text) return;
+
+      chatInput.value = '';
+
+      // Always use the default flow regardless of what user types
+      if (state.waitingForUserInput && state.flowStep === 0) {
+        state.waitingForUserInput = false;
+        state.flowStep = 1;
+        
+        // Show the default user message from the screens
+        await playChatSequence('userMood');
+        await wait(800);
+        await playChatSequence('recommendation');
+      }
+    };
+
+    const handleKeyDown = (e) => {
+      if (e.key === 'Enter') {
+        handleSendMessage();
+      }
+    };
+
+    // ==================== 
+    // VIDEO MODAL HANDLERS
+    // ====================
+    const videoModal = document.getElementById('videoModal');
+    const videoModalClose = document.getElementById('videoModalClose');
+    const videoHotspot = document.getElementById('videoHotspot');
+    const perfectServeVideo = document.getElementById('perfectServeVideo');
+
+    const handleOpenVideoModal = () => {
+      videoModal.classList.add('active');
+      document.body.style.overflow = 'hidden';
+      perfectServeVideo.play();
+    };
+
+    const handleCloseVideoModal = () => {
+      videoModal.classList.remove('active');
+      document.body.style.overflow = '';
+      perfectServeVideo.pause();
+      perfectServeVideo.currentTime = 0;
+    };
+
+    const handleVideoModalKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        handleCloseVideoModal();
+      }
+    };
+
+    // ==================== 
+    // RECIPE CARD MODAL HANDLERS
+    // ====================
+    const recipeModal = document.getElementById('recipeModal');
+    const recipeModalClose = document.getElementById('recipeModalClose');
+    const shareBtn = document.getElementById('shareBtn');
+    const shareBtnContainer = document.getElementById('shareBtnContainer');
+    const recipeShareBtn = document.getElementById('recipeShareBtn');
+    const recipeSaveBtn = document.getElementById('recipeSaveBtn');
+
+    const handleOpenRecipeModal = () => {
+      recipeModal.classList.add('active');
+      document.body.style.overflow = 'hidden';
+    };
+
+    const handleCloseRecipeModal = () => {
+      recipeModal.classList.remove('active');
+      document.body.style.overflow = '';
+    };
+
+    const handleRecipeShare = async () => {
+      // Navigate to repeatability screen
+      navigateToRepeatability();
+    };
+
+    const handleRecipeSave = () => {
+      // Navigate to repeatability screen
+      navigateToRepeatability();
+    };
+
+    const navigateToRepeatability = async () => {
+      // Close the recipe modal
+      handleCloseRecipeModal();
+      
+      // Navigate to chat screen
+      navigateTo('chat');
+      
+      // Switch to bartender pose 3 (welcoming gesture)
+      showBartenderPose(3);
+      
+      // Play the repeatability messages
+      await wait(500);
+      await playChatSequence('repeatability');
+    };
+
+    const showBartenderPose = (poseNumber) => {
+      // Stop any shaking animation
+      stopBartenderShaking();
+      
+      // Hide all bartender images
+      bartenderImages.forEach(img => img.classList.remove('active'));
+      
+      // Show the specified pose (1-indexed)
+      const poseIndex = poseNumber - 1;
+      if (bartenderImages[poseIndex]) {
+        bartenderImages[poseIndex].classList.add('active');
+      }
+    };
+
+    const handleRecipeModalKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        handleCloseRecipeModal();
+      }
+    };
+
+    // Show share button when experience is complete
+    const showShareButton = () => {
+      if (shareBtnContainer) {
+        shareBtnContainer.classList.add('visible');
+      }
+    };
+
+    // ==================== 
+    // SWIRL DETECTION SYSTEM
+    // ====================
+    const swirlState = {
+      isActive: false,
+      progress: 0,
+      lastBeta: null,
+      lastGamma: null,
+      cumulativeMotion: 0,
+      motionThreshold: 100, // Total motion needed to complete reveal
+      permissionGranted: false
+    };
+
+    const experienceOverlay = document.getElementById('experienceOverlay');
+    const swirlContent = document.getElementById('swirlContent');
+
+    // Check if device supports motion
+    const supportsDeviceMotion = () => {
+      return 'DeviceOrientationEvent' in window;
+    };
+
+    // Request permission for iOS 13+
+    const requestSwirlPermission = async () => {
+      if (typeof DeviceOrientationEvent !== 'undefined' &&
+          typeof DeviceOrientationEvent.requestPermission === 'function') {
+        try {
+          const permission = await DeviceOrientationEvent.requestPermission();
+          return permission === 'granted';
+        } catch (error) {
+          console.error('Motion permission error:', error);
+          return false;
+        }
+      }
+      return true; // No permission needed (Android, etc.)
+    };
+
+    // Handle device orientation for swirl detection
+    const handleSwirlOrientation = (event) => {
+      if (!swirlState.isActive || swirlState.progress >= 100) return;
+
+      const beta = event.beta || 0;  // Front-back tilt
+      const gamma = event.gamma || 0; // Left-right tilt
+
+      if (swirlState.lastBeta !== null && swirlState.lastGamma !== null) {
+        // Calculate delta movement
+        const deltaBeta = Math.abs(beta - swirlState.lastBeta);
+        const deltaGamma = Math.abs(gamma - swirlState.lastGamma);
+        
+        // Combine movements (swirl detection)
+        const movement = deltaBeta + deltaGamma;
+        
+        // Only count significant movements (filter out noise)
+        if (movement > 2) {
+          swirlState.cumulativeMotion += movement * 0.5;
+          
+          // Calculate progress percentage
+          swirlState.progress = Math.min(100, (swirlState.cumulativeMotion / swirlState.motionThreshold) * 100);
+          
+          // Update UI
+          updateSwirlProgress();
+        }
+      }
+
+      swirlState.lastBeta = beta;
+      swirlState.lastGamma = gamma;
+    };
+
+    // Update swirl progress UI
+    const updateSwirlProgress = () => {
+      // Start fading in the experience overlay at 50%
+      if (swirlState.progress >= 50 && experienceOverlay) {
+        const fadeProgress = (swirlState.progress - 50) / 50; // 0 to 1
+        experienceOverlay.style.opacity = fadeProgress;
+      }
+
+      // Complete the reveal at 100%
+      if (swirlState.progress >= 100) {
+        completeSwirl();
+      }
+    };
+
+    // Complete the swirl reveal
+    const completeSwirl = () => {
+      swirlState.isActive = false;
+      window.removeEventListener('deviceorientation', handleSwirlOrientation);
+      
+      if (experienceOverlay) {
+        experienceOverlay.classList.add('active');
+      }
+
+      // Show share button after a brief delay
+      setTimeout(() => {
+        showShareButton();
+      }, 1500);
+    };
+
+    // Start swirl detection
+    const startSwirlDetection = async () => {
+      if (!supportsDeviceMotion()) {
+        console.log('Device motion not supported');
+        return;
+      }
+
+      // Request permission if needed
+      if (!swirlState.permissionGranted) {
+        swirlState.permissionGranted = await requestSwirlPermission();
+        if (!swirlState.permissionGranted) {
+          console.log('Motion permission denied');
+          return;
+        }
+      }
+
+      // Reset state
+      swirlState.isActive = true;
+      swirlState.progress = 0;
+      swirlState.cumulativeMotion = 0;
+      swirlState.lastBeta = null;
+      swirlState.lastGamma = null;
+
+      // Start listening
+      window.addEventListener('deviceorientation', handleSwirlOrientation);
+    };
+
+    // Stop swirl detection
+    const stopSwirlDetection = () => {
+      swirlState.isActive = false;
+      window.removeEventListener('deviceorientation', handleSwirlOrientation);
+    };
+
+    // Handle tap to continue (also requests motion permission)
+    const handleSwirlFallback = async () => {
+      // Request motion permission before transitioning
+      if (!swirlState.permissionGranted) {
+        swirlState.permissionGranted = await requestSwirlPermission();
+      }
+      
+      swirlState.progress = 100;
+      updateSwirlProgress();
+      completeSwirl();
+    };
+
+    // ==================== 
+    // INITIALIZATION
+    // ====================
+    const init = () => {
+      // Destination button events
+      destinationBtns.forEach(btn => {
+        btn.addEventListener('click', handleDestinationClick);
+        btn.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            handleDestinationClick(e);
+          }
+        });
+      });
+
+      // Chat input events
+      sendBtn.addEventListener('click', handleSendMessage);
+      chatInput.addEventListener('keydown', handleKeyDown);
+
+      // Immersive drink click - navigate to 3D experience
+      const drinkContainer = document.getElementById('drinkContainer');
+      drinkContainer.addEventListener('click', () => {
+        window.location.href = 'proto-toki.html';
+      });
+      drinkContainer.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          window.location.href = 'proto-toki.html';
+        }
+      });
+
+      // Video hotspot events
+      videoHotspot.addEventListener('click', handleOpenVideoModal);
+      videoHotspot.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          handleOpenVideoModal();
+        }
+      });
+
+      // Video modal close events
+      videoModalClose.addEventListener('click', handleCloseVideoModal);
+      videoModalClose.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          handleCloseVideoModal();
+        }
+      });
+
+      // Close modal on backdrop click
+      videoModal.addEventListener('click', (e) => {
+        if (e.target === videoModal) {
+          handleCloseVideoModal();
+        }
+      });
+
+      // Close modal on Escape key
+      document.addEventListener('keydown', handleVideoModalKeyDown);
+
+      // Tap to continue on swirl screen
+      if (swirlContent) {
+        swirlContent.addEventListener('click', handleSwirlFallback);
+        swirlContent.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            handleSwirlFallback();
+          }
+        });
+      }
+
+      // Share button events
+      if (shareBtn) {
+        shareBtn.addEventListener('click', handleOpenRecipeModal);
+        shareBtn.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            handleOpenRecipeModal();
+          }
+        });
+      }
+
+      // Mix another cocktail button events
+      const mixAnotherBtn = document.getElementById('mixAnotherBtn');
+      if (mixAnotherBtn) {
+        mixAnotherBtn.addEventListener('click', navigateToRepeatability);
+        mixAnotherBtn.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            navigateToRepeatability();
+          }
+        });
+      }
+
+      // Recipe modal close events
+      if (recipeModalClose) {
+        recipeModalClose.addEventListener('click', handleCloseRecipeModal);
+        recipeModalClose.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            handleCloseRecipeModal();
+          }
+        });
+      }
+
+      // Recipe modal backdrop click
+      if (recipeModal) {
+        recipeModal.addEventListener('click', (e) => {
+          if (e.target === recipeModal || e.target.classList.contains('recipe-modal__background')) {
+            handleCloseRecipeModal();
+          }
+        });
+      }
+
+      // Recipe share and save button events
+      if (recipeShareBtn) {
+        recipeShareBtn.addEventListener('click', handleRecipeShare);
+        recipeShareBtn.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            handleRecipeShare();
+          }
+        });
+      }
+
+      if (recipeSaveBtn) {
+        recipeSaveBtn.addEventListener('click', handleRecipeSave);
+        recipeSaveBtn.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            handleRecipeSave();
+          }
+        });
+      }
+
+      // Close recipe modal on Escape key
+      document.addEventListener('keydown', handleRecipeModalKeyDown);
+    };
+
+    // Start the app
+    init();
+  </script>
+</body>
+</html>
+

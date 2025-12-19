@@ -1,0 +1,1267 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>three.js webgl - drink motion</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<link type="text/css" rel="stylesheet" href="example.css">
+		<style>
+			#iceControls {
+				position: fixed;
+				bottom: 20px;
+				left: 20px;
+				background: rgba( 27, 34, 51, 0.9 );
+				border: 1px solid rgba( 255, 255, 255, 0.15 );
+				border-radius: 12px;
+				padding: 16px 20px;
+				color: #fff;
+				font-family: system-ui, -apple-system, sans-serif;
+				font-size: 13px;
+				backdrop-filter: blur( 10px );
+				z-index: 100;
+				min-width: 180px;
+			}
+
+			#iceControls h3 {
+				margin: 0 0 14px 0;
+				font-size: 14px;
+				font-weight: 600;
+				color: rgba( 255, 255, 255, 0.9 );
+				letter-spacing: 0.5px;
+			}
+
+			.control-row {
+				display: flex;
+				align-items: center;
+				justify-content: space-between;
+				margin-bottom: 12px;
+			}
+
+			.control-row:last-child {
+				margin-bottom: 0;
+			}
+
+			.control-row label {
+				color: rgba( 255, 255, 255, 0.7 );
+				font-size: 12px;
+				min-width: 60px;
+			}
+
+			.control-row .controls {
+				display: flex;
+				align-items: center;
+				gap: 8px;
+			}
+
+			#iceControls button {
+				background: rgba( 77, 184, 255, 0.2 );
+				border: 1px solid rgba( 77, 184, 255, 0.4 );
+				color: #4db8ff;
+				padding: 6px 12px;
+				border-radius: 6px;
+				cursor: pointer;
+				font-size: 12px;
+				font-weight: 500;
+				transition: all 0.2s ease;
+			}
+
+			#iceControls button:hover {
+				background: rgba( 77, 184, 255, 0.35 );
+				border-color: rgba( 77, 184, 255, 0.6 );
+			}
+
+			#iceControls button:active {
+				transform: scale( 0.96 );
+			}
+
+			#iceControls button.active {
+				background: rgba( 77, 184, 255, 0.5 );
+				border-color: #4db8ff;
+			}
+
+			.qty-btn {
+				width: 28px;
+				height: 28px;
+				padding: 0 !important;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				font-size: 16px !important;
+				font-weight: 600 !important;
+			}
+
+			#quantityValue {
+				min-width: 24px;
+				text-align: center;
+				font-weight: 600;
+				color: #fff;
+			}
+
+			#sizeSlider {
+				width: 90px;
+				height: 4px;
+				-webkit-appearance: none;
+				appearance: none;
+				background: rgba( 255, 255, 255, 0.2 );
+				border-radius: 2px;
+				outline: none;
+				cursor: pointer;
+			}
+
+			#sizeSlider::-webkit-slider-thumb {
+				-webkit-appearance: none;
+				appearance: none;
+				width: 14px;
+				height: 14px;
+				background: #4db8ff;
+				border-radius: 50%;
+				cursor: pointer;
+				transition: transform 0.15s ease;
+			}
+
+			#sizeSlider::-webkit-slider-thumb:hover {
+				transform: scale( 1.15 );
+			}
+
+			#sizeSlider::-moz-range-thumb {
+				width: 14px;
+				height: 14px;
+				background: #4db8ff;
+				border: none;
+				border-radius: 50%;
+				cursor: pointer;
+			}
+
+			#sizeValue {
+				min-width: 32px;
+				text-align: right;
+				font-size: 11px;
+				color: rgba( 255, 255, 255, 0.6 );
+			}
+		</style>
+	</head>
+	<body>
+
+		<div id="info">
+			<a href="https://threejs.org/" target="_blank" rel="noopener" class="logo-link"></a>
+
+			<div class="title-wrapper">
+				<a href="https://threejs.org/" target="_blank" rel="noopener">three.js</a>
+				<span>Drink Swirl (Accelerometer)</span>
+			</div>
+
+			<small>
+				Tilt your phone to swirl the drink. Tap to enable motion or drag to disturb.
+			</small>
+		</div>
+
+		<div id="overlay" aria-live="polite">
+			<p>Tap to enable motion controls or keep using touch.</p>
+			<button id="enableMotionButton" aria-label="Enable motion controls">Enable motion</button>
+		</div>
+
+		<div id="iceControls" role="region" aria-label="Ice controls">
+			<h3>Ice Settings</h3>
+			<div class="control-row">
+				<label id="shapeLabel">Shape</label>
+				<div class="controls">
+					<button id="shapeCube" class="active" aria-pressed="true" aria-describedby="shapeLabel">Cube</button>
+					<button id="shapeSphere" aria-pressed="false" aria-describedby="shapeLabel">Sphere</button>
+				</div>
+			</div>
+			<div class="control-row">
+				<label for="sizeSlider">Size</label>
+				<div class="controls">
+					<input type="range" id="sizeSlider" min="0.08" max="0.25" step="0.01" value="0.15" aria-label="Ice size">
+					<span id="sizeValue">0.15</span>
+				</div>
+			</div>
+			<div class="control-row">
+				<label id="quantityLabel">Quantity</label>
+				<div class="controls">
+					<button id="quantityMinus" class="qty-btn" aria-label="Decrease quantity" aria-describedby="quantityLabel">−</button>
+					<span id="quantityValue" aria-live="polite">3</span>
+					<button id="quantityPlus" class="qty-btn" aria-label="Increase quantity" aria-describedby="quantityLabel">+</button>
+				</div>
+			</div>
+		</div>
+
+		<script type="importmap">
+			{
+				"imports": {
+					"three": "../build/three.module.js",
+					"three/addons/": "./jsm/"
+				}
+			}
+		</script>
+
+		<script type="module">
+
+			import * as THREE from 'three';
+			import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+			let Ammo;
+			let renderer, scene, camera, controls;
+			let liquidSurface, liquidBody;
+			let liquidUniforms;
+			let raycaster;
+			let waterPlane;
+			let glassOuter, glassInner;
+			const mouse = new THREE.Vector2();
+			let motionOverlay = null;
+			let enableMotionButton = null;
+
+			// Physics variables
+			let physicsWorld;
+			let tmpTransform;
+			let tmpVector;
+			let tmpQuaternion;
+			const iceObjects = [];
+			const PHYSICS_TIMESTEP = 1 / 60;
+
+			// Ice configuration
+			const iceConfig = {
+				shape: 'cube',
+				size: 0.15,
+				quantity: 3,
+				minSize: 0.08,
+				maxSize: 0.25,
+				maxQuantity: 8,
+				density: 917, // kg/m³ (ice density)
+				liquidDensity: 1000, // kg/m³ (water density)
+			};
+
+			// Glass wall collider body
+			let glassWallBody = null;
+			let glassBottomBody = null;
+
+			const motionState = {
+				enabled: false,
+				available: false,
+				tilt: new THREE.Vector2(),
+				targetTilt: new THREE.Vector2(),
+				ripplePos: new THREE.Vector2( 10000, 10000 ),
+				rippleStrength: 0,
+				lastUpdate: 0,
+			};
+
+			// Liquid configuration
+			const LIQUID_RADIUS = 1.1;
+			const LIQUID_HEIGHT = 1.6;
+			const LIQUID_BASE_Y = 0.1;
+			const LIQUID_SURFACE_Y = LIQUID_BASE_Y + LIQUID_HEIGHT;
+			const LIQUID_COLOR = 0x4db8ff;
+
+			// Glass configuration
+			const GLASS_RADIUS = 1.15;
+			const GLASS_HEIGHT = 2;
+
+			// Load Ammo.js and initialize
+			async function loadAmmo() {
+
+				const AmmoLib = await import( './jsm/libs/ammo.wasm.js' );
+				Ammo = await AmmoLib.default();
+				return Ammo;
+
+			}
+
+			loadAmmo().then( () => {
+
+				init();
+
+			} );
+
+			function initPhysics() {
+
+				// Collision configuration
+				const collisionConfiguration = new Ammo.btDefaultCollisionConfiguration();
+				const dispatcher = new Ammo.btCollisionDispatcher( collisionConfiguration );
+				const broadphase = new Ammo.btDbvtBroadphase();
+				const solver = new Ammo.btSequentialImpulseConstraintSolver();
+
+				physicsWorld = new Ammo.btDiscreteDynamicsWorld(
+					dispatcher,
+					broadphase,
+					solver,
+					collisionConfiguration
+				);
+				physicsWorld.setGravity( new Ammo.btVector3( 0, - 9.81, 0 ) );
+
+				// Create temporary objects for transforms
+				tmpTransform = new Ammo.btTransform();
+				tmpVector = new Ammo.btVector3();
+				tmpQuaternion = new Ammo.btQuaternion();
+
+				// Create glass wall collider (static cylinder)
+				createGlassCollider();
+
+			}
+
+			function createGlassCollider() {
+
+				// Create cylindrical wall using compound shape with box segments
+				const wallThickness = 0.05;
+				const segments = 32;
+				const angleStep = ( Math.PI * 2 ) / segments;
+
+				const compoundShape = new Ammo.btCompoundShape();
+
+				for ( let i = 0; i < segments; i ++ ) {
+
+					const angle = i * angleStep;
+					const nextAngle = ( i + 1 ) * angleStep;
+					const midAngle = ( angle + nextAngle ) / 2;
+
+					// Calculate segment dimensions
+					const segmentWidth = GLASS_RADIUS * angleStep * 1.1;
+					const segmentHeight = GLASS_HEIGHT;
+					const segmentDepth = wallThickness;
+
+					const boxShape = new Ammo.btBoxShape(
+						new Ammo.btVector3( segmentWidth / 2, segmentHeight / 2, segmentDepth / 2 )
+					);
+
+					const localTransform = new Ammo.btTransform();
+					localTransform.setIdentity();
+
+					const x = Math.cos( midAngle ) * GLASS_RADIUS;
+					const z = Math.sin( midAngle ) * GLASS_RADIUS;
+					localTransform.setOrigin( new Ammo.btVector3( x, 0, z ) );
+
+					const quat = new Ammo.btQuaternion();
+					quat.setRotation( new Ammo.btVector3( 0, 1, 0 ), - midAngle );
+					localTransform.setRotation( quat );
+
+					compoundShape.addChildShape( localTransform, boxShape );
+
+				}
+
+				const transform = new Ammo.btTransform();
+				transform.setIdentity();
+				transform.setOrigin( new Ammo.btVector3( 0, 1, 0 ) );
+
+				const motionState = new Ammo.btDefaultMotionState( transform );
+				const rbInfo = new Ammo.btRigidBodyConstructionInfo(
+					0, // mass = 0 for static
+					motionState,
+					compoundShape,
+					new Ammo.btVector3( 0, 0, 0 )
+				);
+
+				glassWallBody = new Ammo.btRigidBody( rbInfo );
+				glassWallBody.setFriction( 0.3 );
+				glassWallBody.setRestitution( 0.4 );
+				physicsWorld.addRigidBody( glassWallBody );
+
+				// Create bottom collider
+				const bottomShape = new Ammo.btBoxShape(
+					new Ammo.btVector3( GLASS_RADIUS, 0.05, GLASS_RADIUS )
+				);
+
+				const bottomTransform = new Ammo.btTransform();
+				bottomTransform.setIdentity();
+				bottomTransform.setOrigin( new Ammo.btVector3( 0, LIQUID_BASE_Y - 0.05, 0 ) );
+
+				const bottomMotionState = new Ammo.btDefaultMotionState( bottomTransform );
+				const bottomRbInfo = new Ammo.btRigidBodyConstructionInfo(
+					0,
+					bottomMotionState,
+					bottomShape,
+					new Ammo.btVector3( 0, 0, 0 )
+				);
+
+				glassBottomBody = new Ammo.btRigidBody( bottomRbInfo );
+				glassBottomBody.setFriction( 0.5 );
+				glassBottomBody.setRestitution( 0.2 );
+				physicsWorld.addRigidBody( glassBottomBody );
+
+			}
+
+			function createIceMaterial() {
+
+				return new THREE.MeshPhysicalMaterial( {
+					color: 0xddf4ff,
+					metalness: 0,
+					roughness: 0.15,
+					transmission: 0.85,
+					opacity: 1,
+					transparent: true,
+					thickness: 0.3,
+					clearcoat: 0.3,
+					clearcoatRoughness: 0.25,
+					ior: 1.31,
+					envMapIntensity: 0.8,
+				} );
+
+			}
+
+			function createIceMesh( shape, size ) {
+
+				let geometry;
+
+				if ( shape === 'sphere' ) {
+
+					geometry = new THREE.SphereGeometry( size, 24, 24 );
+
+				} else {
+
+					geometry = new THREE.BoxGeometry( size * 2, size * 2, size * 2 );
+
+				}
+
+				const material = createIceMaterial();
+				const mesh = new THREE.Mesh( geometry, material );
+				mesh.renderOrder = 5;
+
+				return mesh;
+
+			}
+
+			function createIceBody( shape, size, position ) {
+
+				let collisionShape;
+
+				if ( shape === 'sphere' ) {
+
+					collisionShape = new Ammo.btSphereShape( size );
+
+				} else {
+
+					collisionShape = new Ammo.btBoxShape(
+						new Ammo.btVector3( size, size, size )
+					);
+
+				}
+
+				// Calculate mass based on volume and density
+				let volume;
+				if ( shape === 'sphere' ) {
+
+					volume = ( 4 / 3 ) * Math.PI * Math.pow( size, 3 );
+
+				} else {
+
+					volume = Math.pow( size * 2, 3 );
+
+				}
+
+				const mass = volume * iceConfig.density;
+
+				const transform = new Ammo.btTransform();
+				transform.setIdentity();
+				transform.setOrigin( new Ammo.btVector3( position.x, position.y, position.z ) );
+
+				// Add slight random rotation
+				const quat = new Ammo.btQuaternion();
+				quat.setEulerZYX(
+					Math.random() * Math.PI * 2,
+					Math.random() * Math.PI * 2,
+					Math.random() * Math.PI * 2
+				);
+				transform.setRotation( quat );
+
+				const localInertia = new Ammo.btVector3( 0, 0, 0 );
+				collisionShape.calculateLocalInertia( mass, localInertia );
+
+				const motionState = new Ammo.btDefaultMotionState( transform );
+				const rbInfo = new Ammo.btRigidBodyConstructionInfo(
+					mass,
+					motionState,
+					collisionShape,
+					localInertia
+				);
+
+				const body = new Ammo.btRigidBody( rbInfo );
+				body.setFriction( 0.4 );
+				body.setRestitution( 0.3 );
+				body.setDamping( 0.3, 0.5 );
+				body.setActivationState( 4 ); // Disable deactivation
+
+				return body;
+
+			}
+
+			function spawnIce() {
+
+				if ( iceObjects.length >= iceConfig.maxQuantity ) return;
+
+				// Random position above liquid surface, within glass radius
+				const angle = Math.random() * Math.PI * 2;
+				const radius = Math.random() * ( LIQUID_RADIUS - iceConfig.size - 0.1 );
+				const position = new THREE.Vector3(
+					Math.cos( angle ) * radius,
+					LIQUID_SURFACE_Y + iceConfig.size + 0.1,
+					Math.sin( angle ) * radius
+				);
+
+				const mesh = createIceMesh( iceConfig.shape, iceConfig.size );
+				mesh.position.copy( position );
+				scene.add( mesh );
+
+				const body = createIceBody( iceConfig.shape, iceConfig.size, position );
+				physicsWorld.addRigidBody( body );
+
+				iceObjects.push( { mesh, body, size: iceConfig.size, shape: iceConfig.shape } );
+
+			}
+
+			function removeIce() {
+
+				if ( iceObjects.length === 0 ) return;
+
+				const ice = iceObjects.pop();
+				scene.remove( ice.mesh );
+				ice.mesh.geometry.dispose();
+				ice.mesh.material.dispose();
+				physicsWorld.removeRigidBody( ice.body );
+
+			}
+
+			function clearAllIce() {
+
+				while ( iceObjects.length > 0 ) {
+
+					removeIce();
+
+				}
+
+			}
+
+			function rebuildAllIce() {
+
+				const count = iceObjects.length;
+				clearAllIce();
+
+				for ( let i = 0; i < count; i ++ ) {
+
+					spawnIce();
+
+				}
+
+			}
+
+			function setIceQuantity( quantity ) {
+
+				const targetQuantity = Math.max( 0, Math.min( quantity, iceConfig.maxQuantity ) );
+				iceConfig.quantity = targetQuantity;
+
+				while ( iceObjects.length < targetQuantity ) {
+
+					spawnIce();
+
+				}
+
+				while ( iceObjects.length > targetQuantity ) {
+
+					removeIce();
+
+				}
+
+				updateQuantityDisplay();
+
+			}
+
+			function updateQuantityDisplay() {
+
+				const quantityValue = document.getElementById( 'quantityValue' );
+				if ( quantityValue ) {
+
+					quantityValue.textContent = iceObjects.length;
+
+				}
+
+			}
+
+			function applyBuoyancy() {
+
+				const tiltX = liquidUniforms.uTilt.value.x;
+				const tiltY = liquidUniforms.uTilt.value.y;
+
+				for ( const ice of iceObjects ) {
+
+					const body = ice.body;
+					const size = ice.size;
+					const shape = ice.shape;
+
+					// Get current position
+					const ms = body.getMotionState();
+					ms.getWorldTransform( tmpTransform );
+					const origin = tmpTransform.getOrigin();
+					const posY = origin.y();
+					const posX = origin.x();
+					const posZ = origin.z();
+
+					// Calculate local liquid surface height based on tilt
+					const localSurfaceY = LIQUID_SURFACE_Y + ( posX * tiltX + posZ * tiltY ) * 0.25;
+
+					// Calculate submerged ratio
+					let submergedRatio = 0;
+					const objectBottom = posY - size;
+					const objectTop = posY + size;
+
+					if ( objectBottom >= localSurfaceY ) {
+
+						// Completely above water
+						submergedRatio = 0;
+
+					} else if ( objectTop <= localSurfaceY ) {
+
+						// Completely submerged
+						submergedRatio = 1;
+
+					} else {
+
+						// Partially submerged
+						const submergedHeight = localSurfaceY - objectBottom;
+						const totalHeight = size * 2;
+						submergedRatio = Math.min( 1, Math.max( 0, submergedHeight / totalHeight ) );
+
+					}
+
+					// Calculate buoyancy force
+					let volume;
+					if ( shape === 'sphere' ) {
+
+						volume = ( 4 / 3 ) * Math.PI * Math.pow( size, 3 );
+
+					} else {
+
+						volume = Math.pow( size * 2, 3 );
+
+					}
+
+					const displacedVolume = volume * submergedRatio;
+					const buoyancyForce = displacedVolume * iceConfig.liquidDensity * 9.81;
+
+					// Apply buoyancy force
+					if ( submergedRatio > 0 ) {
+
+						tmpVector.setValue( 0, buoyancyForce, 0 );
+						body.applyCentralForce( tmpVector );
+
+						// Apply damping when in water
+						const velocity = body.getLinearVelocity();
+						const dampingFactor = 0.98;
+						tmpVector.setValue(
+							velocity.x() * dampingFactor,
+							velocity.y() * dampingFactor,
+							velocity.z() * dampingFactor
+						);
+						body.setLinearVelocity( tmpVector );
+
+						// Apply rotational damping
+						const angVelocity = body.getAngularVelocity();
+						const angDampingFactor = 0.95;
+						tmpVector.setValue(
+							angVelocity.x() * angDampingFactor,
+							angVelocity.y() * angDampingFactor,
+							angVelocity.z() * angDampingFactor
+						);
+						body.setAngularVelocity( tmpVector );
+
+					}
+
+					// Apply tilt-based lateral force (simulates liquid flow)
+					if ( submergedRatio > 0.1 ) {
+
+						const flowStrength = 2.0;
+						tmpVector.setValue(
+							tiltX * flowStrength * submergedRatio,
+							0,
+							tiltY * flowStrength * submergedRatio
+						);
+						body.applyCentralForce( tmpVector );
+
+					}
+
+					// Keep ice within bounds (backup constraint)
+					const distFromCenter = Math.sqrt( posX * posX + posZ * posZ );
+					if ( distFromCenter > LIQUID_RADIUS - size ) {
+
+						const pushStrength = 10;
+						const normX = - posX / distFromCenter;
+						const normZ = - posZ / distFromCenter;
+						tmpVector.setValue(
+							normX * pushStrength,
+							0,
+							normZ * pushStrength
+						);
+						body.applyCentralForce( tmpVector );
+
+					}
+
+				}
+
+			}
+
+			function syncPhysicsToGraphics() {
+
+				for ( const ice of iceObjects ) {
+
+					const body = ice.body;
+					const mesh = ice.mesh;
+
+					const ms = body.getMotionState();
+					if ( ms ) {
+
+						ms.getWorldTransform( tmpTransform );
+						const p = tmpTransform.getOrigin();
+						const q = tmpTransform.getRotation();
+
+						mesh.position.set( p.x(), p.y(), p.z() );
+						mesh.quaternion.set( q.x(), q.y(), q.z(), q.w() );
+
+					}
+
+				}
+
+			}
+
+			function stepPhysics( deltaTime ) {
+
+				if ( ! physicsWorld ) return;
+
+				applyBuoyancy();
+				physicsWorld.stepSimulation( deltaTime, 10, PHYSICS_TIMESTEP );
+				syncPhysicsToGraphics();
+
+			}
+
+			function setupIceControls() {
+
+				const shapeCubeBtn = document.getElementById( 'shapeCube' );
+				const shapeSphereBtn = document.getElementById( 'shapeSphere' );
+				const sizeSlider = document.getElementById( 'sizeSlider' );
+				const sizeValue = document.getElementById( 'sizeValue' );
+				const quantityMinus = document.getElementById( 'quantityMinus' );
+				const quantityPlus = document.getElementById( 'quantityPlus' );
+
+				const handleShapeCube = () => {
+
+					if ( iceConfig.shape === 'cube' ) return;
+					iceConfig.shape = 'cube';
+					shapeCubeBtn.classList.add( 'active' );
+					shapeCubeBtn.setAttribute( 'aria-pressed', 'true' );
+					shapeSphereBtn.classList.remove( 'active' );
+					shapeSphereBtn.setAttribute( 'aria-pressed', 'false' );
+					rebuildAllIce();
+
+				};
+
+				const handleShapeSphere = () => {
+
+					if ( iceConfig.shape === 'sphere' ) return;
+					iceConfig.shape = 'sphere';
+					shapeSphereBtn.classList.add( 'active' );
+					shapeSphereBtn.setAttribute( 'aria-pressed', 'true' );
+					shapeCubeBtn.classList.remove( 'active' );
+					shapeCubeBtn.setAttribute( 'aria-pressed', 'false' );
+					rebuildAllIce();
+
+				};
+
+				const handleSizeChange = () => {
+
+					iceConfig.size = parseFloat( sizeSlider.value );
+					sizeValue.textContent = iceConfig.size.toFixed( 2 );
+					rebuildAllIce();
+
+				};
+
+				const handleQuantityMinus = () => {
+
+					setIceQuantity( iceConfig.quantity - 1 );
+
+				};
+
+				const handleQuantityPlus = () => {
+
+					setIceQuantity( iceConfig.quantity + 1 );
+
+				};
+
+				shapeCubeBtn.addEventListener( 'click', handleShapeCube );
+				shapeSphereBtn.addEventListener( 'click', handleShapeSphere );
+				sizeSlider.addEventListener( 'input', handleSizeChange );
+				quantityMinus.addEventListener( 'click', handleQuantityMinus );
+				quantityPlus.addEventListener( 'click', handleQuantityPlus );
+
+				// Keyboard support
+				shapeCubeBtn.addEventListener( 'keydown', ( e ) => {
+
+					if ( e.key === 'Enter' || e.key === ' ' ) handleShapeCube();
+
+				} );
+				shapeSphereBtn.addEventListener( 'keydown', ( e ) => {
+
+					if ( e.key === 'Enter' || e.key === ' ' ) handleShapeSphere();
+
+				} );
+				quantityMinus.addEventListener( 'keydown', ( e ) => {
+
+					if ( e.key === 'Enter' || e.key === ' ' ) handleQuantityMinus();
+
+				} );
+				quantityPlus.addEventListener( 'keydown', ( e ) => {
+
+					if ( e.key === 'Enter' || e.key === ' ' ) handleQuantityPlus();
+
+				} );
+
+			}
+
+			function init() {
+
+				renderer = new THREE.WebGLRenderer( { antialias: true } );
+				renderer.setPixelRatio( window.devicePixelRatio );
+				renderer.setSize( window.innerWidth, window.innerHeight );
+				renderer.outputColorSpace = THREE.SRGBColorSpace;
+				renderer.toneMapping = THREE.ACESFilmicToneMapping;
+				renderer.toneMappingExposure = 1.0;
+				document.body.appendChild( renderer.domElement );
+
+				scene = new THREE.Scene();
+				scene.background = new THREE.Color( 0x1b2233 );
+
+				camera = new THREE.PerspectiveCamera( 55, window.innerWidth / window.innerHeight, 0.1, 100 );
+				camera.position.set( 0, 2.5, 3.5 );
+				camera.lookAt( 0, 1, 0 );
+
+				const ambient = new THREE.AmbientLight( 0xffffff, 1.2 );
+				scene.add( ambient );
+
+				const hemi = new THREE.HemisphereLight( 0xdde7ff, 0x1e2230, 0.8 );
+				scene.add( hemi );
+
+				const dir = new THREE.DirectionalLight( 0xffffff, 2.0 );
+				dir.position.set( 2, 4, 1.2 );
+				dir.castShadow = false;
+				scene.add( dir );
+
+				const backLight = new THREE.DirectionalLight( 0x88aaff, 0.5 );
+				backLight.position.set( - 2, 2, - 2 );
+				scene.add( backLight );
+
+				const floor = new THREE.Mesh(
+					new THREE.CircleGeometry( 6, 64 ),
+					new THREE.MeshStandardMaterial( { color: 0x242a3a, roughness: 0.65, metalness: 0.08 } )
+				);
+				floor.rotation.x = - Math.PI * 0.5;
+				floor.receiveShadow = true;
+				scene.add( floor );
+
+				// Initialize physics
+				initPhysics();
+
+				buildLiquid();
+				buildGlass();
+
+				// Spawn initial ice
+				for ( let i = 0; i < iceConfig.quantity; i ++ ) {
+
+					spawnIce();
+
+				}
+
+				controls = new OrbitControls( camera, renderer.domElement );
+				controls.enableDamping = true;
+				controls.target.set( 0, 1, 0 );
+
+				raycaster = new THREE.Raycaster();
+				renderer.domElement.addEventListener( 'pointermove', onPointerMove );
+				renderer.domElement.addEventListener( 'pointerdown', onPointerDown );
+
+				window.addEventListener( 'resize', onWindowResize );
+
+				setupMotionOverlay();
+				setupIceControls();
+
+				renderer.setAnimationLoop( animate );
+
+			}
+
+			function buildGlass() {
+
+				const glassHeight = 2;
+				const glassRadius = 1.2;
+				const thickness = 0.05;
+
+				const outer = new THREE.CylinderGeometry( glassRadius, glassRadius, glassHeight, 64, 1, true );
+				const inner = new THREE.CylinderGeometry( glassRadius - thickness, glassRadius - thickness, glassHeight, 64, 1, true );
+
+				inner.computeVertexNormals();
+
+				const glassMaterialOuter = new THREE.MeshPhysicalMaterial( {
+					color: 0xffffff,
+					metalness: 0,
+					roughness: 0.02,
+					transmission: 0.98,
+					opacity: 1,
+					transparent: true,
+					thickness: 0.1,
+					clearcoat: 1.0,
+					ior: 1.5,
+					envMapIntensity: 1.0,
+					depthWrite: false,
+				} );
+
+				const glassMaterialInner = new THREE.MeshPhysicalMaterial( {
+					color: 0xffffff,
+					metalness: 0,
+					roughness: 0.02,
+					transmission: 0.98,
+					opacity: 1,
+					transparent: true,
+					thickness: 0.1,
+					clearcoat: 1.0,
+					ior: 1.5,
+					side: THREE.BackSide,
+					depthWrite: false,
+				} );
+
+				glassOuter = new THREE.Mesh( outer, glassMaterialOuter );
+				glassInner = new THREE.Mesh( inner, glassMaterialInner );
+
+				glassOuter.position.y = 1;
+				glassInner.position.y = 1;
+
+				glassOuter.renderOrder = 10;
+				glassInner.renderOrder = 9;
+
+				scene.add( glassOuter );
+				scene.add( glassInner );
+
+				const base = new THREE.Mesh(
+					new THREE.CylinderGeometry( glassRadius, glassRadius, 0.08, 48 ),
+					new THREE.MeshPhysicalMaterial( {
+						color: 0xffffff,
+						metalness: 0,
+						roughness: 0.05,
+						transmission: 0.9,
+						transparent: true,
+						thickness: 0.08,
+						ior: 1.5,
+						depthWrite: false,
+					} )
+				);
+				base.position.y = 0.04;
+				base.renderOrder = 8;
+				scene.add( base );
+
+			}
+
+			function buildLiquid() {
+
+				liquidUniforms = {
+					uTime: { value: 0 },
+					uTilt: { value: new THREE.Vector2() },
+					uRippleCenter: { value: new THREE.Vector2( 10000, 10000 ) },
+					uRippleStrength: { value: 0 },
+					uLiquidHeight: { value: LIQUID_HEIGHT },
+					uSurfaceY: { value: LIQUID_SURFACE_Y },
+				};
+
+				// Liquid surface (top) - animated waves
+				const surfaceSegments = 64;
+				const surfaceGeometry = new THREE.CircleGeometry( LIQUID_RADIUS, surfaceSegments );
+				surfaceGeometry.rotateX( - Math.PI * 0.5 );
+				surfaceGeometry.translate( 0, LIQUID_SURFACE_Y, 0 );
+
+				const surfaceMaterial = new THREE.MeshStandardMaterial( {
+					color: LIQUID_COLOR,
+					metalness: 0.1,
+					roughness: 0.1,
+					transparent: true,
+					opacity: 0.85,
+					emissive: 0x0a3366,
+					emissiveIntensity: 0.15,
+					side: THREE.DoubleSide,
+					depthWrite: true,
+				} );
+
+				surfaceMaterial.onBeforeCompile = ( shader ) => {
+
+					shader.uniforms.uTime = liquidUniforms.uTime;
+					shader.uniforms.uTilt = liquidUniforms.uTilt;
+					shader.uniforms.uRippleCenter = liquidUniforms.uRippleCenter;
+					shader.uniforms.uRippleStrength = liquidUniforms.uRippleStrength;
+
+					shader.vertexShader = shader.vertexShader.replace(
+						'#include <common>',
+						`#include <common>
+						uniform float uTime;
+						uniform vec2 uTilt;
+						uniform vec2 uRippleCenter;
+						uniform float uRippleStrength;
+						varying float vWaveHeight;`
+					);
+
+					shader.vertexShader = shader.vertexShader.replace(
+						'#include <begin_vertex>',
+						`vec3 transformed = vec3( position );
+						float tilt = dot( transformed.xz, uTilt ) * 0.25;
+						float wave = sin( transformed.x * 3.0 + uTime * 1.2 ) * 0.015 
+						           + sin( transformed.z * 3.5 + uTime * 0.9 ) * 0.015
+						           + sin( ( transformed.x + transformed.z ) * 2.0 + uTime * 1.5 ) * 0.01;
+						float dist = length( transformed.xz - uRippleCenter );
+						float ripple = uRippleStrength * exp( - dist * 2.5 ) * sin( 10.0 * dist - uTime * 4.0 );
+						float totalWave = tilt + wave + ripple;
+						transformed.y += totalWave;
+						vWaveHeight = totalWave;`
+					);
+
+					shader.fragmentShader = shader.fragmentShader.replace(
+						'#include <common>',
+						`#include <common>
+						varying float vWaveHeight;`
+					);
+
+					surfaceMaterial.userData.shader = shader;
+
+				};
+
+				liquidSurface = new THREE.Mesh( surfaceGeometry, surfaceMaterial );
+				liquidSurface.renderOrder = 2;
+				scene.add( liquidSurface );
+
+				// Liquid body (cylinder sides + bottom)
+				const bodyGeometry = new THREE.CylinderGeometry( 
+					LIQUID_RADIUS, 
+					LIQUID_RADIUS, 
+					LIQUID_HEIGHT, 
+					64, 
+					1, 
+					true 
+				);
+				bodyGeometry.translate( 0, LIQUID_BASE_Y + LIQUID_HEIGHT * 0.5, 0 );
+
+				const bodyMaterial = new THREE.MeshStandardMaterial( {
+					color: LIQUID_COLOR,
+					metalness: 0.05,
+					roughness: 0.15,
+					transparent: true,
+					opacity: 0.7,
+					emissive: 0x0a3366,
+					emissiveIntensity: 0.1,
+					side: THREE.DoubleSide,
+					depthWrite: false,
+				} );
+
+				liquidBody = new THREE.Mesh( bodyGeometry, bodyMaterial );
+				liquidBody.renderOrder = 1;
+				scene.add( liquidBody );
+
+				// Liquid bottom cap
+				const bottomGeometry = new THREE.CircleGeometry( LIQUID_RADIUS, 64 );
+				bottomGeometry.rotateX( Math.PI * 0.5 );
+				bottomGeometry.translate( 0, LIQUID_BASE_Y, 0 );
+
+				const bottomMaterial = new THREE.MeshStandardMaterial( {
+					color: LIQUID_COLOR,
+					metalness: 0.05,
+					roughness: 0.2,
+					transparent: true,
+					opacity: 0.6,
+					emissive: 0x0a3366,
+					emissiveIntensity: 0.08,
+					side: THREE.DoubleSide,
+					depthWrite: false,
+				} );
+
+				const liquidBottom = new THREE.Mesh( bottomGeometry, bottomMaterial );
+				liquidBottom.renderOrder = 0;
+				scene.add( liquidBottom );
+
+				// Invisible plane for raycasting
+				waterPlane = new THREE.Mesh(
+					new THREE.PlaneGeometry( LIQUID_RADIUS * 2, LIQUID_RADIUS * 2 ),
+					new THREE.MeshBasicMaterial( { visible: false } )
+				);
+				waterPlane.rotation.x = - Math.PI * 0.5;
+				waterPlane.position.y = LIQUID_SURFACE_Y;
+				scene.add( waterPlane );
+
+			}
+
+			function onPointerMove( event ) {
+
+				setMouseFromEvent( event );
+
+			}
+
+			function onPointerDown( event ) {
+
+				setMouseFromEvent( event );
+				triggerRipple();
+
+			}
+
+			function setMouseFromEvent( event ) {
+
+				const rect = renderer.domElement.getBoundingClientRect();
+				mouse.set(
+					( ( event.clientX - rect.left ) / rect.width ) * 2 - 1,
+					- ( ( event.clientY - rect.top ) / rect.height ) * 2 + 1
+				);
+
+			}
+
+			function triggerRipple() {
+
+				raycaster.setFromCamera( mouse, camera );
+				const hit = raycaster.intersectObject( waterPlane );
+				if ( hit.length === 0 ) return;
+
+				const point = hit[ 0 ].point;
+				liquidUniforms.uRippleCenter.value.set( point.x, point.z );
+				liquidUniforms.uRippleStrength.value = Math.min( liquidUniforms.uRippleStrength.value + 0.5, 1.5 );
+
+			}
+
+			function setupMotionOverlay() {
+
+				motionOverlay = document.getElementById( 'overlay' );
+				enableMotionButton = document.getElementById( 'enableMotionButton' );
+
+				if ( ! enableMotionButton ) return;
+
+				enableMotionButton.addEventListener( 'click', () => {
+
+					if ( motionOverlay ) motionOverlay.style.display = 'none';
+					requestMotionAccess();
+
+				}, { once: true } );
+
+			}
+
+			async function requestMotionAccess() {
+
+				const granted = await askForMotionPermission();
+				if ( ! granted ) return;
+
+				motionState.enabled = true;
+				startMotionListeners();
+
+			}
+
+			async function askForMotionPermission() {
+
+				const tryPermission = async ( ctor ) => {
+
+					if ( typeof ctor === 'undefined' || typeof ctor.requestPermission !== 'function' ) return true;
+					try {
+
+						const response = await ctor.requestPermission();
+						return response === 'granted';
+
+					} catch ( err ) {
+
+						console.warn( 'Motion permission request failed', err );
+						return false;
+
+					}
+
+				};
+
+				const motionGranted = await tryPermission( window.DeviceMotionEvent );
+				const orientationGranted = await tryPermission( window.DeviceOrientationEvent );
+				return motionGranted || orientationGranted;
+
+			}
+
+			function startMotionListeners() {
+
+				if ( motionState.available ) return;
+
+				window.addEventListener( 'deviceorientation', handleOrientation, true );
+				window.addEventListener( 'devicemotion', handleMotion, true );
+				motionState.available = true;
+
+			}
+
+			function handleOrientation( event ) {
+
+				if ( ! motionState.enabled ) return;
+
+				const gamma = event.gamma ?? 0;
+				const beta = event.beta ?? 0;
+
+				const normX = THREE.MathUtils.clamp( gamma / 45, - 1, 1 );
+				const normY = THREE.MathUtils.clamp( beta / 45, - 1, 1 );
+
+				motionState.targetTilt.set( normX, normY );
+				motionState.lastUpdate = performance.now();
+
+			}
+
+			function handleMotion( event ) {
+
+				if ( ! motionState.enabled ) return;
+				if ( ! event.accelerationIncludingGravity ) return;
+
+				const { x = 0, y = 0, z = 0 } = event.accelerationIncludingGravity;
+				const magnitude = Math.sqrt( x * x + y * y + z * z );
+				const impulse = THREE.MathUtils.clamp( Math.abs( magnitude - 9.8 ) / 12, 0, 1 );
+				motionState.rippleStrength = Math.max( motionState.rippleStrength, impulse * 0.5 );
+				motionState.lastUpdate = performance.now();
+
+			}
+
+			function applyMotion() {
+
+				const now = performance.now();
+				const fresh = now - motionState.lastUpdate < 600;
+
+				if ( motionState.enabled && fresh ) {
+
+					motionState.tilt.lerp( motionState.targetTilt, 0.12 );
+					liquidUniforms.uTilt.value.lerp( motionState.tilt, 0.2 );
+
+					if ( motionState.rippleStrength > 0.02 ) {
+
+						liquidUniforms.uRippleStrength.value = Math.min( liquidUniforms.uRippleStrength.value + motionState.rippleStrength, 1.3 );
+						motionState.rippleStrength *= 0.9;
+
+					} else {
+
+						motionState.rippleStrength *= 0.8;
+
+					}
+
+				} else {
+
+					motionState.tilt.lerp( new THREE.Vector2(), 0.05 );
+					liquidUniforms.uTilt.value.lerp( motionState.tilt, 0.2 );
+
+				}
+
+				liquidUniforms.uRippleStrength.value *= 0.96;
+
+			}
+
+			function animate() {
+
+				const deltaTime = 1 / 60;
+
+				liquidUniforms.uTime.value += 0.016;
+				applyMotion();
+
+				// Step physics simulation
+				stepPhysics( deltaTime );
+
+				controls.update();
+				renderer.render( scene, camera );
+
+			}
+
+			function onWindowResize() {
+
+				camera.aspect = window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
+				renderer.setSize( window.innerWidth, window.innerHeight );
+
+			}
+
+		</script>
+	</body>
+</html>

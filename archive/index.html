@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>The House of Suntory - Toki Highball Experience</title>
+	<style>
+		@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Cormorant+Garamond:wght@400;500;600&display=swap');
+
+		* {
+			margin: 0;
+			padding: 0;
+			box-sizing: border-box;
+		}
+
+		body {
+			font-family: 'Noto Sans JP', sans-serif;
+			background: #f5f5f5;
+			color: #1a1a1a;
+			overflow-x: hidden;
+			-webkit-font-smoothing: antialiased;
+			-moz-osx-font-smoothing: grayscale;
+		}
+
+		.screen {
+			position: fixed;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100vh;
+			display: flex;
+			flex-direction: column;
+			opacity: 0;
+			visibility: hidden;
+			transition: opacity 0.5s ease, visibility 0.5s ease;
+			overflow-y: auto;
+		}
+
+		.screen.active {
+			opacity: 1;
+			visibility: visible;
+		}
+
+		/* Screen 1 - Landing */
+		.screen-1 {
+			background: linear-gradient(180deg, #e8e8e8 0%, #f0f0f0 100%);
+			justify-content: center;
+			align-items: center;
+			text-align: center;
+		}
+
+		.video-background {
+			position: absolute;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+			background: rgba(200, 200, 200, 0.3);
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			color: #888;
+			font-size: 14px;
+			z-index: 1;
+		}
+
+		.screen-1-content {
+			position: relative;
+			z-index: 2;
+			width: 100%;
+			max-width: 600px;
+			padding: 40px 20px;
+		}
+
+		.brand-title {
+			font-family: 'Cormorant Garamond', serif;
+			font-size: 24px;
+			font-weight: 500;
+			color: #2a2a2a;
+			letter-spacing: 2px;
+			margin-bottom: 30px;
+			text-transform: uppercase;
+		}
+
+		.main-title {
+			font-family: 'Noto Sans JP', sans-serif;
+			font-size: 48px;
+			font-weight: 700;
+			color: #1a1a1a;
+			margin-bottom: 60px;
+			line-height: 1.2;
+		}
+
+		.enter-button {
+			background: #8b6f47;
+			color: #ffffff;
+			border: none;
+			padding: 18px 40px;
+			font-size: 14px;
+			font-weight: 500;
+			letter-spacing: 1px;
+			text-transform: uppercase;
+			cursor: pointer;
+			border-radius: 4px;
+			transition: background 0.3s ease, transform 0.2s ease;
+			font-family: 'Noto Sans JP', sans-serif;
+		}
+
+		.enter-button:hover {
+			background: #7a5f3a;
+			transform: translateY(-2px);
+		}
+
+		.enter-button:active {
+			transform: translateY(0);
+		}
+
+		/* Screen 2 & 3 - Chat Interface */
+		.screen-2, .screen-3 {
+			background: #ffffff;
+		}
+
+		.header {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			padding: 20px;
+			border-bottom: 1px solid #e8e8e8;
+		}
+
+		.header-title {
+			font-family: 'Cormorant Garamond', serif;
+			font-size: 18px;
+			font-weight: 500;
+			color: #1a1a1a;
+			letter-spacing: 1px;
+		}
+
+		.mute-icon {
+			width: 24px;
+			height: 24px;
+			cursor: pointer;
+			opacity: 0.6;
+		}
+
+		.chat-container {
+			flex: 1;
+			padding: 20px;
+			overflow-y: auto;
+			position: relative;
+		}
+
+		.chat-message {
+			margin-bottom: 20px;
+			display: flex;
+			flex-direction: column;
+		}
+
+		.message-label {
+			font-size: 12px;
+			font-weight: 500;
+			margin-bottom: 8px;
+		}
+
+		.message-label.kenji {
+			color: #8b6f47;
+			text-align: left;
+		}
+
+		.message-label.user {
+			color: #1a1a1a;
+			text-align: right;
+		}
+
+		.message-bubble {
+			padding: 14px 18px;
+			border-radius: 18px;
+			max-width: 75%;
+			font-size: 15px;
+			line-height: 1.5;
+			word-wrap: break-word;
+		}
+
+		.message-bubble.kenji {
+			background: #ffffff;
+			border: 2px solid #8b6f47;
+			color: #1a1a1a;
+			align-self: flex-start;
+		}
+
+		.message-bubble.user {
+			background: #ffffff;
+			border: 2px solid #1a1a1a;
+			color: #1a1a1a;
+			align-self: flex-end;
+		}
+
+		.bartender-silhouette {
+			position: absolute;
+			bottom: 80px;
+			left: 50%;
+			transform: translateX(-50%);
+			width: 200px;
+			height: 300px;
+			background: #1a1a1a;
+			clip-path: polygon(30% 0%, 70% 0%, 85% 20%, 90% 40%, 85% 60%, 80% 80%, 70% 100%, 30% 100%, 20% 80%, 15% 60%, 10% 40%, 15% 20%);
+			opacity: 0.3;
+			z-index: 0;
+		}
+
+		.input-container {
+			position: fixed;
+			bottom: 0;
+			left: 0;
+			right: 0;
+			background: #ffffff;
+			padding: 15px 20px;
+			border-top: 1px solid #e8e8e8;
+			display: flex;
+			align-items: center;
+			gap: 10px;
+			z-index: 10;
+		}
+
+		.message-input {
+			flex: 1;
+			padding: 12px 16px;
+			border: 1px solid #1a1a1a;
+			border-radius: 24px;
+			font-size: 15px;
+			font-family: 'Noto Sans JP', sans-serif;
+			outline: none;
+		}
+
+		.message-input::placeholder {
+			color: #999;
+		}
+
+		.send-button {
+			width: 40px;
+			height: 40px;
+			border-radius: 50%;
+			background: #1a1a1a;
+			border: none;
+			cursor: pointer;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			transition: background 0.3s ease;
+		}
+
+		.send-button:hover {
+			background: #333;
+		}
+
+		.send-button::after {
+			content: '→';
+			color: #ffffff;
+			font-size: 18px;
+		}
+
+		/* Screen 4 - Product Page */
+		.screen-4 {
+			background: #ffffff;
+		}
+
+		.product-container {
+			flex: 1;
+			display: flex;
+			flex-direction: column;
+			padding: 20px;
+		}
+
+		.product-image-container {
+			background: #e8e8e8;
+			border-radius: 12px;
+			padding: 40px;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			min-height: 300px;
+			margin-bottom: 30px;
+		}
+
+		.product-image {
+			width: 120px;
+			height: 200px;
+			background: #1a1a1a;
+			border-radius: 8px;
+			position: relative;
+		}
+
+		.product-image::after {
+			content: '';
+			position: absolute;
+			bottom: -20px;
+			left: 50%;
+			transform: translateX(-50%);
+			width: 100px;
+			height: 20px;
+			background: rgba(26, 26, 26, 0.2);
+			border-radius: 50%;
+			filter: blur(8px);
+		}
+
+		.product-title {
+			font-family: 'Cormorant Garamond', serif;
+			font-size: 36px;
+			font-weight: 500;
+			color: #1a1a1a;
+			text-align: center;
+			margin-bottom: 30px;
+		}
+
+		.product-buttons {
+			background: #1a1a1a;
+			padding: 30px 20px;
+			border-radius: 20px 20px 0 0;
+			display: flex;
+			flex-direction: column;
+			gap: 12px;
+		}
+
+		.product-button {
+			background: #ffffff;
+			border: 2px solid #8b6f47;
+			color: #1a1a1a;
+			padding: 16px 20px;
+			border-radius: 8px;
+			font-size: 14px;
+			font-weight: 400;
+			cursor: pointer;
+			transition: background 0.3s ease, transform 0.2s ease;
+			font-family: 'Noto Sans JP', sans-serif;
+			text-align: left;
+		}
+
+		.product-button:hover {
+			background: #f8f8f8;
+			transform: translateY(-2px);
+		}
+
+		.scan-button {
+			background: #8b6f47;
+			border: none;
+			color: #ffffff;
+			padding: 20px;
+			border-radius: 8px;
+			font-size: 14px;
+			font-weight: 500;
+			letter-spacing: 1px;
+			text-transform: uppercase;
+			cursor: pointer;
+			transition: background 0.3s ease, transform 0.2s ease;
+			font-family: 'Noto Sans JP', sans-serif;
+			margin-top: 10px;
+		}
+
+		.scan-button:hover {
+			background: #7a5f3a;
+			transform: translateY(-2px);
+		}
+
+		/* Screen 5 - Final Experience */
+		.screen-5 {
+			background: #ffffff;
+			justify-content: center;
+			align-items: center;
+			text-align: center;
+			cursor: pointer;
+		}
+
+		.screen-5-content {
+			width: 100%;
+			max-width: 600px;
+			padding: 40px 20px;
+		}
+
+		.swirl-instruction {
+			font-family: 'Noto Sans JP', sans-serif;
+			font-size: 24px;
+			font-weight: 500;
+			color: #1a1a1a;
+			margin-bottom: 40px;
+			letter-spacing: 1px;
+			text-transform: uppercase;
+		}
+
+		.drink-visualization {
+			width: 150px;
+			height: 250px;
+			margin: 0 auto 40px;
+			position: relative;
+		}
+
+		.glass {
+			width: 100%;
+			height: 100%;
+			background: linear-gradient(to bottom, 
+				rgba(255, 255, 255, 0.9) 0%,
+				rgba(255, 255, 255, 0.7) 50%,
+				rgba(255, 255, 255, 0.5) 100%);
+			border: 3px solid rgba(26, 26, 26, 0.2);
+			border-radius: 8px 8px 20px 20px;
+			position: relative;
+			overflow: hidden;
+		}
+
+		.liquid {
+			position: absolute;
+			bottom: 0;
+			left: 0;
+			right: 0;
+			height: 70%;
+			background: linear-gradient(to top,
+				#d4a574 0%,
+				#e8c896 50%,
+				#f5d9a8 100%);
+			border-radius: 0 0 18px 18px;
+		}
+
+		.bubbles {
+			position: absolute;
+			width: 100%;
+			height: 100%;
+			overflow: hidden;
+		}
+
+		.bubble {
+			position: absolute;
+			background: rgba(255, 255, 255, 0.6);
+			border-radius: 50%;
+			animation: bubble-rise 3s infinite;
+		}
+
+		@keyframes bubble-rise {
+			0% {
+				transform: translateY(100%) translateX(0);
+				opacity: 0;
+			}
+			50% {
+				opacity: 1;
+			}
+			100% {
+				transform: translateY(-20px) translateX(20px);
+				opacity: 0;
+			}
+		}
+
+		.orange-peel {
+			position: absolute;
+			top: -10px;
+			right: 20px;
+			width: 60px;
+			height: 4px;
+			background: #ff8c42;
+			border-radius: 2px;
+			transform: rotate(-15deg);
+		}
+
+		.ice-cubes {
+			position: absolute;
+			bottom: 30%;
+			left: 50%;
+			transform: translateX(-50%);
+		}
+
+		.ice-cube {
+			position: absolute;
+			width: 20px;
+			height: 20px;
+			background: rgba(255, 255, 255, 0.7);
+			border: 1px solid rgba(255, 255, 255, 0.5);
+			border-radius: 2px;
+		}
+
+		.ice-cube:nth-child(1) {
+			left: -15px;
+			top: 0;
+		}
+
+		.ice-cube:nth-child(2) {
+			left: 15px;
+			top: 10px;
+		}
+
+		.drink-title {
+			font-family: 'Cormorant Garamond', serif;
+			font-size: 32px;
+			font-weight: 500;
+			color: #1a1a1a;
+			letter-spacing: 2px;
+		}
+
+		/* Responsive */
+		@media (max-width: 768px) {
+			.main-title {
+				font-size: 36px;
+			}
+
+			.swirl-instruction {
+				font-size: 20px;
+			}
+
+			.product-title {
+				font-size: 28px;
+			}
+		}
+	</style>
+</head>
+<body>
+	<!-- Screen 1: Landing -->
+	<div class="screen screen-1 active">
+		<div class="video-background">
+			[landing/load video background playing]
+		</div>
+		<div class="screen-1-content">
+			<div class="brand-title">THE HOUSE OF SUNTORY</div>
+			<div class="main-title">Lorem Title</div>
+			<button class="enter-button" onclick="nextScreen()">LOREM ENTER EXPERIENCE</button>
+		</div>
+	</div>
+
+	<!-- Screen 2: Chat - Initial -->
+	<div class="screen screen-2">
+		<div class="header">
+			<div class="header-title">THE HOUSE OF SUNTORY</div>
+			<div class="mute-icon">🔇</div>
+		</div>
+		<div class="chat-container">
+			<div class="bartender-silhouette"></div>
+			<div class="chat-message">
+				<div class="message-label kenji">Kenji</div>
+				<div class="message-bubble kenji">Hi, I'm Kenji, your personal AI mixologist. Tell me what you want to drink and I'll turn it into an experience you'll never forget.</div>
+			</div>
+			<div class="chat-message">
+				<div class="message-label kenji">Kenji</div>
+				<div class="message-bubble kenji">What are you in the mood for?</div>
+			</div>
+			<div class="chat-message">
+				<div class="message-label user">You</div>
+				<div class="message-bubble user">It's been a long day, I need something refreshing.</div>
+			</div>
+		</div>
+		<div class="input-container">
+			<input type="text" class="message-input" placeholder="Type your message..." onkeypress="handleChatInput(event, 2)">
+			<button class="send-button" onclick="sendMessage(2)"></button>
+		</div>
+	</div>
+
+	<!-- Screen 3: Chat - Response -->
+	<div class="screen screen-3">
+		<div class="header">
+			<div class="header-title">THE HOUSE OF SUNTORY</div>
+			<div class="mute-icon">🔇</div>
+		</div>
+		<div class="chat-container">
+			<div class="bartender-silhouette"></div>
+			<div class="chat-message">
+				<div class="message-label kenji">Kenji</div>
+				<div class="message-bubble kenji">Hi, I'm Kenji, your personal AI mixologist. Tell me what you want to drink and I'll turn it into an experience you'll never forget.</div>
+			</div>
+			<div class="chat-message">
+				<div class="message-label kenji">Kenji</div>
+				<div class="message-bubble kenji">What are you in the mood for?</div>
+			</div>
+			<div class="chat-message">
+				<div class="message-label user">You</div>
+				<div class="message-bubble user">It's been a long day, I need something refreshing.</div>
+			</div>
+			<div class="chat-message">
+				<div class="message-label kenji">Kenji</div>
+				<div class="message-bubble kenji">Sorry to hear about your day. I have two great options to help you relax this evening.</div>
+			</div>
+		</div>
+		<div class="input-container">
+			<input type="text" class="message-input" placeholder="Type your message..." onkeypress="handleChatInput(event, 3)">
+			<button class="send-button" onclick="sendMessage(3)"></button>
+		</div>
+	</div>
+
+	<!-- Screen 4: Product Page -->
+	<div class="screen screen-4">
+		<div class="header">
+			<div class="header-title">THE HOUSE OF SUNTORY</div>
+			<div class="mute-icon">🔇</div>
+		</div>
+		<div class="product-container">
+			<div class="product-image-container">
+				<div class="product-image"></div>
+			</div>
+			<div class="product-title">TOKI HIGHBALL</div>
+			<div class="product-buttons">
+				<button class="product-button">Lorem this highball reflects the harmony of Wa.</button>
+				<button class="product-button">Lorem lorem lorem lorem</button>
+				<button class="product-button">Here's your Highball</button>
+				<button class="scan-button" onclick="nextScreen()">SCAN SURFACE INFRONT OF YOU</button>
+			</div>
+		</div>
+	</div>
+
+	<!-- Screen 5: Final Experience -->
+	<div class="screen screen-5" onclick="goToInteractive()">
+		<div class="screen-5-content">
+			<div class="header">
+				<div class="header-title">THE HOUSE OF SUNTORY</div>
+				<div class="mute-icon">🔇</div>
+			</div>
+			<div class="swirl-instruction">SWIRL TO EXPERIENCE YOUR HIGHBALL</div>
+			<div class="drink-visualization">
+				<div class="glass">
+					<div class="liquid">
+						<div class="bubbles">
+							<div class="bubble" style="left: 20%; width: 4px; height: 4px; animation-delay: 0s;"></div>
+							<div class="bubble" style="left: 40%; width: 3px; height: 3px; animation-delay: 0.5s;"></div>
+							<div class="bubble" style="left: 60%; width: 5px; height: 5px; animation-delay: 1s;"></div>
+							<div class="bubble" style="left: 30%; width: 3px; height: 3px; animation-delay: 1.5s;"></div>
+							<div class="bubble" style="left: 70%; width: 4px; height: 4px; animation-delay: 2s;"></div>
+						</div>
+						<div class="ice-cubes">
+							<div class="ice-cube"></div>
+							<div class="ice-cube"></div>
+						</div>
+					</div>
+					<div class="orange-peel"></div>
+				</div>
+			</div>
+			<div class="drink-title">TOKI HIGHBALL</div>
+		</div>
+	</div>
+
+	<script>
+		let currentScreen = 1;
+		const totalScreens = 5;
+
+		const nextScreen = () => {
+			if (currentScreen < totalScreens) {
+				const current = document.querySelector(`.screen-${currentScreen}`);
+				currentScreen++;
+				const next = document.querySelector(`.screen-${currentScreen}`);
+				
+				current.classList.remove('active');
+				setTimeout(() => {
+					next.classList.add('active');
+				}, 300);
+			}
+		};
+
+		const goToInteractive = () => {
+			window.location.href = './examples/proto-toki.html';
+		};
+
+		const handleChatInput = (event, screenNum) => {
+			if (event.key === 'Enter') {
+				sendMessage(screenNum);
+			}
+		};
+
+		const sendMessage = (screenNum) => {
+			const input = document.querySelector(`.screen-${screenNum} .message-input`);
+			const message = input.value.trim();
+			
+			if (message) {
+				// In a real app, you'd process the message here
+				// For now, just advance to next screen after a delay
+				setTimeout(() => {
+					if (screenNum === 2) {
+						nextScreen();
+					} else if (screenNum === 3) {
+						nextScreen();
+					}
+				}, 1000);
+			}
+		};
+
+		// Add some interactive bubbles animation
+		const createBubbles = () => {
+			const bubblesContainer = document.querySelector('.bubbles');
+			if (!bubblesContainer) return;
+
+			for (let i = 0; i < 10; i++) {
+				const bubble = document.createElement('div');
+				bubble.className = 'bubble';
+				bubble.style.left = Math.random() * 100 + '%';
+				bubble.style.width = (Math.random() * 3 + 2) + 'px';
+				bubble.style.height = bubble.style.width;
+				bubble.style.animationDelay = Math.random() * 3 + 's';
+				bubble.style.animationDuration = (Math.random() * 2 + 2) + 's';
+				bubblesContainer.appendChild(bubble);
+			}
+		};
+
+		// Initialize bubbles when screen 5 is shown
+		const observer = new MutationObserver((mutations) => {
+			mutations.forEach((mutation) => {
+				if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+					const screen5 = document.querySelector('.screen-5');
+					if (screen5 && screen5.classList.contains('active')) {
+						createBubbles();
+					}
+				}
+			});
+		});
+
+		observer.observe(document.querySelector('.screen-5'), {
+			attributes: true,
+			attributeFilter: ['class']
+		});
+	</script>
+</body>
+</html>

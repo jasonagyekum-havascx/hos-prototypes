@@ -1,0 +1,25 @@
+{
+  "name": "hos-prototypes",
+  "version": "1.0.0",
+  "description": "House of Suntory - Toki Highball Interactive Experience",
+  "type": "module",
+  "scripts": {
+    "dev": "npx live-server --port=3000 --open=examples/virtual-bartender.html --watch=examples,build",
+    "start": "npx live-server --port=3000 --open=examples/virtual-bartender.html",
+    "build": "echo 'Static site - no build required'"
+  },
+  "keywords": [
+    "three.js",
+    "webgl",
+    "interactive",
+    "suntory",
+    "toki",
+    "highball"
+  ],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "live-server": "^1.2.2"
+  }
+}
+

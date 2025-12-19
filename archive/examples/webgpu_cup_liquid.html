@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>three.js webgpu - Cup Liquid Preview</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<link type="text/css" rel="stylesheet" href="example.css">
+		<style>
+			#cup-selector {
+				position: fixed;
+				bottom: 20px;
+				left: 50%;
+				transform: translateX(-50%);
+				z-index: 1000;
+				display: flex;
+				gap: 12px;
+				background: rgba(0, 0, 0, 0.6);
+				padding: 12px 20px;
+				border-radius: 30px;
+				backdrop-filter: blur(10px);
+			}
+			
+			#cup-selector button {
+				background: rgba(255, 255, 255, 0.1);
+				border: 2px solid rgba(255, 255, 255, 0.3);
+				border-radius: 20px;
+				color: #fff;
+				padding: 8px 16px;
+				font-size: 13px;
+				cursor: pointer;
+				transition: all 0.3s ease;
+				font-family: 'Inter', sans-serif;
+			}
+			
+			#cup-selector button:hover {
+				background: rgba(255, 255, 255, 0.2);
+				border-color: rgba(255, 255, 255, 0.5);
+			}
+			
+			#cup-selector button.active {
+				background: rgba(255, 255, 255, 0.3);
+				border-color: #fff;
+			}
+
+			#liquid-selector {
+				position: fixed;
+				bottom: 80px;
+				left: 50%;
+				transform: translateX(-50%);
+				z-index: 1000;
+				display: flex;
+				gap: 8px;
+				background: rgba(0, 0, 0, 0.6);
+				padding: 10px 16px;
+				border-radius: 25px;
+				backdrop-filter: blur(10px);
+			}
+
+			.liquid-swatch {
+				width: 32px;
+				height: 32px;
+				border-radius: 50%;
+				border: 2px solid rgba(255, 255, 255, 0.3);
+				cursor: pointer;
+				transition: all 0.3s ease;
+			}
+
+			.liquid-swatch:hover {
+				transform: scale(1.15);
+				border-color: rgba(255, 255, 255, 0.6);
+			}
+
+			.liquid-swatch.active {
+				border-color: #fff;
+				box-shadow: 0 0 12px rgba(255, 255, 255, 0.5);
+			}
+		</style>
+	</head>
+	<body>
+
+		<div id="info">
+			<a href="https://threejs.org/" target="_blank" rel="noopener" class="logo-link"></a>
+
+			<div class="title-wrapper">
+				<a href="https://threejs.org/" target="_blank" rel="noopener">three.js</a>
+				<span>Cup Liquid Preview</span>
+			</div>
+
+			<small>
+				Click and drag to swirl liquid. Scroll to zoom.
+			</small>
+		</div>
+
+		<div id="cup-selector" role="group" aria-label="Cup selection">
+			<button id="cup1Btn" class="active" aria-pressed="true" tabindex="0">Cup 1</button>
+			<button id="cup2Btn" aria-pressed="false" tabindex="0">Cup 2</button>
+		</div>
+
+		<div id="liquid-selector" role="group" aria-label="Liquid color selection">
+			<div class="liquid-swatch active" data-liquid="water" style="background: linear-gradient(135deg, #9bd2ec, #5ba3c9);" title="Water" tabindex="0" role="button" aria-label="Water"></div>
+			<div class="liquid-swatch" data-liquid="orange" style="background: linear-gradient(135deg, #ff9f43, #ee5a24);" title="Orange Juice" tabindex="0" role="button" aria-label="Orange Juice"></div>
+			<div class="liquid-swatch" data-liquid="wine" style="background: linear-gradient(135deg, #8b0a1a, #5c0a1a);" title="Wine" tabindex="0" role="button" aria-label="Wine"></div>
+			<div class="liquid-swatch" data-liquid="milk" style="background: linear-gradient(135deg, #fefefe, #e8e8e8);" title="Milk" tabindex="0" role="button" aria-label="Milk"></div>
+			<div class="liquid-swatch" data-liquid="coffee" style="background: linear-gradient(135deg, #5c3317, #2d1506);" title="Coffee" tabindex="0" role="button" aria-label="Coffee"></div>
+			<div class="liquid-swatch" data-liquid="lemonade" style="background: linear-gradient(135deg, #f7dc6f, #f4d03f);" title="Lemonade" tabindex="0" role="button" aria-label="Lemonade"></div>
+		</div>
+
+		<script type="importmap">
+			{
+				"imports": {
+					"three": "../build/three.webgpu.js",
+					"three/webgpu": "../build/three.webgpu.js",
+					"three/tsl": "../build/three.tsl.js",
+					"three/addons/": "./jsm/"
+				}
+			}
+		</script>
+
+		<script type="module">
+
+			import * as THREE from 'three/webgpu';
+			import { instanceIndex, If, uint, int, floor, float, length, clamp, vec2, cos, vec3, vertexIndex, Fn, uniform, instancedArray, min, max, positionLocal, transformNormalToView, select, globalId } from 'three/tsl';
+
+			import { SimplexNoise } from 'three/addons/math/SimplexNoise.js';
+			import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+			import { HDRLoader } from 'three/addons/loaders/HDRLoader.js';
+			import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
+			import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+			import WebGPU from 'three/addons/capabilities/WebGPU.js';
+
+			// Liquid simulation parameters
+			const WIDTH = 64;
+			let LIQUID_RADIUS = 0.032; // Will be adjusted based on cup model
+			let LIQUID_BOUNDS = LIQUID_RADIUS * 2;
+			let LIQUID_BOUNDS_HALF = LIQUID_RADIUS;
+			const liquidMaxHeight = 0.005;
+			
+			// Cup scaling and liquid position (will be updated after loading models)
+			const CUP_SCALE = 0.08; // Scale down the cups significantly
+			let liquidYPosition = 0.055; // Default Y position for liquid inside cup
+
+			let container;
+			let camera, scene, renderer, controls;
+
+			let mouseDown = false;
+			let firstClick = true;
+			let updateOriginMouseDown = false;
+
+			const mouseCoords = new THREE.Vector2();
+			const raycaster = new THREE.Raycaster();
+			let frame = 0;
+
+			const liquidPresets = {
+				water: { color: 0x9bd2ec, metalness: 0.1, roughness: 0.1, opacity: 0.85 },
+				orange: { color: 0xff9f43, metalness: 0.0, roughness: 0.3, opacity: 0.95 },
+				wine: { color: 0x8b0a1a, metalness: 0.1, roughness: 0.2, opacity: 0.9 },
+				milk: { color: 0xfefefe, metalness: 0.0, roughness: 0.4, opacity: 0.98 },
+				coffee: { color: 0x5c3317, metalness: 0.05, roughness: 0.3, opacity: 0.95 },
+				lemonade: { color: 0xf7dc6f, metalness: 0.05, roughness: 0.2, opacity: 0.88 }
+			};
+
+			let currentLiquid = 'water';
+
+			const effectController = {
+				mousePos: uniform( new THREE.Vector2() ).setName( 'mousePos' ),
+				mouseSpeed: uniform( new THREE.Vector2() ).setName( 'mouseSpeed' ),
+				mouseDeep: uniform( 0.3 ).setName( 'mouseDeep' ),
+				mouseSize: uniform( 0.015 ).setName( 'mouseSize' ),
+				viscosity: uniform( 0.94 ).setName( 'viscosity' ),
+				speed: 5,
+			};
+
+			let sun, ambientLight;
+			let liquidMesh;
+			let meshRay;
+			let computeHeightAtoB, computeHeightBtoA;
+			let pingPong = 0;
+			const readFromA = uniform( 1 );
+
+			let cupModels = {};
+			let currentCup = 'cup1';
+
+			const simplex = new SimplexNoise();
+
+			if ( WebGPU.isAvailable() === false ) {
+
+				document.body.appendChild( WebGPU.getErrorMessage() );
+				throw new Error( 'No WebGPU support' );
+
+			}
+
+			init();
+
+			function noise( x, y ) {
+
+				let multR = liquidMaxHeight;
+				let mult = 0.025;
+				let r = 0;
+				for ( let i = 0; i < 10; i ++ ) {
+
+					r += multR * simplex.noise( x * mult, y * mult );
+					multR *= 0.5 + 0.02 * i;
+					mult *= 1.2;
+
+				}
+
+				return r;
+
+			}
+
+			async function init() {
+
+				container = document.createElement( 'div' );
+				document.body.appendChild( container );
+
+				camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 0.01, 100 );
+				camera.position.set( 0, 0.15, 0.35 );
+				camera.lookAt( 0, 0.05, 0 );
+
+				scene = new THREE.Scene();
+
+				// Lighting
+				sun = new THREE.DirectionalLight( 0xffffff, 3.0 );
+				sun.position.set( 2, 4, 3 );
+				sun.castShadow = true;
+				scene.add( sun );
+
+				ambientLight = new THREE.AmbientLight( 0xffffff, 0.4 );
+				scene.add( ambientLight );
+
+				const fillLight = new THREE.DirectionalLight( 0xffffff, 1.0 );
+				fillLight.position.set( -2, 2, -2 );
+				scene.add( fillLight );
+
+				// Add a subtle ground plane / table surface
+				const groundGeometry = new THREE.PlaneGeometry( 2, 2 );
+				const groundMaterial = new THREE.MeshStandardMaterial( {
+					color: 0x8b7355,
+					roughness: 0.8,
+					metalness: 0.1
+				} );
+				const ground = new THREE.Mesh( groundGeometry, groundMaterial );
+				ground.rotation.x = - Math.PI / 2;
+				ground.position.y = - 0.001;
+				ground.receiveShadow = true;
+				scene.add( ground );
+
+				// Initialize height storage buffers for liquid simulation
+				const heightArray = new Float32Array( WIDTH * WIDTH );
+				const prevHeightArray = new Float32Array( WIDTH * WIDTH );
+
+				let p = 0;
+				for ( let j = 0; j < WIDTH; j ++ ) {
+
+					for ( let i = 0; i < WIDTH; i ++ ) {
+
+						const x = i * 64 / WIDTH;
+						const y = j * 64 / WIDTH;
+
+						const height = noise( x, y );
+
+						heightArray[ p ] = height;
+						prevHeightArray[ p ] = height;
+
+						p ++;
+
+					}
+
+				}
+
+				// Ping-pong height storage buffers
+				const heightStorageA = instancedArray( heightArray ).setName( 'HeightA' );
+				const heightStorageB = instancedArray( new Float32Array( heightArray ) ).setName( 'HeightB' );
+				const prevHeightStorage = instancedArray( prevHeightArray ).setName( 'PrevHeight' );
+
+				// Get neighbor indices
+				const getNeighborIndicesTSL = ( index ) => {
+
+					const width = uint( WIDTH );
+
+					const x = int( index.mod( WIDTH ) );
+					const y = int( index.div( WIDTH ) );
+
+					const leftX = max( 0, x.sub( 1 ) );
+					const rightX = min( x.add( 1 ), width.sub( 1 ) );
+
+					const bottomY = max( 0, y.sub( 1 ) );
+					const topY = min( y.add( 1 ), width.sub( 1 ) );
+
+					const westIndex = y.mul( width ).add( leftX );
+					const eastIndex = y.mul( width ).add( rightX );
+
+					const southIndex = bottomY.mul( width ).add( x );
+					const northIndex = topY.mul( width ).add( x );
+
+					return { northIndex, southIndex, eastIndex, westIndex };
+
+				};
+
+				// Get neighbor values
+				const getNeighborValuesTSL = ( index, store ) => {
+
+					const { northIndex, southIndex, eastIndex, westIndex } = getNeighborIndicesTSL( index );
+
+					const north = store.element( northIndex );
+					const south = store.element( southIndex );
+					const east = store.element( eastIndex );
+					const west = store.element( westIndex );
+
+					return { north, south, east, west };
+
+				};
+
+				// Create compute shader for height simulation
+				const createComputeHeight = ( readBuffer, writeBuffer ) => Fn( () => {
+
+					const { viscosity, mousePos, mouseSize, mouseDeep, mouseSpeed } = effectController;
+
+					const height = readBuffer.element( instanceIndex ).toVar();
+					const prevHeight = prevHeightStorage.element( instanceIndex ).toVar();
+
+					const { north, south, east, west } = getNeighborValuesTSL( instanceIndex, readBuffer );
+
+					const neighborHeight = north.add( south ).add( east ).add( west );
+					neighborHeight.mulAssign( 0.5 );
+					neighborHeight.subAssign( prevHeight );
+
+					const newHeight = neighborHeight.mul( viscosity );
+
+					// Get x and y position
+					const x = float( globalId.x ).mul( 1 / WIDTH );
+					const y = float( globalId.y ).mul( 1 / WIDTH );
+
+					// Mouse influence - circular liquid surface
+					const centerVec = vec2( 0.5 );
+					const mousePhase = clamp( length( ( vec2( x, y ).sub( centerVec ) ).mul( LIQUID_BOUNDS ).sub( mousePos ) ).mul( Math.PI ).div( mouseSize ), 0.0, Math.PI );
+
+					newHeight.addAssign( cos( mousePhase ).add( 1.0 ).mul( mouseDeep ).mul( mouseSpeed.length() ) );
+
+					prevHeightStorage.element( instanceIndex ).assign( height );
+					writeBuffer.element( instanceIndex ).assign( newHeight );
+
+				} )().compute( WIDTH * WIDTH, [ 8, 8 ] );
+
+				// Create both ping-pong compute shaders
+				computeHeightAtoB = createComputeHeight( heightStorageA, heightStorageB ).setName( 'Update Height A→B' );
+				computeHeightBtoA = createComputeHeight( heightStorageB, heightStorageA ).setName( 'Update Height B→A' );
+
+				// Create liquid geometry function (will be called after cup loads)
+				const createLiquidGeometry = ( radius ) => {
+
+					const geometry = new THREE.CircleGeometry( radius, WIDTH - 1, WIDTH - 1 );
+
+					// Remap UV coordinates to square for proper simulation mapping
+					const positions = geometry.attributes.position;
+					const uvs = geometry.attributes.uv;
+
+					for ( let i = 0; i < positions.count; i ++ ) {
+
+						const x = positions.getX( i );
+						const z = positions.getY( i );
+
+						// Map from circular position to UV
+						const u = ( x / radius + 1 ) * 0.5;
+						const v = ( z / radius + 1 ) * 0.5;
+
+						uvs.setXY( i, u, v );
+
+					}
+
+					return geometry;
+
+				};
+
+				// Initial liquid geometry (will be replaced after cup loads)
+				let liquidGeometry = createLiquidGeometry( LIQUID_RADIUS );
+
+				const preset = liquidPresets[ currentLiquid ];
+				const liquidMaterial = new THREE.MeshStandardNodeMaterial( {
+					color: preset.color,
+					metalness: preset.metalness,
+					roughness: preset.roughness,
+					transparent: true,
+					opacity: preset.opacity,
+					side: THREE.DoubleSide
+				} );
+
+				// Helper to get height from current read buffer
+				const getCurrentHeight = ( index ) => {
+
+					return select( readFromA, heightStorageA.element( index ), heightStorageB.element( index ) );
+
+				};
+
+				// Helper to get normals
+				const getCurrentNormals = ( index ) => {
+
+					const { northIndex, southIndex, eastIndex, westIndex } = getNeighborIndicesTSL( index );
+
+					const north = getCurrentHeight( northIndex );
+					const south = getCurrentHeight( southIndex );
+					const east = getCurrentHeight( eastIndex );
+					const west = getCurrentHeight( westIndex );
+
+					const normalX = ( west.sub( east ) ).mul( WIDTH / LIQUID_BOUNDS );
+					const normalY = ( south.sub( north ) ).mul( WIDTH / LIQUID_BOUNDS );
+
+					return { normalX, normalY };
+
+				};
+
+				liquidMaterial.normalNode = Fn( () => {
+
+					const { normalX, normalY } = getCurrentNormals( vertexIndex );
+					return transformNormalToView( vec3( normalX, normalY.negate(), 1.0 ) ).toVertexStage();
+
+				} )();
+
+				liquidMaterial.positionNode = Fn( () => {
+
+					return vec3( positionLocal.x, positionLocal.y, getCurrentHeight( vertexIndex ).mul( 2 ) );
+
+				} )();
+
+				liquidMesh = new THREE.Mesh( liquidGeometry, liquidMaterial );
+				liquidMesh.rotation.x = - Math.PI * 0.5;
+				liquidMesh.position.y = liquidYPosition;
+
+				scene.add( liquidMesh );
+
+				// Raycast plane for mouse interaction
+				let geometryRay = new THREE.CircleGeometry( LIQUID_RADIUS * 1.2, 32 );
+				meshRay = new THREE.Mesh( geometryRay, new THREE.MeshBasicMaterial( { color: 0xFFFFFF, visible: false } ) );
+				meshRay.rotation.x = - Math.PI / 2;
+				meshRay.position.y = liquidYPosition;
+				scene.add( meshRay );
+				
+				// Function to update liquid position and size
+				const updateLiquidForCup = ( cupScene, scale ) => {
+
+					// Calculate bounding box of cup
+					const box = new THREE.Box3().setFromObject( cupScene );
+					const size = new THREE.Vector3();
+					const center = new THREE.Vector3();
+					box.getSize( size );
+					box.getCenter( center );
+
+					// Calculate liquid radius based on cup width (use smaller of x/z)
+					const cupRadius = Math.min( size.x, size.z ) * 0.38;
+					LIQUID_RADIUS = cupRadius;
+					LIQUID_BOUNDS = LIQUID_RADIUS * 2;
+					LIQUID_BOUNDS_HALF = LIQUID_RADIUS;
+
+					// Position liquid at ~70% of cup height
+					liquidYPosition = box.min.y + size.y * 0.7;
+
+					// Update liquid mesh
+					liquidMesh.geometry.dispose();
+					liquidMesh.geometry = createLiquidGeometry( LIQUID_RADIUS );
+					liquidMesh.position.y = liquidYPosition;
+
+					// Update raycast plane
+					meshRay.geometry.dispose();
+					meshRay.geometry = new THREE.CircleGeometry( LIQUID_RADIUS * 1.2, 32 );
+					meshRay.position.y = liquidYPosition;
+
+					console.log( 'Cup dimensions:', size, 'Liquid radius:', LIQUID_RADIUS, 'Liquid Y:', liquidYPosition );
+
+				};
+
+				// Store reference globally for cup switching
+				updateLiquidForCupFn = updateLiquidForCup;
+
+				// Load models and environment
+				const hdrLoader = new HDRLoader().setPath( './textures/equirectangular/' );
+				const glbLoader = new GLTFLoader().setPath( 'models/glb/' );
+				glbLoader.setDRACOLoader( new DRACOLoader().setDecoderPath( 'jsm/libs/draco/gltf/' ) );
+
+				try {
+
+					const [ env, cup1Model, cup2Model ] = await Promise.all( [
+						hdrLoader.loadAsync( 'blouberg_sunrise_2_1k.hdr' ),
+						glbLoader.loadAsync( 'cup-01.glb' ),
+						glbLoader.loadAsync( 'cup-02.glb' )
+					] );
+
+					env.mapping = THREE.EquirectangularReflectionMapping;
+					scene.environment = env;
+					scene.background = env;
+					scene.backgroundBlurriness = 0.4;
+					scene.environmentIntensity = 1.0;
+
+					// Setup cup 1
+					cupModels.cup1 = cup1Model.scene;
+					cupModels.cup1.visible = true;
+					cupModels.cup1.scale.setScalar( CUP_SCALE );
+					cupModels.cup1.traverse( ( child ) => {
+
+						if ( child.isMesh ) {
+
+							// Create new material for glass effect
+							child.material = new THREE.MeshPhysicalMaterial( {
+								color: 0xffffff,
+								roughness: 0.05,
+								metalness: 0.0,
+								transparent: true,
+								opacity: 0.3,
+								transmission: 0.9,
+								thickness: 0.5,
+								ior: 1.5,
+								side: THREE.DoubleSide
+							} );
+
+						}
+
+					} );
+					scene.add( cupModels.cup1 );
+
+					// Setup cup 2
+					cupModels.cup2 = cup2Model.scene;
+					cupModels.cup2.visible = false;
+					cupModels.cup2.scale.setScalar( CUP_SCALE );
+					cupModels.cup2.traverse( ( child ) => {
+
+						if ( child.isMesh ) {
+
+							child.material = new THREE.MeshPhysicalMaterial( {
+								color: 0xffffff,
+								roughness: 0.05,
+								metalness: 0.0,
+								transparent: true,
+								opacity: 0.3,
+								transmission: 0.9,
+								thickness: 0.5,
+								ior: 1.5,
+								side: THREE.DoubleSide
+							} );
+
+						}
+
+					} );
+					scene.add( cupModels.cup2 );
+
+					// Update liquid position for the first cup
+					updateLiquidForCup( cupModels.cup1, CUP_SCALE );
+
+				} catch ( e ) {
+
+					console.warn( 'Error loading models:', e );
+
+					// Create fallback cup geometry
+					const cupGeometry = new THREE.CylinderGeometry( 0.035, 0.03, 0.1, 32, 1, true );
+					const cupMaterial = new THREE.MeshPhysicalMaterial( {
+						color: 0xffffff,
+						transparent: true,
+						opacity: 0.3,
+						transmission: 0.9,
+						roughness: 0.05,
+						metalness: 0.0,
+						side: THREE.DoubleSide
+					} );
+
+					const cup = new THREE.Mesh( cupGeometry, cupMaterial );
+					cup.position.y = 0.05;
+					cupModels.cup1 = new THREE.Group();
+					cupModels.cup1.add( cup );
+					cupModels.cup2 = cupModels.cup1.clone();
+					cupModels.cup2.visible = false;
+					scene.add( cupModels.cup1 );
+					scene.add( cupModels.cup2 );
+
+					// Update liquid for fallback cup
+					updateLiquidForCup( cupModels.cup1, 1 );
+
+				}
+
+				// Renderer
+				renderer = new THREE.WebGPURenderer( { antialias: true } );
+				renderer.setPixelRatio( window.devicePixelRatio );
+				renderer.setSize( window.innerWidth, window.innerHeight );
+				renderer.toneMapping = THREE.ACESFilmicToneMapping;
+				renderer.toneMappingExposure = 0.6;
+				renderer.setAnimationLoop( render );
+				container.appendChild( renderer.domElement );
+
+				// Controls
+				controls = new OrbitControls( camera, container );
+				controls.target.set( 0, 0.05, 0 );
+				controls.enableDamping = true;
+				controls.dampingFactor = 0.05;
+				controls.minDistance = 0.15;
+				controls.maxDistance = 1;
+				controls.maxPolarAngle = Math.PI * 0.85;
+				controls.update();
+
+				// Event listeners
+				setupUIControls();
+
+				container.style.touchAction = 'none';
+				container.addEventListener( 'pointermove', handlePointerMove );
+				container.addEventListener( 'pointerdown', handlePointerDown );
+				container.addEventListener( 'pointerup', handlePointerUp );
+
+				window.addEventListener( 'resize', handleWindowResize );
+
+			}
+
+			// Store updateLiquidForCup reference globally for cup switching
+			let updateLiquidForCupFn = null;
+
+			function setupUIControls() {
+
+				// Cup selection
+				const cup1Btn = document.getElementById( 'cup1Btn' );
+				const cup2Btn = document.getElementById( 'cup2Btn' );
+
+				const handleCupSelect = ( cupId ) => {
+
+					currentCup = cupId;
+
+					cup1Btn.classList.toggle( 'active', cupId === 'cup1' );
+					cup2Btn.classList.toggle( 'active', cupId === 'cup2' );
+					cup1Btn.setAttribute( 'aria-pressed', cupId === 'cup1' );
+					cup2Btn.setAttribute( 'aria-pressed', cupId === 'cup2' );
+
+					if ( cupModels.cup1 ) cupModels.cup1.visible = ( cupId === 'cup1' );
+					if ( cupModels.cup2 ) cupModels.cup2.visible = ( cupId === 'cup2' );
+
+					// Update liquid position for the selected cup
+					const selectedCup = cupId === 'cup1' ? cupModels.cup1 : cupModels.cup2;
+					if ( selectedCup && updateLiquidForCupFn ) {
+
+						updateLiquidForCupFn( selectedCup, CUP_SCALE );
+
+					}
+
+				};
+
+				cup1Btn.addEventListener( 'click', () => handleCupSelect( 'cup1' ) );
+				cup2Btn.addEventListener( 'click', () => handleCupSelect( 'cup2' ) );
+
+				cup1Btn.addEventListener( 'keydown', ( e ) => {
+
+					if ( e.key === 'Enter' || e.key === ' ' ) handleCupSelect( 'cup1' );
+
+				} );
+				cup2Btn.addEventListener( 'keydown', ( e ) => {
+
+					if ( e.key === 'Enter' || e.key === ' ' ) handleCupSelect( 'cup2' );
+
+				} );
+
+				// Liquid selection
+				const liquidSwatches = document.querySelectorAll( '.liquid-swatch' );
+
+				liquidSwatches.forEach( ( swatch ) => {
+
+					const handleLiquidSelect = () => {
+
+						const liquidType = swatch.dataset.liquid;
+						currentLiquid = liquidType;
+
+						liquidSwatches.forEach( s => s.classList.remove( 'active' ) );
+						swatch.classList.add( 'active' );
+
+						updateLiquidAppearance();
+
+					};
+
+					swatch.addEventListener( 'click', handleLiquidSelect );
+					swatch.addEventListener( 'keydown', ( e ) => {
+
+						if ( e.key === 'Enter' || e.key === ' ' ) handleLiquidSelect();
+
+					} );
+
+				} );
+
+			}
+
+			function updateLiquidAppearance() {
+
+				const preset = liquidPresets[ currentLiquid ];
+
+				if ( liquidMesh && liquidMesh.material ) {
+
+					liquidMesh.material.color.setHex( preset.color );
+					liquidMesh.material.metalness = preset.metalness;
+					liquidMesh.material.roughness = preset.roughness;
+					liquidMesh.material.opacity = preset.opacity;
+					liquidMesh.material.needsUpdate = true;
+
+				}
+
+			}
+
+			function handleWindowResize() {
+
+				camera.aspect = window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
+				renderer.setSize( window.innerWidth, window.innerHeight );
+
+			}
+
+			function setMouseCoords( x, y ) {
+
+				mouseCoords.set( ( x / renderer.domElement.clientWidth ) * 2 - 1, - ( y / renderer.domElement.clientHeight ) * 2 + 1 );
+
+			}
+
+			function handlePointerDown() {
+
+				mouseDown = true;
+				firstClick = true;
+				updateOriginMouseDown = true;
+
+			}
+
+			function handlePointerUp() {
+
+				mouseDown = false;
+				firstClick = false;
+				updateOriginMouseDown = false;
+				controls.enabled = true;
+
+			}
+
+			function handlePointerMove( event ) {
+
+				if ( event.isPrimary === false ) return;
+				setMouseCoords( event.clientX, event.clientY );
+
+			}
+
+			function raycast() {
+
+				if ( mouseDown && ( firstClick || ! controls.enabled ) ) {
+
+					raycaster.setFromCamera( mouseCoords, camera );
+
+					const intersects = raycaster.intersectObject( meshRay );
+
+					if ( intersects.length > 0 ) {
+
+						const point = intersects[ 0 ].point;
+
+						if ( updateOriginMouseDown ) {
+
+							effectController.mousePos.value.set( point.x, point.z );
+							updateOriginMouseDown = false;
+
+						}
+
+						// Amplify mouse speed for smaller liquid surface
+						const speedMultiplier = 15;
+						effectController.mouseSpeed.value.set(
+							( point.x - effectController.mousePos.value.x ) * speedMultiplier,
+							( point.z - effectController.mousePos.value.y ) * speedMultiplier
+						);
+
+						effectController.mousePos.value.set( point.x, point.z );
+
+						if ( firstClick ) {
+
+							controls.enabled = false;
+
+						}
+
+					} else {
+
+						updateOriginMouseDown = true;
+						effectController.mouseSpeed.value.set( 0, 0 );
+
+					}
+
+					firstClick = false;
+
+				} else {
+
+					updateOriginMouseDown = true;
+					effectController.mouseSpeed.value.set( 0, 0 );
+
+				}
+
+			}
+
+			function render() {
+
+				raycast();
+
+				frame ++;
+
+				if ( frame >= 7 - effectController.speed ) {
+
+					// Ping-pong: alternate buffers
+					if ( pingPong === 0 ) {
+
+						renderer.compute( computeHeightAtoB, [ 8, 8, 1 ] );
+						readFromA.value = 0;
+
+					} else {
+
+						renderer.compute( computeHeightBtoA, [ 8, 8, 1 ] );
+						readFromA.value = 1;
+
+					}
+
+					pingPong = 1 - pingPong;
+					frame = 0;
+
+				}
+
+				controls.update();
+				renderer.render( scene, camera );
+
+			}
+
+		</script>
+	</body>
+</html>
+
