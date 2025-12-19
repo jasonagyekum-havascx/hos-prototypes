@@ -167,13 +167,10 @@
       padding-top: 80px;
     }
 
-    .landing-subtitle {
-      font-family: var(--font-serif);
-      font-size: 15px;
-      font-weight: 400;
-      letter-spacing: 4px;
-      text-transform: uppercase;
-      color: var(--color-text-light);
+    .landing-logo {
+      max-width: 270px;
+      width: 100%;
+      height: auto;
       margin-bottom: 8px;
       opacity: 0;
       transform: translateY(20px);
@@ -312,6 +309,15 @@ text-transform: uppercase;
       letter-spacing: 3px;
       text-transform: uppercase;
       color: var(--color-text-light);
+    }
+
+    .header-logo-img {
+      max-width: 160px;
+      width: 100%;
+      height: auto;
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
     }
 
     .chat-header .header-logo {
@@ -502,56 +508,30 @@ text-transform: uppercase;
 
     .cocktail-card {
       flex-shrink: 0;
-      width: 145px;
-      min-height: 170px;
-      background: rgba(255, 252, 248, 0.97);
-      border-radius: 16px;
-      padding: 12px 12px 10px;
-      text-align: center;
+      background: transparent;
+      border: none;
+      padding: 0;
       cursor: pointer;
       transition: var(--transition-smooth);
-      border: 3px solid transparent;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+      border-radius: 16px;
+      overflow: hidden;
     }
 
     .cocktail-card:hover,
     .cocktail-card:focus {
       transform: translateY(-6px);
-      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.25);
     }
 
     .cocktail-card.selected {
-      border-color: var(--color-gold);
-      box-shadow: 0 8px 30px rgba(139, 115, 85, 0.3);
+      outline: 3px solid var(--color-gold);
+      outline-offset: 2px;
     }
 
-    .cocktail-card__image {
-      width: 70px;
-      height: 115px;
-      margin: 0 auto 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      position: relative;
-      flex-shrink: 0;
-    }
-
-    .cocktail-card__image svg {
-      width: 100%;
-      height: 100%;
+    .cocktail-card img {
       display: block;
-    }
-
-    .cocktail-card__name {
-      font-family: var(--font-serif);
-      font-size: 13px;
-      font-weight: 600;
-      letter-spacing: 1.5px;
-      color: var(--color-gold);
-      text-transform: uppercase;
+      height: 180px;
+      width: auto;
+      border-radius: 16px;
     }
 
     /* CTA Button */
@@ -717,35 +697,42 @@ text-transform: uppercase;
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
-      padding: 24px;
+      justify-content: flex-start;
+      padding: 24px 24px 60px;
       text-align: center;
+      overflow: hidden;
     }
 
     .swirl-instruction {
-      font-family: var(--font-serif);
+      font-family: var(--font-sans);
       font-size: 14px;
       font-weight: 500;
       letter-spacing: 3px;
       text-transform: uppercase;
-      color: var(--color-gold);
-      margin-bottom: 24px;
+      color: #000000;
+      margin-bottom: 16px;
+      flex-shrink: 0;
       opacity: 0;
       animation: fadeInUp 0.8s ease forwards 0.3s;
     }
 
     .swirl-drink-image {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       width: 100%;
-      max-width: 300px;
-      height: auto;
-      margin-bottom: 32px;
+      max-width: 320px;
+      min-height: 0;
+      margin-bottom: 24px;
       opacity: 0;
       animation: fadeInUp 0.8s ease forwards 0.5s;
     }
 
     .swirl-drink-image img {
       width: 100%;
-      height: auto;
+      height: 100%;
+      max-height: 100%;
       object-fit: contain;
       filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.1));
     }
@@ -754,9 +741,10 @@ text-transform: uppercase;
       font-family: var(--font-serif);
       font-size: 28px;
       font-weight: 400;
-      letter-spacing: 5px;
+      letter-spacing: 8px;
       color: var(--color-gold);
       text-transform: uppercase;
+      flex-shrink: 0;
       opacity: 0;
       animation: fadeInUp 0.8s ease forwards 0.7s;
     }
@@ -843,7 +831,7 @@ text-transform: uppercase;
       font-weight: 500;
       letter-spacing: 2px;
       text-transform: uppercase;
-      color: white;
+      color: #000;
       cursor: pointer;
       transition: var(--transition-smooth);
       margin-top: 20px;
@@ -855,7 +843,7 @@ text-transform: uppercase;
     }
 
     .mix-another-btn:focus-visible {
-      outline: 2px solid white;
+      outline: 2px solid #000;
       outline-offset: 2px;
     }
 
@@ -887,7 +875,7 @@ text-transform: uppercase;
       width: 100%;
       height: 100%;
       background: url('../images/assets/recipe-card-background.jpg') center center / cover no-repeat;
-      opacity: 0.7;
+      opacity: 1;
     }
 
 
@@ -1290,7 +1278,7 @@ text-transform: uppercase;
       </div>
       
       <div class="landing-content">
-        <p class="landing-subtitle">The House of Suntory</p>
+        <img src="../images/assets/logo-landing.png" alt="The House of Suntory" class="landing-logo" />
         <h1 class="landing-title">VIRTUAL<br>BARTENDER</h1>
       </div>
       
@@ -1346,7 +1334,7 @@ text-transform: uppercase;
     <!-- CHAT SCREEN -->
     <section class="screen chat-screen" id="chatScreen" aria-label="Chat with AI Bartender">
       <header class="chat-header">
-        <span class="header-logo">The House of Suntory</span>
+        <img src="../images/assets/logo-chat.png" alt="The House of Suntory" class="header-logo-img" />
         <button class="header-profile" aria-label="User profile" tabindex="0">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
             <circle cx="12" cy="8" r="4"/>
@@ -1818,16 +1806,7 @@ text-transform: uppercase;
         card.className = 'cocktail-card';
         card.setAttribute('tabindex', '0');
         card.setAttribute('aria-label', `Select ${cocktail.name}`);
-        card.innerHTML = `
-          <div class="cocktail-card__image">
-            <img 
-              src="${cocktail.imageSrc}" 
-              alt="${cocktail.imageAlt}" 
-              style="width: 100%; height: 100%; object-fit: cover; border-radius: 12px;"
-            />
-          </div>
-          <p class="cocktail-card__name">${cocktail.name}</p>
-        `;
+        card.innerHTML = `<img src="${cocktail.imageSrc}" alt="${cocktail.imageAlt}" />`;
         
         card.addEventListener('click', () => handleCocktailSelect(cocktail, card));
         card.addEventListener('keydown', (e) => {
