@@ -11,7 +11,10 @@
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
   <!-- Adobe Fonts - Futura PT -->
   <link rel="stylesheet" href="https://use.typekit.net/yfq5vqz.css">
-  
+
+  <!-- p5.js library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+
   <style>
     /* CSS Variables */
     :root {
@@ -322,6 +325,190 @@ text-transform: uppercase;
     .destination-btn--active:hover {
       background: var(--color-gold-light);
       transform: translateY(-2px);
+    }
+
+    /* ==================== */
+    /* PAINTING SCREEN */
+    /* ==================== */
+    .painting-screen {
+      background: #F5F0E8; /* Eggshell white */
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .painting-header {
+      position: absolute;
+      top: 16px;
+      left: 0;
+      right: 0;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+    }
+
+    .painting-header .header-logo {
+      color: #4A3F35; /* Dark brown for light background */
+      font-size: 12px;
+      letter-spacing: 2px;
+      text-align: center;
+      flex: 1;
+    }
+
+    .painting-header .header-profile {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      border: 1.5px solid rgba(74, 63, 53, 0.4);
+      background: transparent;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: var(--transition-smooth);
+    }
+
+    .painting-header .header-profile:hover {
+      border-color: var(--color-gold);
+    }
+
+    .painting-header .header-profile svg {
+      width: 18px;
+      height: 18px;
+      stroke: rgba(74, 63, 53, 0.6);
+    }
+
+    .painting-container {
+      position: relative;
+      width: 100%;
+      max-width: 500px;
+      height: 500px;
+      /* Removed rounded container styling - no border-radius, box-shadow, background, border */
+    }
+
+    @media (max-width: 480px) {
+      .painting-container {
+        height: 400px;
+      }
+
+      .painting-instructions {
+        padding: 0 20px;
+        margin-top: 20px;
+      }
+
+      .painting-title {
+        font-size: 20px;
+        letter-spacing: 1px;
+      }
+
+      .painting-subtitle {
+        font-size: 13px;
+      }
+
+      .painting-description {
+        font-size: 15px;
+      }
+
+      .painting-progress {
+        bottom: 16px;
+        left: 16px;
+        right: 16px;
+        padding: 12px 20px;
+      }
+    }
+
+    .painting-canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    #paintingCanvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .painting-instructions {
+      text-align: center;
+      margin-top: 24px;
+      color: #4A3F35; /* Dark brown for light background */
+      max-width: 320px;
+    }
+
+    .painting-title {
+      font-family: var(--font-serif);
+      font-size: 24px;
+      font-weight: 400;
+      letter-spacing: 2px;
+      color: var(--color-gold);
+      margin-bottom: 12px;
+      text-transform: uppercase;
+    }
+
+    .painting-subtitle {
+      font-family: var(--font-sans);
+      font-size: 14px;
+      font-weight: 500;
+      letter-spacing: 2px;
+      color: rgba(74, 63, 53, 0.7); /* Muted dark brown */
+      margin-bottom: 16px;
+      text-transform: uppercase;
+    }
+
+    .painting-description {
+      font-family: var(--font-sans);
+      font-size: 16px;
+      line-height: 1.5;
+      color: #4A3F35; /* Dark brown for light background */
+      opacity: 0;
+      animation: fadeInUp 0.8s ease forwards 0.3s;
+    }
+
+    .painting-progress {
+      position: absolute;
+      bottom: 20px;
+      left: 20px;
+      right: 20px;
+      background: rgba(255, 255, 255, 0.8);
+      backdrop-filter: blur(10px);
+      border-radius: 50px;
+      padding: 16px 24px;
+      opacity: 0;
+      transform: translateY(20px);
+      animation: fadeInUp 0.8s ease forwards 0.8s;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 4px;
+      background: rgba(74, 63, 53, 0.2);
+      border-radius: 2px;
+      overflow: hidden;
+      margin-bottom: 8px;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--color-gold);
+      border-radius: 2px;
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+
+    .progress-text {
+      font-family: var(--font-sans);
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 1px;
+      color: #4A3F35; /* Dark brown for light background */
+      text-transform: uppercase;
+      text-align: center;
     }
 
     /* ==================== */
@@ -925,7 +1112,7 @@ text-transform: uppercase;
       bottom: 80px;
       left: 50%;
       transform: translateX(-50%);
-      z-index: 101;
+      z-index: 150;
       opacity: 0;
       pointer-events: none;
       transition: opacity 0.5s ease, transform 0.5s ease;
@@ -937,6 +1124,13 @@ text-transform: uppercase;
     .share-btn-container.visible {
       opacity: 1;
       pointer-events: auto;
+    }
+
+    /* Hide share buttons when modal is active */
+    .video-modal.active ~ .share-btn-container,
+    .recipe-modal.active ~ .share-btn-container {
+      opacity: 0;
+      pointer-events: none;
     }
 
     .share-btn {
@@ -976,7 +1170,7 @@ text-transform: uppercase;
       font-weight: 500;
       letter-spacing: 2px;
       text-transform: uppercase;
-      color: #000;
+      color: var(--color-gold);
       cursor: pointer;
       transition: var(--transition-smooth);
       margin-top: 20px;
@@ -988,7 +1182,7 @@ text-transform: uppercase;
     }
 
     .mix-another-btn:focus-visible {
-      outline: 2px solid #000;
+      outline: 2px solid var(--color-gold);
       outline-offset: 2px;
     }
 
@@ -1288,7 +1482,7 @@ text-transform: uppercase;
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0, 0, 0, 0.7);
+      background: rgba(0, 0, 0, 0.4);
       z-index: 1000;
       display: flex;
       align-items: center;
@@ -1297,6 +1491,7 @@ text-transform: uppercase;
       opacity: 0;
       visibility: hidden;
       transition: var(--transition-smooth);
+      padding: 40px 24px;
     }
 
     .video-modal.active {
@@ -1304,15 +1499,26 @@ text-transform: uppercase;
       visibility: visible;
     }
 
+    .video-modal__panel {
+      position: relative;
+      background: rgba(255, 255, 255, 0.88);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-radius: 4px;
+      padding: 48px 20px 24px;
+      max-width: 340px;
+      width: 100%;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+    }
+
     .video-modal__close {
       position: absolute;
-      top: 20px;
-      right: 20px;
-      width: 44px;
-      height: 44px;
+      top: 12px;
+      right: 12px;
+      width: 32px;
+      height: 32px;
       border: none;
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 50%;
+      background: transparent;
       cursor: pointer;
       display: flex;
       align-items: center;
@@ -1321,36 +1527,130 @@ text-transform: uppercase;
     }
 
     .video-modal__close:hover {
-      background: rgba(255, 255, 255, 0.2);
+      opacity: 0.7;
     }
 
     .video-modal__close svg {
-      width: 24px;
-      height: 24px;
-      stroke: white;
+      width: 18px;
+      height: 18px;
+      stroke: #333;
+      stroke-width: 1.5;
+    }
+
+    .video-modal__header {
+      margin-bottom: 12px;
+    }
+
+    .video-modal__header-title {
+      font-family: var(--font-serif);
+      font-size: 22px;
+      font-weight: 400;
+      color: #1A1512;
+      margin-bottom: 8px;
+    }
+
+    .video-modal__header-desc {
+      font-family: var(--font-sans);
+      font-size: 14px;
+      line-height: 1.5;
+      color: #333;
+    }
+
+    .video-modal__header-desc a {
+      color: var(--color-gold);
+      text-decoration: none;
     }
 
     .video-modal__content {
-      width: 80%;
-      max-width: 430px;
-      padding: 0 20px;
+      width: 100%;
     }
 
     .video-modal__video {
       width: 100%;
-      border-radius: 16px;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+      border-radius: 4px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
     }
 
     .video-modal__title {
       font-family: var(--font-serif);
-      font-size: 18px;
+      font-size: 16px;
       font-weight: 400;
-      letter-spacing: 3px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: #1A1512;
+      text-align: center;
+      margin-top: 16px;
+    }
+
+    .video-modal__actions {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      margin-top: 20px;
+    }
+
+    .video-modal__add-btn {
+      width: 48px;
+      height: 48px;
+      border: 1.5px solid rgba(139, 115, 85, 0.4);
+      border-radius: 50%;
+      background: transparent;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: var(--transition-smooth);
+    }
+
+    .video-modal__add-btn:hover {
+      border-color: var(--color-gold);
+      background: rgba(139, 115, 85, 0.1);
+    }
+
+    .video-modal__add-btn svg {
+      width: 20px;
+      height: 20px;
+      stroke: var(--color-gold);
+    }
+
+    .video-modal__share-btn {
+      width: 100%;
+      max-width: 160px;
+      padding: 14px 24px;
+      background: rgba(26, 21, 18, 0.95);
+      border: none;
+      border-radius: 0;
+      font-family: var(--font-sans);
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: white;
+      cursor: pointer;
+      transition: var(--transition-smooth);
+    }
+
+    .video-modal__share-btn:hover {
+      background: #231815;
+    }
+
+    .video-modal__mix-btn {
+      background: transparent;
+      border: none;
+      font-family: var(--font-sans);
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 2px;
       text-transform: uppercase;
       color: var(--color-gold);
-      text-align: center;
-      margin-top: 24px;
+      cursor: pointer;
+      transition: var(--transition-smooth);
+      padding: 8px 0;
+    }
+
+    .video-modal__mix-btn:hover {
+      color: var(--color-gold-light);
     }
 
     /* ==================== */
@@ -1474,6 +1774,38 @@ text-transform: uppercase;
           </button>
         </div>
       </footer>
+    </section>
+    
+    <!-- PAINTING SCREEN -->
+    <section class="screen painting-screen" id="paintingScreen" aria-label="Paint to enter">
+      <header class="painting-header">
+        <span class="header-logo">The House of Suntory</span>
+        <button class="header-profile" aria-label="User profile" tabindex="0">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+            <circle cx="12" cy="8" r="4"/>
+            <path d="M4 20c0-4 4-6 8-6s8 2 8 6"/>
+          </svg>
+        </button>
+      </header>
+
+      <div class="painting-container" id="paintingContainer">
+        <div id="paintingCanvas"></div>
+      </div>
+
+      <div class="painting-instructions">
+        <h2 class="painting-title">Enso</h2>
+        <p class="painting-subtitle">The Art of the Strokes</p>
+        <p class="painting-description">
+          This is where a short description of the kanji will go.
+        </p>
+      </div>
+
+      <div class="painting-progress" id="paintingProgress">
+        <div class="progress-bar">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <div class="progress-text" id="progressText">Trace the kanji to continue</div>
+      </div>
     </section>
     
     <!-- CHAT SCREEN -->
@@ -1670,24 +2002,40 @@ text-transform: uppercase;
     
     <!-- Video Modal -->
     <div class="video-modal" id="videoModal" role="dialog" aria-modal="true" aria-labelledby="videoModalTitle">
-      <button class="video-modal__close" id="videoModalClose" aria-label="Close video" tabindex="0">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <line x1="18" y1="6" x2="6" y2="18"/>
-          <line x1="6" y1="6" x2="18" y2="18"/>
-        </svg>
-      </button>
-      <div class="video-modal__content">
-        <video 
-          class="video-modal__video" 
-          id="perfectServeVideo"
-          src="../images/perfect-serve.mp4"
-          controls
-          playsinline
-          preload="metadata"
-        >
-          Your browser does not support the video tag.
-        </video>
-        <h3 class="video-modal__title" id="videoModalTitle">The Perfect Serve</h3>
+      <div class="video-modal__panel">
+        <button class="video-modal__close" id="videoModalClose" aria-label="Close video" tabindex="0">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+        
+        <div class="video-modal__header">
+          <h3 class="video-modal__header-title" id="videoModalTitle">The Perfect Serve</h3>
+          <p class="video-modal__header-desc">Watch how Japanese bartenders craft the <a href="#">perfect Toki Highball</a>—a ritual of precision and care.</p>
+        </div>
+        
+        <div class="video-modal__content">
+          <video 
+            class="video-modal__video" 
+            id="perfectServeVideo"
+            src="../images/perfect-serve.mp4"
+            controls
+            playsinline
+            preload="metadata"
+          >
+            Your browser does not support the video tag.
+          </video>
+        </div>
+        
+        <div class="video-modal__actions">
+          <button class="video-modal__share-btn" id="videoShareBtn" aria-label="Share" tabindex="0">
+            SHARE
+          </button>
+          <button class="video-modal__mix-btn" id="videoMixBtn" aria-label="Mix another cocktail" tabindex="0">
+            MIX ANOTHER COCKTAIL →
+          </button>
+        </div>
       </div>
     </div>
     
@@ -1732,6 +2080,201 @@ text-transform: uppercase;
   <!-- Load configuration from external file (gitignored) -->
   <script src="config.js"></script>
   
+  <!-- p5.js Painting Sketch -->
+  <script>
+    let paintingSketch = function(p) {
+      let brush;
+      let canvas;
+      let isDrawing = false;
+      let strokePoints = [];
+      let circleProgress = 0;
+      let targetCircleCenter = null;
+      let targetCircleRadius = 120;
+      
+      // For Kanji character support (future implementation):
+      // - Define Kanji path as array of points or SVG path data
+      // - Use path following algorithm to detect if user traces the character
+      // - Calculate distance from drawn path to target Kanji path
+      // Example: const kanjiPath = [{x: 100, y: 100}, {x: 150, y: 120}, ...];
+
+      p.setup = function() {
+        console.log('p5 sketch setup called');
+        // Get container dimensions to ensure proper sizing
+        const container = document.getElementById('paintingCanvas');
+        const containerWidth = container ? container.offsetWidth : 500;
+        const containerHeight = container ? container.offsetHeight : 500;
+        
+        canvas = p.createCanvas(containerWidth, containerHeight);
+        canvas.parent('paintingCanvas');
+        console.log('Canvas created:', canvas);
+
+        // Set up ink-like brush with natural variations
+        p.stroke('#8B7355'); // Gold stroke color
+        p.strokeWeight(p.random(6, 12)); // Vary stroke weight for natural look
+        p.noFill();
+
+        // Set background to eggshell white (matching screen background)
+        p.background(245, 240, 232); // Eggshell white, fully opaque
+      };
+
+      function drawTargetCircle() {
+        p.push();
+        p.stroke(139, 115, 85, 60); // More visible gold on light background
+        p.strokeWeight(1);
+        p.noFill();
+        p.drawingContext.setLineDash([5, 5]);
+        // Ensure circle is centered
+        const centerX = p.width / 2;
+        const centerY = p.height / 2;
+        p.circle(centerX, centerY, targetCircleRadius * 2);
+        p.drawingContext.setLineDash([]);
+        p.pop();
+      }
+
+      p.draw = function() {
+        // Redraw the target circle guide each frame to ensure it's visible
+        drawTargetCircle();
+        
+        // Only update if we're drawing
+        if (isDrawing) {
+          // Draw with brush
+          if (p.mouseIsPressed && p.mouseX >= 0 && p.mouseX <= p.width && p.mouseY >= 0 && p.mouseY <= p.height) {
+            // Record stroke points for circle detection
+            strokePoints.push({x: p.mouseX, y: p.mouseY});
+          }
+        }
+
+        // Check circle completion every few frames
+        if (p.frameCount % 10 === 0 && strokePoints.length > 50) {
+          checkCircleCompletion();
+        }
+      };
+
+      p.windowResized = function() {
+        // Resize canvas to match container
+        const container = document.getElementById('paintingCanvas');
+        if (container) {
+          p.resizeCanvas(container.offsetWidth, container.offsetHeight);
+          // Redraw background to eggshell white
+          p.background(245, 240, 232);
+        }
+      };
+
+      p.mousePressed = function() {
+        if (p.mouseX >= 0 && p.mouseX <= p.width && p.mouseY >= 0 && p.mouseY <= p.height) {
+          isDrawing = true;
+          strokePoints = [{x: p.mouseX, y: p.mouseY}];
+        }
+      };
+
+      p.mouseDragged = function() {
+        if (isDrawing && p.mouseX >= 0 && p.mouseX <= p.width && p.mouseY >= 0 && p.mouseY <= p.height) {
+          // Vary stroke properties for ink-like effect
+          p.strokeWeight(p.random(4, 10));
+          p.stroke(p.color(139, 115, 85, p.random(180, 255))); // Vary opacity
+
+          // Draw multiple overlapping lines for ink bleed effect
+          for (let i = 0; i < 3; i++) {
+            let offsetX = p.random(-2, 2);
+            let offsetY = p.random(-2, 2);
+            p.line(p.pmouseX + offsetX, p.pmouseY + offsetY, p.mouseX + offsetX, p.mouseY + offsetY);
+          }
+
+          strokePoints.push({x: p.mouseX, y: p.mouseY});
+        }
+      };
+
+      p.mouseReleased = function() {
+        if (isDrawing) {
+          isDrawing = false;
+        }
+      };
+
+      function checkCircleCompletion() {
+        if (strokePoints.length < 100) return;
+
+        // Calculate center and radius of the drawn shape
+        let centerX = 0, centerY = 0;
+        strokePoints.forEach(point => {
+          centerX += point.x;
+          centerY += point.y;
+        });
+        centerX /= strokePoints.length;
+        centerY /= strokePoints.length;
+
+        // Calculate average distance from center (radius)
+        let avgRadius = 0;
+        strokePoints.forEach(point => {
+          let distance = p.dist(centerX, centerY, point.x, point.y);
+          avgRadius += distance;
+        });
+        avgRadius /= strokePoints.length;
+
+        // Check if the shape is close to the target circle (centered)
+        const targetCenterX = p.width / 2;
+        const targetCenterY = p.height / 2;
+
+        const centerDistance = p.dist(centerX, centerY, targetCenterX, targetCenterY);
+        const radiusDifference = Math.abs(avgRadius - targetCircleRadius);
+
+        // Calculate completion score
+        let centerAccuracy = Math.max(0, 1 - (centerDistance / 50)); // Within 50px of center
+        let radiusAccuracy = Math.max(0, 1 - (radiusDifference / 30)); // Within 30px of target radius
+
+        circleProgress = (centerAccuracy + radiusAccuracy) / 2;
+
+        // Update progress UI
+        updateProgressUI(circleProgress);
+
+        // Complete if progress is high enough
+        if (circleProgress > 0.7) {
+          setTimeout(() => {
+            completePainting();
+          }, 500);
+        }
+      }
+
+      function updateProgressUI(progress) {
+        const progressFill = document.getElementById('progressFill');
+        const progressText = document.getElementById('progressText');
+
+        if (progressFill && progressText) {
+          progressFill.style.width = (progress * 100) + '%';
+
+          if (progress > 0.7) {
+            progressText.textContent = 'Perfect! Entering...';
+            progressText.style.color = '#8B7355';
+          } else if (progress > 0.4) {
+            progressText.textContent = 'Almost there...';
+          } else {
+            progressText.textContent = 'Paint a circle to continue';
+          }
+        }
+      }
+
+      function completePainting() {
+        // Add completion animation
+        p.push();
+        p.fill(139, 115, 85, 50);
+        p.noStroke();
+        p.circle(p.width/2, p.height/2, targetCircleRadius * 2 + 20);
+        p.pop();
+
+        // Navigate to chat screen
+        setTimeout(() => {
+          navigateTo('chat');
+        }, 1000);
+      }
+
+      // Make functions globally accessible
+      window.paintingSketch = paintingSketch;
+    };
+
+    // Initialize the sketch when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+      new p5(paintingSketch);
+    });
+  </script>
   <script>
     // ==================== 
     // AUDIO SERVICE (11labs Integration)
@@ -1902,7 +2445,8 @@ text-transform: uppercase;
       isBartenderShaking: false,
       isAudioPlaying: false,
       currentAudio: null,
-      audioQueue: []
+      audioQueue: [],
+      chatFlowStarted: false
     };
 
     // Chat conversation flow
@@ -1978,6 +2522,7 @@ text-transform: uppercase;
     // ====================
     const screens = {
       landing: document.getElementById('landingScreen'),
+      painting: document.getElementById('paintingScreen'),
       chat: document.getElementById('chatScreen'),
       swirl: document.getElementById('swirlScreen'),
       immersive: document.getElementById('immersiveScreen')
@@ -2040,7 +2585,8 @@ text-transform: uppercase;
       screens[screenName].classList.add('active');
       state.currentScreen = screenName;
 
-      if (screenName === 'chat' && state.chatHistory.length === 0) {
+      if (screenName === 'chat' && !state.chatFlowStarted) {
+        state.chatFlowStarted = true;
         startChatFlow();
       }
 
@@ -2447,7 +2993,7 @@ text-transform: uppercase;
 
       state.selectedDestination = destination;
 
-      // Navigate to chat after short delay
+      // Navigate to chat screen
       setTimeout(() => {
         navigateTo('chat');
       }, 300);
@@ -2484,11 +3030,13 @@ text-transform: uppercase;
     const videoModalClose = document.getElementById('videoModalClose');
     const videoHotspot = document.getElementById('videoHotspot');
     const perfectServeVideo = document.getElementById('perfectServeVideo');
+    const videoShareBtn = document.getElementById('videoShareBtn');
+    const videoMixBtn = document.getElementById('videoMixBtn');
 
     const handleOpenVideoModal = () => {
       videoModal.classList.add('active');
       document.body.style.overflow = 'hidden';
-      perfectServeVideo.play();
+      // Don't auto-play, let user control
     };
 
     const handleCloseVideoModal = () => {
@@ -2502,6 +3050,16 @@ text-transform: uppercase;
       if (e.key === 'Escape') {
         handleCloseVideoModal();
       }
+    };
+
+    const handleVideoShare = () => {
+      handleCloseVideoModal();
+      handleOpenRecipeModal();
+    };
+
+    const handleVideoMixAnother = () => {
+      handleCloseVideoModal();
+      navigateToRepeatability();
     };
 
     // ==================== 
@@ -2525,13 +3083,19 @@ text-transform: uppercase;
     };
 
     const handleRecipeShare = async () => {
-      // Navigate to repeatability screen
-      navigateToRepeatability();
+      // Close the recipe modal and navigate to landing page
+      handleCloseRecipeModal();
+      setTimeout(() => {
+        navigateTo('landing');
+      }, 300);
     };
 
     const handleRecipeSave = () => {
-      // Navigate to repeatability screen
-      navigateToRepeatability();
+      // Close the recipe modal and navigate to landing page
+      handleCloseRecipeModal();
+      setTimeout(() => {
+        navigateTo('landing');
+      }, 300);
     };
 
     const navigateToRepeatability = async () => {
@@ -2666,9 +3230,9 @@ text-transform: uppercase;
         experienceOverlay.classList.add('active');
       }
 
-      // Show share button after a brief delay
+      // Navigate to landing page after a brief delay
       setTimeout(() => {
-        showShareButton();
+        navigateTo('landing');
       }, 1500);
     };
 
@@ -2766,15 +3330,36 @@ text-transform: uppercase;
         }
       });
 
-      // Close modal on backdrop click
+      // Close modal on Escape key
+      document.addEventListener('keydown', handleVideoModalKeyDown);
+
+      // Video modal share and mix buttons
+      if (videoShareBtn) {
+        videoShareBtn.addEventListener('click', handleVideoShare);
+        videoShareBtn.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            handleVideoShare();
+          }
+        });
+      }
+
+      if (videoMixBtn) {
+        videoMixBtn.addEventListener('click', handleVideoMixAnother);
+        videoMixBtn.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            handleVideoMixAnother();
+          }
+        });
+      }
+
+      // Close video modal on panel outside click
       videoModal.addEventListener('click', (e) => {
         if (e.target === videoModal) {
           handleCloseVideoModal();
         }
       });
-
-      // Close modal on Escape key
-      document.addEventListener('keydown', handleVideoModalKeyDown);
 
       // Tap to continue on swirl screen
       if (swirlContent) {
@@ -2854,6 +3439,20 @@ text-transform: uppercase;
       // Close recipe modal on Escape key
       document.addEventListener('keydown', handleRecipeModalKeyDown);
     };
+
+    // Listen for messages from iframe (proto-toki.html) for hotspot panel visibility
+    window.addEventListener('message', (event) => {
+      const shareBtnContainer = document.getElementById('shareBtnContainer');
+      if (!shareBtnContainer) return;
+      
+      if (event.data?.type === 'hotspotPanelOpen') {
+        shareBtnContainer.style.opacity = '0';
+        shareBtnContainer.style.pointerEvents = 'none';
+      } else if (event.data?.type === 'hotspotPanelClose') {
+        shareBtnContainer.style.opacity = '';
+        shareBtnContainer.style.pointerEvents = '';
+      }
+    });
 
     // Start the app
     init();

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 	<head>
-		<title>three.js webgl - Toki Japanese Highball</title>
+		<title>three.js webgl - Roku Gin</title>
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 		<link type="text/css" rel="stylesheet" href="example.css">
@@ -444,7 +444,7 @@
 			<!-- <div id="info">
 
 			<div class="title-wrapper">
-				<span>Toki Japanese Highball</span>
+				<span>Roku Gin</span>
 			</div>
 
 			<small>
@@ -489,7 +489,7 @@
 			<source src="audio/ice_clink-long.mp3" type="audio/mpeg">
 		</audio>
 
-		<div id="brandLabel">TOKI</div>
+		<div id="brandLabel">ROKU</div>
 
 		<div id="overlay" aria-live="polite">
 			<p>Tap to enable motion controls or keep using touch.</p>
@@ -500,19 +500,20 @@
 		<div id="hotspotOverlay" class="hotspot-overlay" role="presentation"></div>
 
 		<!-- Hotspot Info Panels -->
-		<div id="panelWhisky" class="hotspot-panel" role="dialog" aria-labelledby="panelWhiskyTitle" aria-modal="true">
+		<div id="panelGin" class="hotspot-panel" role="dialog" aria-labelledby="panelGinTitle" aria-modal="true">
 			<div class="hotspot-panel-header">
-				<h2 id="panelWhiskyTitle">Suntory Toki</h2>
+				<h2 id="panelGinTitle">Roku Gin</h2>
 				<button class="hotspot-panel-close" aria-label="Close panel" tabindex="0">×</button>
 			</div>
 			<p>
-				<span class="highlight">Toki</span> means "time" in Japanese, representing the harmony of old and new. 
-				This blended Japanese whisky combines malt from Hakushu and Yamazaki distilleries with 
-				grain whisky from Chita.
+				<span class="highlight">Roku</span> means "six" in Japanese, representing the six unique Japanese botanicals 
+				that define this exceptional gin. Crafted by Suntory, it combines traditional gin botanicals with 
+				six distinctive Japanese ingredients: sakura flower, sakura leaf, yuzu peel, sencha tea, 
+				gyokuro tea, and sansho pepper.
 			</p>
 			<p>
-				Silky with a subtle sweetness, it's the perfect base for a refreshing Highball—Japan's 
-				most popular way to enjoy whisky.
+				With a delicate balance of floral, citrus, and herbal notes, Roku Gin creates a refreshing 
+				and sophisticated cocktail experience—perfect for a Japanese-style gin and tonic.
 			</p>
 		</div>
 
@@ -522,12 +523,12 @@
 				<button class="hotspot-panel-close" aria-label="Close panel" tabindex="0">×</button>
 			</div>
 			<p>
-				In Japan, ice is an art form. Large, <span class="highlight">crystal-clear cubes</span> are essential 
-				for the perfect Highball—they melt slowly, keeping your drink cold without over-diluting.
+				In Japan, ice is an art form. A single, <span class="highlight">tall crystal-clear cube</span> is essential 
+				for the perfect gin and tonic—it melts slowly, keeping your drink cold without over-diluting.
 			</p>
 			<p>
-				The best Highball bars in Tokyo hand-carve their ice from massive blocks, ensuring purity 
-				and the ideal melting rate.
+				The best cocktail bars in Tokyo hand-carve their ice from massive blocks, ensuring purity 
+				and the ideal melting rate for a perfectly balanced drink.
 			</p>
 		</div>
 
@@ -537,12 +538,12 @@
 				<button class="hotspot-panel-close" aria-label="Close panel" tabindex="0">×</button>
 			</div>
 			<p>
-				The tall, slender <span class="highlight">Collins glass</span> is traditional for Japanese Highballs. 
+				The tall, slender <span class="highlight">Collins glass</span> is traditional for Japanese cocktails. 
 				Its narrow profile preserves carbonation and creates an elegant presentation.
 			</p>
 			<p>
 				Many Japanese bars freeze their glasses beforehand, creating a frosty exterior that 
-				keeps your Highball perfectly chilled from the first sip to the last.
+				keeps your drink perfectly chilled from the first sip to the last.
 			</p>
 		</div>
 
@@ -552,7 +553,7 @@
 				<button class="hotspot-panel-close" aria-label="Close panel" tabindex="0">×</button>
 			</div>
 			<p>
-				Watch how Japanese bartenders craft the <span class="highlight">perfect Toki Highball</span>—a ritual 
+				Watch how Japanese bartenders craft the <span class="highlight">perfect Roku Gin</span> cocktail—a ritual 
 				of precision and care.
 			</p>
 			<div class="video-placeholder">
@@ -604,15 +605,15 @@
 			const MAX_BUBBLES = 500;
 			let bubbleMesh;
 
-			// Orange slice
-			let orangeSlice;
-			let orangeSliceVisible = true;
+			// Lemon wedge
+			let lemonWedge;
+			let lemonWedgeVisible = true;
 
-			// Ice cubes (simple floating objects)
+			// Ice cubes (single tall cube)
 			const iceObjects = [];
 			const iceConfig = {
-				quantity: 2,
-				maxQuantity: 4,
+				quantity: 1,
+				maxQuantity: 1,
 				baseSize: 0.12,
 				sizeMultiplier: 3.75,
 			};
@@ -623,7 +624,7 @@
 			// Time tracking
 			let elapsedTime = 0;
 
-			// Highball glass dimensio.ns (taller and slender)
+			// Highball glass dimensions (taller and slender)
 			const GLASS_RADIUS = 0.85;
 			const GLASS_HEIGHT = 2.8;
 			const GLASS_THICKNESS = 0.04;
@@ -634,9 +635,14 @@
 			const LIQUID_BASE_Y = 0.1;
 			const LIQUID_SURFACE_Y = LIQUID_BASE_Y + LIQUID_HEIGHT;
 
-			// Toki Highball golden amber color (20% darker)
-			const LIQUID_COLOR = 0xaf934a;
-			const LIQUID_DEEP_COLOR = 0xa18033;
+			// Roku Gin cream color
+			const LIQUID_COLOR = 0xf2f3dc;
+			const LIQUID_DEEP_COLOR = 0xe1e2c8;
+
+			// Drink level tracking
+			let currentLiquidHeight = LIQUID_HEIGHT;
+			let clickedHotspots = new Set();
+			let pendingLiquidLevelChange = null;
 
 			const motionState = {
 				enabled: false,
@@ -706,15 +712,15 @@
 
 			function createIceMesh(size) {
 
-				// Rectangular ice cube typical for highballs
-				const geometry = new THREE.BoxGeometry(size * 1.8, size * 2.2, size * 1.8);
+				// Tall rectangular ice cube for gin and tonic
+				const geometry = new THREE.BoxGeometry(size * 1.8, size * 4.4, size * 1.8);
 				const material = createIceMaterial();
 				const mesh = new THREE.Mesh(geometry, material);
 				mesh.renderOrder = 3;
 				mesh.userData.baseSize = size;
 
 				// Add inner frosted core for realism
-				const innerGeometry = new THREE.BoxGeometry(size * 1.4, size * 1.8, size * 1.4);
+				const innerGeometry = new THREE.BoxGeometry(size * 1.4, size * 3.6, size * 1.4);
 				const innerMaterial = new THREE.MeshStandardMaterial({
 					color: 0xffffff,
 					metalness: 0.0,
@@ -754,40 +760,21 @@
 
 				const size = getCurrentIceSize();
 				const scale = ice.mesh.scale.x;
-				// Ice height is 2.2 * size * scale
-				return size * 2.2 * scale * 0.5;
+				// Ice height is 4.4 * size * scale
+				return size * 4.4 * scale * 0.5;
 
 			}
 
 			function findNonOverlappingPosition(size, iceIndex) {
 
-				const iceHeight = size * 2.2;
+				const iceHeight = size * 4.4;
 				
-				// For 2 stacked ice cubes - deterministic positioning
-				if (iceIndex === 0) {
-
-					// First (top) ice cube - breaks the surface
-					// Positioned at center, 30% submerged
-					return { 
-						x: 0, 
-						z: 0, 
-						y: LIQUID_SURFACE_Y - iceHeight * 0.35
-					};
-
-				} else {
-
-					// Second (bottom) ice cube - stacked below the first
-					// Positioned directly under the first cube
-					const topIce = iceObjects[0];
-					const stackY = topIce.baseY - iceHeight - 0.02; // Stack below with small gap
-					
-					return { 
-						x: topIce.baseX + (Math.random() - 0.5) * 0.05, // Tiny offset for realism
-						z: topIce.baseZ + (Math.random() - 0.5) * 0.05, 
-						y: Math.max(stackY, LIQUID_BASE_Y + iceHeight * 0.5 + 0.1) // Don't go below glass bottom
-					};
-
-				}
+				// Single tall ice cube at surface level
+				return { 
+					x: 0, 
+					z: 0, 
+					y: LIQUID_SURFACE_Y - iceHeight * 0.35
+				};
 
 			}
 
@@ -801,24 +788,24 @@
 
 				const mesh = createIceMesh(size);
 
-				// First ice cube is the "surface" ice
-				const isFirstIce = iceIndex === 0;
+				// Single ice cube is the "surface" ice
+				const isFloater = true;
 
-				// Each ice cube gets unique animation parameters
+				// Ice cube gets unique animation parameters
 				const iceData = {
 					mesh,
 					baseX: position.x,
 					baseY: position.y,
 					baseZ: position.z,
 					targetY: position.y,
-					isFloater: isFirstIce,
+					isFloater: isFloater,
 					velocityY: 0,
 					phaseX: Math.random() * Math.PI * 2,
 					phaseZ: Math.random() * Math.PI * 2,
 					phaseY: Math.random() * Math.PI * 2,
 					rotationSpeed: (Math.random() - 0.5) * 0.3,
 					bobSpeed: 0.8 + Math.random() * 0.4,
-					bobAmount: isFirstIce ? 0.02 : 0.01,
+					bobAmount: 0.02,
 					driftAmount: 0.01 + Math.random() * 0.01,
 				};
 
@@ -863,32 +850,11 @@
 			function resolveIceCollisions() {
 
 				const size = getCurrentIceSize();
-				const iceHeight = size * 2.2;
+				const iceHeight = size * 4.4;
 				const minY = LIQUID_BASE_Y + iceHeight * 0.5 + 0.05;
 				const boundsRadius = LIQUID_RADIUS - size * 0.8;
 
-				// For 2 stacked cubes - maintain vertical alignment
-				if (iceObjects.length === 2) {
-
-					const topIce = iceObjects[0];  // First ice (floater at top)
-					const bottomIce = iceObjects[1];  // Second ice (below)
-
-					// Keep top ice at surface level
-					const topTargetY = LIQUID_SURFACE_Y - iceHeight * 0.35;
-					topIce.baseY += (topTargetY - topIce.baseY) * 0.1;
-
-					// Keep bottom ice stacked below top ice
-					const bottomTargetY = topIce.baseY - iceHeight - 0.02;
-					const clampedBottomY = Math.max(bottomTargetY, minY);
-					bottomIce.baseY += (clampedBottomY - bottomIce.baseY) * 0.1;
-
-					// Keep bottom ice horizontally aligned with top (slight offset for realism)
-					bottomIce.baseX += (topIce.baseX - bottomIce.baseX) * 0.05;
-					bottomIce.baseZ += (topIce.baseZ - bottomIce.baseZ) * 0.05;
-
-				}
-
-				// Apply bounds constraints for all ice
+				// Apply bounds constraints for single ice cube
 				for (const ice of iceObjects) {
 
 					// Keep within glass bounds horizontally
@@ -901,10 +867,8 @@
 
 					}
 
-					// Clamp Y range
-					const maxY = ice.isFloater 
-						? LIQUID_SURFACE_Y - iceHeight * 0.25 
-						: LIQUID_SURFACE_Y - iceHeight * 0.6;
+					// Clamp Y range - keep at surface level
+					const maxY = LIQUID_SURFACE_Y - iceHeight * 0.25;
 					
 					if (ice.baseY > maxY) ice.baseY = maxY;
 					if (ice.baseY < minY) ice.baseY = minY;
@@ -923,7 +887,7 @@
 
 				for (const ice of iceObjects) {
 
-					// Gentle bobbing motion - stronger for floater
+					// Gentle bobbing motion
 					const bobY = Math.sin(time * ice.bobSpeed + ice.phaseY) * ice.bobAmount;
 
 					// Slight drift in X and Z
@@ -958,91 +922,86 @@
 
 			}
 
-			// Orange peel creation (single strip peel)
-			function createOrangeSlice() {
+			// Lemon wedge creation
+			function createLemonWedge() {
 
 				const group = new THREE.Group();
 
-				// Peel dimensions - shorter strip (half length)
-				const peelLength = 1.2;
-				const peelWidth = 0.18;
-				const peelThickness = 0.035;
-				const curveSegments = 16;
+				// Wedge dimensions - match ice cube width (0.45 * 3.75 * 1.8 ≈ 0.81)
+				const wedgeRadius = 0.4;
+				const wedgeThickness = 0.02;
+				const wedgeAngle = Math.PI * 0.4; // About 72 degrees
 
-				// Create a curved path for the peel - gentle S-curve
-				const curve = new THREE.CatmullRomCurve3([
-					new THREE.Vector3(0, 0, 0),
-					new THREE.Vector3(0.06, peelLength * 0.3, 0.03),
-					new THREE.Vector3(-0.04, peelLength * 0.6, 0.05),
-					new THREE.Vector3(0.02, peelLength, 0),
-				]);
+				// Create wedge shape (circular segment)
+				const wedgeShape = new THREE.Shape();
+				wedgeShape.moveTo(0, 0);
+				wedgeShape.arc(0, 0, wedgeRadius, 0, wedgeAngle, false);
+				wedgeShape.lineTo(0, 0);
 
-				// Create custom peel geometry by extruding along curve
-				const peelShape = new THREE.Shape();
-				peelShape.moveTo(-peelWidth / 2, 0);
-				peelShape.lineTo(peelWidth / 2, 0);
-				peelShape.lineTo(peelWidth / 2, peelThickness);
-				peelShape.lineTo(-peelWidth / 2, peelThickness);
-				peelShape.lineTo(-peelWidth / 2, 0);
-
+				// Extrude to create 3D wedge
 				const extrudeSettings = {
-					steps: curveSegments,
+					depth: wedgeThickness,
 					bevelEnabled: false,
-					extrudePath: curve,
 				};
 
-				const peelGeometry = new THREE.ExtrudeGeometry(peelShape, extrudeSettings);
+				const wedgeGeometry = new THREE.ExtrudeGeometry(wedgeShape, extrudeSettings);
+				wedgeGeometry.rotateX(-Math.PI * 0.5);
+				wedgeGeometry.translate(0, wedgeThickness * 0.5, 0);
 
-				// Orange rind (outer surface) - vibrant orange
-				const rindMaterial = new THREE.MeshStandardMaterial({
-					color: 0xf57c00,
+				// Lemon flesh (yellow-green)
+				const fleshMaterial = new THREE.MeshStandardMaterial({
+					color: 0xfff44f,
 					metalness: 0.05,
-					roughness: 0.55,
-					side: THREE.FrontSide,
+					roughness: 0.6,
+					side: THREE.DoubleSide,
 				});
 
-				const peel = new THREE.Mesh(peelGeometry, rindMaterial);
-				group.add(peel);
+				const flesh = new THREE.Mesh(wedgeGeometry, fleshMaterial);
+				group.add(flesh);
 
-				// Inner pith layer (whitish-orange)
-				const pithGeometry = peelGeometry.clone();
+				// White pith edge
+				const pithShape = new THREE.Shape();
+				pithShape.moveTo(0, 0);
+				pithShape.arc(0, 0, wedgeRadius, 0, wedgeAngle, false);
+				pithShape.lineTo(0, 0);
+
+				const pithExtrudeSettings = {
+					depth: wedgeThickness * 0.3,
+					bevelEnabled: false,
+				};
+
+				const pithGeometry = new THREE.ExtrudeGeometry(pithShape, pithExtrudeSettings);
+				pithGeometry.rotateX(-Math.PI * 0.5);
+				pithGeometry.translate(0, wedgeThickness * 0.15, 0);
+
 				const pithMaterial = new THREE.MeshStandardMaterial({
-					color: 0xffe4b5,
+					color: 0xffffff,
 					metalness: 0.0,
-					roughness: 0.85,
-					side: THREE.BackSide,
+					roughness: 0.9,
+					side: THREE.DoubleSide,
 				});
 
 				const pith = new THREE.Mesh(pithGeometry, pithMaterial);
 				group.add(pith);
 
-				// Add subtle texture detail with slight bumps along the peel
-				const detailCount = 6;
+				// Add some texture detail with small bumps
+				const detailCount = 4;
 				const detailMaterial = new THREE.MeshStandardMaterial({
-					color: 0xd46a00,
+					color: 0xffd700,
 					metalness: 0.0,
 					roughness: 0.7,
 				});
 
 				for (let i = 0; i < detailCount; i++) {
 
-					const t = (i + 0.5) / detailCount;
-					const point = curve.getPoint(t);
+					const angle = (i + 0.5) / detailCount * wedgeAngle;
+					const radius = wedgeRadius * 0.6;
+					const x = Math.cos(angle) * radius;
+					const z = Math.sin(angle) * radius;
 
-					// Small bumps for orange peel texture
-					const bumpGeo = new THREE.SphereGeometry(0.012, 6, 6);
+					const bumpGeo = new THREE.SphereGeometry(0.008, 6, 6);
 					const bump = new THREE.Mesh(bumpGeo, detailMaterial);
-
-					// Offset slightly from center
-					const offsetX = (Math.random() - 0.5) * peelWidth * 0.5;
-					const offsetZ = peelThickness * 0.5;
-
-					bump.position.set(
-						point.x + offsetX,
-						point.y,
-						point.z + offsetZ
-					);
-
+					bump.position.set(x, wedgeThickness * 0.5, z);
 					group.add(bump);
 
 				}
@@ -1051,58 +1010,58 @@
 
 			}
 
-			function spawnOrangeSlice() {
+			function spawnLemonWedge() {
 
-				orangeSlice = createOrangeSlice();
+				lemonWedge = createLemonWedge();
 				
-				// Position inside glass at top, vertical orientation
-				// Leaning slightly against the inner glass wall
-				const peelX = -0.5;  // Near the inner edge of glass
-				const peelZ = 0.3;
-				const peelY = LIQUID_SURFACE_Y - 0.5;  // Bottom in liquid, top sticks out
+				// Position floating on top of liquid surface
+				const wedgeX = 0.4;
+				const wedgeZ = 0.2;
+				const wedgeY = LIQUID_SURFACE_Y + 0.01;  // Just above surface
 				
-				orangeSlice.position.set(peelX, peelY, peelZ);
+				lemonWedge.position.set(wedgeX, wedgeY, wedgeZ);
 				
-				// Rotate to be vertical with slight lean toward glass edge
-				orangeSlice.rotation.x = 0;  // Upright
-				orangeSlice.rotation.y = -Math.PI * 0.3;  // Angled view
-				orangeSlice.rotation.z = Math.PI * 0.75;  // Slight lean against glass
+				// Rotate to rest on surface (slight tilt)
+				lemonWedge.rotation.x = Math.PI * 0.1;  // Slight tilt
+				lemonWedge.rotation.y = Math.PI * 0.25;  // Angled view
+				lemonWedge.rotation.z = Math.PI * 0.05;  // Slight roll
 				
-				orangeSlice.renderOrder = 6;
-				orangeSlice.visible = orangeSliceVisible;
-				scene.add(orangeSlice);
+				lemonWedge.renderOrder = 6;
+				lemonWedge.visible = lemonWedgeVisible;
+				scene.add(lemonWedge);
 
 			}
 
-			function updateOrangeSliceAnimation(time) {
+			function updateLemonWedgeAnimation(time) {
 
-				if (!orangeSlice || !orangeSliceVisible) return;
+				if (!lemonWedge || !lemonWedgeVisible) return;
 
-				// Very subtle movement - peel is resting against inner glass wall
-				const gentleSway = Math.sin(time * 0.4) * 0.005;
-				const subtleBob = Math.sin(time * 0.6) * 0.008;
+				// Gentle floating motion on liquid surface
+				const gentleSway = Math.sin(time * 0.3) * 0.008;
+				const subtleBob = Math.sin(time * 0.5) * 0.005;
 
 				// Base position with subtle animation
-				const peelX = -0.5;
-				const peelZ = 0.3;
-				const peelY = LIQUID_SURFACE_Y - 0.5;
+				const wedgeX = 0.4;
+				const wedgeZ = 0.2;
+				const currentSurfaceY = LIQUID_BASE_Y + currentLiquidHeight;
+				const wedgeY = currentSurfaceY + 0.01;
 				
-				orangeSlice.position.x = peelX + gentleSway;
-				orangeSlice.position.y = peelY + subtleBob;
-				orangeSlice.position.z = peelZ + gentleSway * 0.3;
+				lemonWedge.position.x = wedgeX + gentleSway;
+				lemonWedge.position.y = wedgeY + subtleBob;
+				lemonWedge.position.z = wedgeZ + gentleSway * 0.4;
 
 				// Very subtle rotation sway
-				orangeSlice.rotation.z = Math.PI * 0.12 + Math.sin(time * 0.3) * 0.015;
+				lemonWedge.rotation.z = Math.PI * 0.05 + Math.sin(time * 0.2) * 0.01;
 
 			}
 
-			function toggleOrangeSlice(visible) {
+			function toggleLemonWedge(visible) {
 
-				orangeSliceVisible = visible;
+				lemonWedgeVisible = visible;
 
-				if (orangeSlice) {
+				if (lemonWedge) {
 
-					orangeSlice.visible = visible;
+					lemonWedge.visible = visible;
 
 				}
 
@@ -1168,15 +1127,15 @@
 			function initHotspots() {
 
 				// Push hotspots further out from glass (GLASS_RADIUS = 0.85, so we'll place them at ~1.3-1.5)
-				// Whisky hotspot - at the liquid level, pushed out to the right
+				// Gin hotspot - at the liquid level, pushed out to the right
 				createHotspot(
 					new THREE.Vector3(1.4, 1.5, 0.2),
-					'About Toki Whisky',
-					'panelWhisky',
+					'About Roku Gin',
+					'panelGin',
 					0xdbb85c
 				);
 
-				// Ice hotspot - near the ice cubes, pushed out to the left-front
+				// Ice hotspot - near the ice cube, pushed out to the left-front
 				createHotspot(
 					new THREE.Vector3(-1.2, 2.2, 1.0),
 					'The Perfect Ice',
@@ -1280,7 +1239,18 @@
 
 					if (intersects.length > 0 && intersects[0].distance < 10) {
 
-						openPanel(hotspot.userData.panelId);
+						const panelId = hotspot.userData.panelId;
+
+						// Check if this hotspot has already been clicked
+						if (!clickedHotspots.has(panelId)) {
+							// Mark as clicked and queue 25% reduction
+							clickedHotspots.add(panelId);
+							const newHeight = currentLiquidHeight * 0.75;
+							pendingLiquidLevelChange = newHeight;
+							console.log('Hotspot clicked:', panelId, 'New height:', newHeight, 'Current:', currentLiquidHeight);
+						}
+
+						openPanel(panelId);
 						return true;
 
 					}
@@ -1322,6 +1292,13 @@
 				}
 
 				hotspotOverlay.classList.remove('active');
+
+				// Check if there's a pending liquid level change
+				if (pendingLiquidLevelChange !== null) {
+					console.log('Updating liquid level to:', pendingLiquidLevelChange);
+					updateLiquidLevel(pendingLiquidLevelChange);
+					pendingLiquidLevelChange = null;
+				}
 
 			}
 
@@ -1461,7 +1438,8 @@
 
 					bubble.life += deltaTime;
 
-					if (bubble.life > bubble.maxLife || bubble.position.y > LIQUID_SURFACE_Y) {
+					const currentSurfaceY = LIQUID_BASE_Y + currentLiquidHeight;
+					if (bubble.life > bubble.maxLife || bubble.position.y > currentSurfaceY) {
 
 						bubble.active = false;
 						scale.set(0, 0, 0);
@@ -1628,8 +1606,8 @@
 
 				}
 
-				// Spawn orange slice
-				spawnOrangeSlice();
+				// Spawn lemon wedge
+				spawnLemonWedge();
 
 				// Initialize hotspots
 				initHotspots();
@@ -1889,7 +1867,7 @@
 					roughness: 0.2,
 					transparent: true,
 					opacity: 0.7,
-					emissive: 0x8b6914,
+					emissive: 0xd5d6be,
 					emissiveIntensity: 0.03,
 					side: THREE.DoubleSide,
 					depthWrite: false,
@@ -1907,6 +1885,76 @@
 				waterPlane.rotation.x = -Math.PI * 0.5;
 				waterPlane.position.y = LIQUID_SURFACE_Y;
 				scene.add(waterPlane);
+
+			}
+
+			function updateLiquidLevel(newHeight) {
+
+				console.log('updateLiquidLevel called with:', newHeight);
+				
+				// Update current liquid height
+				currentLiquidHeight = newHeight;
+				const newSurfaceY = LIQUID_BASE_Y + currentLiquidHeight;
+				
+				console.log('New surface Y:', newSurfaceY, 'Old was:', LIQUID_BASE_Y + LIQUID_HEIGHT);
+
+				// Update liquid surface position
+				if (liquidSurface) {
+					// Dispose old geometry
+					liquidSurface.geometry.dispose();
+					
+					// Create new surface geometry at new height
+					const surfaceSegments = 64;
+					const surfaceGeometry = new THREE.CircleGeometry(LIQUID_RADIUS, surfaceSegments);
+					surfaceGeometry.rotateX(-Math.PI * 0.5);
+					surfaceGeometry.translate(0, newSurfaceY, 0);
+					surfaceGeometry.computeBoundingBox();
+					surfaceGeometry.computeBoundingSphere();
+					
+					liquidSurface.geometry = surfaceGeometry;
+					// Ensure mesh position is at origin since geometry is translated
+					liquidSurface.position.set(0, 0, 0);
+					console.log('Updated liquid surface to Y:', newSurfaceY);
+				}
+
+				// Update liquid body (cylinder)
+				if (liquidBody) {
+					// Dispose old geometry
+					liquidBody.geometry.dispose();
+					
+					// Create new geometry with updated height
+					const bodyGeometry = new THREE.CylinderGeometry(
+						LIQUID_RADIUS,
+						LIQUID_RADIUS,
+						currentLiquidHeight,
+						64,
+						1,
+						true
+					);
+					bodyGeometry.translate(0, LIQUID_BASE_Y + currentLiquidHeight * 0.5, 0);
+					bodyGeometry.computeBoundingBox();
+					bodyGeometry.computeBoundingSphere();
+					
+					liquidBody.geometry = bodyGeometry;
+					// Ensure mesh position is at origin since geometry is translated
+					liquidBody.position.set(0, 0, 0);
+					console.log('Updated liquid body height to:', currentLiquidHeight);
+				}
+
+				// Update water plane position for raycasting
+				if (waterPlane) {
+					waterPlane.position.y = newSurfaceY;
+				}
+
+				// Update lemon wedge position to float on new surface
+				if (lemonWedge) {
+					const wedgeX = lemonWedge.position.x;
+					const wedgeZ = lemonWedge.position.z;
+					const wedgeY = newSurfaceY + 0.01; // Just above surface
+					lemonWedge.position.set(wedgeX, wedgeY, wedgeZ);
+				}
+
+				// Ice cubes remain at original positions (no movement needed)
 
 			}
 
@@ -2262,7 +2310,7 @@
 				// Update animations
 				updateBubbles(deltaTime);
 				updateIceAnimation(elapsedTime);
-				updateOrangeSliceAnimation(elapsedTime);
+				updateLemonWedgeAnimation(elapsedTime);
 				updateHotspots(elapsedTime);
 
 				controls.update();
@@ -2282,3 +2330,4 @@
 		</script>
 	</body>
 </html>
+
