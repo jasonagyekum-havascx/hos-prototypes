@@ -1,0 +1,62 @@
+<!-- LANDING SCREEN -->
+<section class="screen landing-screen active" id="landingScreen" aria-label="Welcome screen">
+  <div class="landing-background" aria-hidden="true">
+    <video class="landing-video" autoplay muted loop playsinline>
+      <source src="../images/landing-bg.mp4" type="video/mp4">
+    </video>
+  </div>
+  
+  <div class="landing-content">
+    <img src="../images/assets/logo-landing.png" alt="The House of Suntory" class="landing-logo" />
+    <h1 class="landing-title">VIRTUAL<br>BARTENDER</h1>
+  </div>
+  
+  <footer class="landing-footer">
+    <div class="location-row">
+      <svg class="location-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+        <circle cx="12" cy="10" r="3"/>
+      </svg>
+      <span class="location-text">SANTA BARBARA, CA</span>
+      <span class="location-temp">| 72°</span>
+    </div>
+    
+    <p class="destination-prompt">Choose your destination to get started</p>
+    
+    <div class="destination-grid" role="group" aria-label="Destination selection">
+      <button 
+        class="destination-btn destination-btn--default" 
+        data-destination="izakaya"
+        aria-label="Select Izakaya"
+        tabindex="0"
+      >
+        Izakaya
+      </button>
+      <button 
+        class="destination-btn destination-btn--default" 
+        data-destination="omakase"
+        aria-label="Select Omakase"
+        tabindex="0"
+      >
+        Omakase
+      </button>
+      <button 
+        class="destination-btn destination-btn--active" 
+        data-destination="listening-bar"
+        aria-label="Select Listening Bar"
+        tabindex="0"
+      >
+        Listening Bar
+      </button>
+      <button 
+        class="destination-btn destination-btn--default" 
+        data-destination="tea-room"
+        aria-label="Select Tea Room"
+        tabindex="0"
+      >
+        Tea Room
+      </button>
+    </div>
+  </footer>
+</section>
+

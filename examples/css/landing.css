@@ -1,0 +1,192 @@
+/* ==================== */
+/* LANDING SCREEN */
+/* ==================== */
+.landing-screen {
+  justify-content: space-between;
+  padding: 60px 24px 48px;
+}
+
+/* Video background container */
+.landing-background {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.landing-video {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  min-width: 100%;
+  min-height: 100%;
+  width: auto;
+  height: auto;
+  transform: translate(-50%, -50%) scale(1.02);
+  object-fit: cover;
+  filter: blur(2px);
+}
+
+/* Gradient overlay on video */
+.landing-background::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+  background: 
+    linear-gradient(180deg, 
+      rgba(20, 40, 30, 0.25) 0%, 
+      rgba(15, 30, 22, 0.35) 40%,
+      rgba(10, 20, 15, 0.7) 100%
+    ),
+    radial-gradient(ellipse 120% 80% at 50% 30%, transparent 0%, rgba(10, 20, 15, 0.4) 100%);
+}
+
+/* Bottom fade for text readability */
+.landing-background::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 50%;
+  z-index: 1;
+  background: 
+    linear-gradient(0deg, 
+      rgba(10, 15, 12, 0.85) 0%, 
+      rgba(15, 25, 20, 0.5) 50%,
+      transparent 100%
+    );
+}
+
+.landing-content {
+  position: relative;
+  z-index: 1;
+  text-align: center;
+  padding-top: 80px;
+}
+
+.landing-logo {
+  max-width: 270px;
+  width: 100%;
+  height: auto;
+  margin-bottom: 8px;
+  opacity: 0;
+  transform: translateY(20px);
+  animation: fadeInUp 0.8s ease forwards 0.2s;
+}
+
+.landing-title {
+  color: #FFF;
+  text-align: center;
+  text-shadow: 0 4px 4px rgba(0, 0, 0, 0.25);
+  font-family: "SUNTORY Sabon";
+  font-size: 44px;
+  font-style: normal;
+  font-weight: 700;
+  line-height: normal;
+  letter-spacing: 0.88px;
+  text-transform: uppercase;
+  transform: translateY(20px);
+  animation: fadeInUp 0.8s ease forwards 0.4s;
+}
+
+.landing-footer {
+  position: relative;
+  z-index: 1;
+}
+
+.location-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 20px;
+  font-size: 14px;
+  color: var(--color-text-light);
+  opacity: 0;
+  animation: fadeInUp 0.8s ease forwards 0.6s;
+}
+
+.location-icon {
+  width: 16px;
+  height: 16px;
+  opacity: 0.9;
+}
+
+.location-text {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  letter-spacing: 1.5px;
+  font-size: 13px;
+}
+
+.location-temp {
+  opacity: 0.8;
+  letter-spacing: 1px;
+}
+
+.destination-prompt {
+  font-size: 16px;
+  text-align: center;
+  color: var(--color-text-light);
+  margin-bottom: 20px;
+  opacity: 0;
+  animation: fadeInUp 0.8s ease forwards 0.7s;
+}
+
+.destination-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  max-width: 320px;
+  margin: 0 auto;
+  opacity: 0;
+  animation: fadeInUp 0.8s ease forwards 0.8s;
+}
+
+.destination-btn {
+  padding: 14px 15px;
+  border-radius: 50px;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: var(--transition-smooth);
+  border: none;
+  outline: none;
+}
+
+.destination-btn:focus-visible {
+  outline: 2px solid var(--color-gold);
+  outline-offset: 2px;
+}
+
+.destination-btn--default {
+  background: rgba(180, 175, 165, 0.85);
+  color: #3a3a3a;
+}
+
+.destination-btn--default:hover {
+  background: rgba(200, 195, 185, 0.95);
+  transform: translateY(-2px);
+}
+
+.destination-btn--active {
+  background: rgba(150, 105, 55, 1);
+  color: white;
+}
+
+.destination-btn--active:hover {
+  background: var(--color-gold-light);
+  transform: translateY(-2px);
+}
+
