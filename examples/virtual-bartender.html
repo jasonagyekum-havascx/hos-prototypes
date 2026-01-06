@@ -11,7 +11,10 @@
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
   <!-- Adobe Fonts - Futura PT -->
   <link rel="stylesheet" href="https://use.typekit.net/yfq5vqz.css">
-  
+
+  <!-- p5.js library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js"></script>
+
   <style>
     /* CSS Variables */
     :root {
@@ -283,6 +286,189 @@ text-transform: uppercase;
     .destination-btn--active:hover {
       background: var(--color-gold-light);
       transform: translateY(-2px);
+    }
+
+    /* ==================== */
+    /* PAINTING SCREEN */
+    /* ==================== */
+    .painting-screen {
+      background: var(--color-dark);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .painting-header {
+      position: absolute;
+      top: 16px;
+      left: 0;
+      right: 0;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+    }
+
+    .painting-header .header-logo {
+      color: var(--color-text-light);
+      font-size: 12px;
+      letter-spacing: 2px;
+      text-align: center;
+      flex: 1;
+    }
+
+    .painting-header .header-profile {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      border: 1.5px solid rgba(255, 255, 255, 0.6);
+      background: transparent;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: var(--transition-smooth);
+    }
+
+    .painting-header .header-profile:hover {
+      border-color: var(--color-gold);
+    }
+
+    .painting-header .header-profile svg {
+      width: 18px;
+      height: 18px;
+      stroke: rgba(255, 255, 255, 0.7);
+    }
+
+    .painting-container {
+      position: relative;
+      width: 100%;
+      max-width: 500px;
+      height: 500px;
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    @media (max-width: 480px) {
+      .painting-container {
+        height: 400px;
+        border-radius: 12px;
+      }
+
+      .painting-instructions {
+        padding: 0 20px;
+        margin-top: 20px;
+      }
+
+      .painting-title {
+        font-size: 20px;
+        letter-spacing: 1px;
+      }
+
+      .painting-subtitle {
+        font-size: 13px;
+      }
+
+      .painting-description {
+        font-size: 15px;
+      }
+
+      .painting-progress {
+        bottom: 16px;
+        left: 16px;
+        right: 16px;
+        padding: 12px 20px;
+      }
+    }
+
+    .painting-canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    .painting-instructions {
+      text-align: center;
+      margin-top: 24px;
+      color: var(--color-text-light);
+      max-width: 320px;
+    }
+
+    .painting-title {
+      font-family: var(--font-serif);
+      font-size: 24px;
+      font-weight: 400;
+      letter-spacing: 2px;
+      color: var(--color-gold);
+      margin-bottom: 12px;
+      text-transform: uppercase;
+    }
+
+    .painting-subtitle {
+      font-family: var(--font-sans);
+      font-size: 14px;
+      font-weight: 500;
+      letter-spacing: 2px;
+      color: var(--color-text-muted);
+      margin-bottom: 16px;
+      text-transform: uppercase;
+    }
+
+    .painting-description {
+      font-family: var(--font-sans);
+      font-size: 16px;
+      line-height: 1.5;
+      color: var(--color-text-light);
+      opacity: 0;
+      animation: fadeInUp 0.8s ease forwards 0.3s;
+    }
+
+    .painting-progress {
+      position: absolute;
+      bottom: 20px;
+      left: 20px;
+      right: 20px;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(10px);
+      border-radius: 50px;
+      padding: 16px 24px;
+      opacity: 0;
+      transform: translateY(20px);
+      animation: fadeInUp 0.8s ease forwards 0.8s;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 2px;
+      overflow: hidden;
+      margin-bottom: 8px;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--color-gold);
+      border-radius: 2px;
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+
+    .progress-text {
+      font-family: var(--font-sans);
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 1px;
+      color: var(--color-text-light);
+      text-transform: uppercase;
+      text-align: center;
     }
 
     /* ==================== */
@@ -1382,66 +1568,36 @@ text-transform: uppercase;
 <body>
   <div class="app" role="main">
     
-    <!-- LANDING SCREEN -->
-    <section class="screen landing-screen active" id="landingScreen" aria-label="Welcome screen">
-      <div class="landing-background" aria-hidden="true">
-        <video class="landing-video" autoplay muted loop playsinline>
-          <source src="../images/landing-bg.mp4" type="video/mp4">
-        </video>
-      </div>
-      
-      <div class="landing-content">
-        <img src="../images/assets/logo-landing.png" alt="The House of Suntory" class="landing-logo" />
-        <h1 class="landing-title">VIRTUAL<br>BARTENDER</h1>
-      </div>
-      
-      <footer class="landing-footer">
-        <div class="location-row">
-          <svg class="location-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
-            <circle cx="12" cy="10" r="3"/>
+    <!-- PAINTING SCREEN -->
+    <section class="screen painting-screen active" id="paintingScreen" aria-label="Paint to enter">
+      <header class="painting-header">
+        <span class="header-logo">The House of Suntory</span>
+        <button class="header-profile" aria-label="User profile" tabindex="0">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+            <circle cx="12" cy="8" r="4"/>
+            <path d="M4 20c0-4 4-6 8-6s8 2 8 6"/>
           </svg>
-          <span class="location-text">SANTA BARBARA, CA</span>
-          <span class="location-temp">| 72°</span>
+        </button>
+      </header>
+
+      <div class="painting-container" id="paintingContainer">
+        <div id="paintingCanvas"></div>
+      </div>
+
+      <div class="painting-instructions">
+        <h2 class="painting-title">Enso</h2>
+        <p class="painting-subtitle">The Art of the Strokes</p>
+        <p class="painting-description">
+          This is where a short description of the kanji will go.
+        </p>
+      </div>
+
+      <div class="painting-progress" id="paintingProgress">
+        <div class="progress-bar">
+          <div class="progress-fill" id="progressFill"></div>
         </div>
-        
-        <p class="destination-prompt">Choose your destination to get started</p>
-        
-        <div class="destination-grid" role="group" aria-label="Destination selection">
-          <button 
-            class="destination-btn destination-btn--default" 
-            data-destination="izakaya"
-            aria-label="Select Izakaya"
-            tabindex="0"
-          >
-            Izakaya
-          </button>
-          <button 
-            class="destination-btn destination-btn--default" 
-            data-destination="omakase"
-            aria-label="Select Omakase"
-            tabindex="0"
-          >
-            Omakase
-          </button>
-          <button 
-            class="destination-btn destination-btn--active" 
-            data-destination="listening-bar"
-            aria-label="Select Listening Bar"
-            tabindex="0"
-          >
-            Listening Bar
-          </button>
-          <button 
-            class="destination-btn destination-btn--default" 
-            data-destination="tea-room"
-            aria-label="Select Tea Room"
-            tabindex="0"
-          >
-            Tea Room
-          </button>
-        </div>
-      </footer>
+        <div class="progress-text" id="progressText">Trace the kanji to continue</div>
+      </div>
     </section>
     
     <!-- CHAT SCREEN -->
@@ -1713,12 +1869,184 @@ text-transform: uppercase;
     
   </div>
 
+  <!-- p5.js Painting Sketch -->
+  <script>
+    let paintingSketch = function(p) {
+      let brush;
+      let canvas;
+      let isDrawing = false;
+      let strokePoints = [];
+      let circleProgress = 0;
+      let targetCircleCenter = null;
+      let targetCircleRadius = 120;
+
+      p.setup = function() {
+        console.log('p5 sketch setup called');
+        canvas = p.createCanvas(500, 500);
+        canvas.parent('paintingCanvas');
+        console.log('Canvas created:', canvas);
+
+        // Set up ink-like brush with natural variations
+        p.stroke('#8B7355');
+        p.strokeWeight(p.random(6, 12)); // Vary stroke weight for natural look
+        p.noFill();
+
+        // Set background
+        p.background(245, 240, 232, 10); // Cream background with transparency
+
+        // Draw target circle guide (subtle)
+        drawTargetCircle();
+      };
+
+      function drawTargetCircle() {
+        p.push();
+        p.stroke(139, 115, 85, 30); // Very subtle gold
+        p.strokeWeight(1);
+        p.noFill();
+        p.drawingContext.setLineDash([5, 5]);
+        p.circle(p.width/2, p.height/2, targetCircleRadius * 2);
+        p.drawingContext.setLineDash([]);
+        p.pop();
+      }
+
+      p.draw = function() {
+        // Only update if we're drawing
+        if (isDrawing) {
+          // Draw with brush
+          if (p.mouseIsPressed && p.mouseX >= 0 && p.mouseX <= p.width && p.mouseY >= 0 && p.mouseY <= p.height) {
+            // Record stroke points for circle detection
+            strokePoints.push({x: p.mouseX, y: p.mouseY});
+          }
+        }
+
+        // Check circle completion every few frames
+        if (p.frameCount % 10 === 0 && strokePoints.length > 50) {
+          checkCircleCompletion();
+        }
+      };
+
+      p.mousePressed = function() {
+        if (p.mouseX >= 0 && p.mouseX <= p.width && p.mouseY >= 0 && p.mouseY <= p.height) {
+          isDrawing = true;
+          strokePoints = [{x: p.mouseX, y: p.mouseY}];
+        }
+      };
+
+      p.mouseDragged = function() {
+        if (isDrawing && p.mouseX >= 0 && p.mouseX <= p.width && p.mouseY >= 0 && p.mouseY <= p.height) {
+          // Vary stroke properties for ink-like effect
+          p.strokeWeight(p.random(4, 10));
+          p.stroke(p.color(139, 115, 85, p.random(180, 255))); // Vary opacity
+
+          // Draw multiple overlapping lines for ink bleed effect
+          for (let i = 0; i < 3; i++) {
+            let offsetX = p.random(-2, 2);
+            let offsetY = p.random(-2, 2);
+            p.line(p.pmouseX + offsetX, p.pmouseY + offsetY, p.mouseX + offsetX, p.mouseY + offsetY);
+          }
+
+          strokePoints.push({x: p.mouseX, y: p.mouseY});
+        }
+      };
+
+      p.mouseReleased = function() {
+        if (isDrawing) {
+          isDrawing = false;
+        }
+      };
+
+      function checkCircleCompletion() {
+        if (strokePoints.length < 100) return;
+
+        // Calculate center and radius of the drawn shape
+        let centerX = 0, centerY = 0;
+        strokePoints.forEach(point => {
+          centerX += point.x;
+          centerY += point.y;
+        });
+        centerX /= strokePoints.length;
+        centerY /= strokePoints.length;
+
+        // Calculate average distance from center (radius)
+        let avgRadius = 0;
+        strokePoints.forEach(point => {
+          let distance = p.dist(centerX, centerY, point.x, point.y);
+          avgRadius += distance;
+        });
+        avgRadius /= strokePoints.length;
+
+        // Check if the shape is close to the target circle
+        let targetCenterX = p.width / 2;
+        let targetCenterY = p.height / 2;
+
+        let centerDistance = p.dist(centerX, centerY, targetCenterX, targetCenterY);
+        let radiusDifference = Math.abs(avgRadius - targetCircleRadius);
+
+        // Calculate completion score
+        let centerAccuracy = Math.max(0, 1 - (centerDistance / 50)); // Within 50px of center
+        let radiusAccuracy = Math.max(0, 1 - (radiusDifference / 30)); // Within 30px of target radius
+
+        circleProgress = (centerAccuracy + radiusAccuracy) / 2;
+
+        // Update progress UI
+        updateProgressUI(circleProgress);
+
+        // Complete if progress is high enough
+        if (circleProgress > 0.7) {
+          setTimeout(() => {
+            completePainting();
+          }, 500);
+        }
+      }
+
+      function updateProgressUI(progress) {
+        const progressFill = document.getElementById('progressFill');
+        const progressText = document.getElementById('progressText');
+
+        if (progressFill && progressText) {
+          progressFill.style.width = (progress * 100) + '%';
+
+          if (progress > 0.7) {
+            progressText.textContent = 'Perfect! Entering...';
+            progressText.style.color = '#8B7355';
+          } else if (progress > 0.4) {
+            progressText.textContent = 'Almost there...';
+          } else {
+            progressText.textContent = 'Paint a circle to continue';
+          }
+        }
+      }
+
+      function completePainting() {
+        // Add completion animation
+        p.push();
+        p.fill(139, 115, 85, 50);
+        p.noStroke();
+        p.circle(p.width/2, p.height/2, targetCircleRadius * 2 + 20);
+        p.pop();
+
+        // Navigate to chat screen
+        setTimeout(() => {
+          navigateTo('chat');
+        }, 1000);
+      }
+
+      // Make functions globally accessible
+      window.paintingSketch = paintingSketch;
+    };
+
+    // Initialize the sketch when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+      new p5(paintingSketch);
+    });
+  </script>
+
   <script>
     // ==================== 
     // STATE MANAGEMENT
     // ====================
     const state = {
-      currentScreen: 'landing',
+      currentScreen: 'painting',
       selectedDestination: 'listening-bar',
       selectedCocktail: null,
       chatHistory: [],
@@ -1726,7 +2054,8 @@ text-transform: uppercase;
       waitingForUserInput: false,
       flowStep: 0,
       bartenderAnimationInterval: null,
-      isBartenderShaking: false
+      isBartenderShaking: false,
+      chatFlowStarted: false
     };
 
     // Chat conversation flow
@@ -1801,7 +2130,7 @@ text-transform: uppercase;
     // DOM ELEMENTS
     // ====================
     const screens = {
-      landing: document.getElementById('landingScreen'),
+      painting: document.getElementById('paintingScreen'),
       chat: document.getElementById('chatScreen'),
       swirl: document.getElementById('swirlScreen'),
       immersive: document.getElementById('immersiveScreen')
@@ -1856,7 +2185,8 @@ text-transform: uppercase;
       screens[screenName].classList.add('active');
       state.currentScreen = screenName;
 
-      if (screenName === 'chat' && state.chatHistory.length === 0) {
+      if (screenName === 'chat' && !state.chatFlowStarted) {
+        state.chatFlowStarted = true;
         startChatFlow();
       }
 
@@ -2060,9 +2390,9 @@ text-transform: uppercase;
 
       state.selectedDestination = destination;
 
-      // Navigate to chat after short delay
+      // Navigate to painting screen first, then to chat after painting is complete
       setTimeout(() => {
-        navigateTo('chat');
+        navigateTo('painting');
       }, 300);
     };
 
