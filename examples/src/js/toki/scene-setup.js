@@ -6,12 +6,19 @@ import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';
 
 // Initialize scene, renderer, and camera
 export function initScene() {
-	const renderer = new THREE.WebGLRenderer({ antialias: true });
+	const renderer = new THREE.WebGLRenderer({ 
+		antialias: true,
+		alpha: true // Enable alpha for AR camera passthrough
+	});
 	renderer.setPixelRatio(window.devicePixelRatio);
 	renderer.setSize(window.innerWidth, window.innerHeight);
 	renderer.outputColorSpace = THREE.SRGBColorSpace;
 	renderer.toneMapping = THREE.ACESFilmicToneMapping;
 	renderer.toneMappingExposure = 1.1;
+	
+	// Enable XR support
+	renderer.xr.enabled = true;
+	
 	document.body.appendChild(renderer.domElement);
 
 	const scene = new THREE.Scene();

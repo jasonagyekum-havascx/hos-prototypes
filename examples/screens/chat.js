@@ -322,6 +322,28 @@ export const navigateToRepeatability = async () => {
 // ==================== 
 // INITIALIZATION
 // ====================
+const checkAndStartChatFlow = () => {
+  const chatScreen = document.getElementById('chatScreen');
+  if (!chatScreen) return;
+  
+  const isActive = chatScreen.classList.contains('active');
+  const isCurrentScreen = state.currentScreen === 'chat';
+  
+  // Only start if screen is active and we haven't started yet
+  if (isActive && isCurrentScreen && state.chatHistory.length === 0 && !state.chatFlowStarted) {
+    // Clear any existing messages in the container
+    if (chatMessages) {
+      chatMessages.innerHTML = '';
+    }
+    
+    state.chatFlowStarted = true;
+    // Small delay to ensure screen is fully visible
+    setTimeout(() => {
+      startChatFlow();
+    }, 100);
+  }
+};
+
 export const initChatScreen = async () => {
   const app = document.querySelector('.app');
   if (!app) return;
@@ -350,9 +372,42 @@ export const initChatScreen = async () => {
     chatInput.addEventListener('keydown', handleKeyDown);
   }
 
-  // Start chat flow when navigating to chat screen
-  if (state.chatHistory.length === 0) {
-    startChatFlow();
+  // Listen for screen activation via both MutationObserver and custom event
+  let lastActiveState = chatScreen.classList.contains('active');
+  
+  // Listen for custom screen activation event
+  chatScreen.addEventListener('screenActivated', () => {
+    requestAnimationFrame(() => {
+      checkAndStartChatFlow();
+    });
+  });
+  
+  const observer = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+      if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+        const isActive = chatScreen.classList.contains('active');
+        const wasInactive = !lastActiveState;
+        
+        // Only trigger when transitioning from inactive to active
+        if (isActive && wasInactive) {
+          // Use requestAnimationFrame to ensure DOM is updated
+          requestAnimationFrame(() => {
+            checkAndStartChatFlow();
+          });
+        }
+        
+        lastActiveState = isActive;
+      }
+    });
+  });
+
+  observer.observe(chatScreen, { attributes: true });
+  
+  // Also check immediately if screen is already active (for direct navigation)
+  if (chatScreen.classList.contains('active')) {
+    requestAnimationFrame(() => {
+      checkAndStartChatFlow();
+    });
   }
 };
 

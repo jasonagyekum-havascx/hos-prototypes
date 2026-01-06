@@ -19,6 +19,10 @@
   <link rel="stylesheet" href="css/swirl.css">
   <link rel="stylesheet" href="css/drink.css">
   <link rel="stylesheet" href="css/share.css">
+  <link rel="stylesheet" href="css/kanji.css">
+  
+  <!-- Model Viewer for iOS AR Quick Look -->
+  <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.3.0/model-viewer.min.js"></script>
   
   <style>
     /* Animation delays for messages */
@@ -38,6 +42,7 @@
   </div>
 
   <script type="module">
+    import { initKanjiScreen } from './screens/kanji.js';
     import { initLandingScreen } from './screens/landing.js';
     import { initChatScreen } from './screens/chat.js';
     import { initSwirlScreen } from './screens/swirl.js';
@@ -47,6 +52,7 @@
     // Initialize all screens (they will load their HTML fragments)
     (async () => {
       await Promise.all([
+        initKanjiScreen(),
         initLandingScreen(),
         initChatScreen(),
         initSwirlScreen(),

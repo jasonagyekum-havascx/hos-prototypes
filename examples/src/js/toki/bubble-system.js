@@ -57,6 +57,11 @@ export function initBubbleSystem(scene) {
 	bubbleMesh.instanceMatrix.needsUpdate = true;
 }
 
+// Get bubble mesh for external access
+export function getBubbleMesh() {
+	return bubbleMesh;
+}
+
 // Spawn a bubble
 export function spawnBubble() {
 	const bubble = bubbleInstances.find(b => !b.active);

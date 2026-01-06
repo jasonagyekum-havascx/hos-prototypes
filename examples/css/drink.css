@@ -2,7 +2,7 @@
 /* IMMERSIVE SCREEN */
 /* ==================== */
 .immersive-screen {
-  background: url('../images/mr-background.jpg') center center / cover no-repeat;
+  background: url('../../images/mr-background.jpg') center center / cover no-repeat;
 }
 
 .immersive-header {

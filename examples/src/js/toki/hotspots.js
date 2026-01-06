@@ -209,3 +209,8 @@ export function getHotspotOverlay() {
 	return hotspotOverlay;
 }
 
+// Get all hotspot groups for external access (e.g., for AR grouping)
+export function getHotspots() {
+	return hotspots;
+}
+
