@@ -394,6 +394,12 @@ text-transform: uppercase;
       height: 100%;
     }
 
+    #paintingCanvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
     .painting-instructions {
       text-align: center;
       margin-top: 24px;
@@ -1879,10 +1885,21 @@ text-transform: uppercase;
       let circleProgress = 0;
       let targetCircleCenter = null;
       let targetCircleRadius = 120;
+      
+      // For Kanji character support (future implementation):
+      // - Define Kanji path as array of points or SVG path data
+      // - Use path following algorithm to detect if user traces the character
+      // - Calculate distance from drawn path to target Kanji path
+      // Example: const kanjiPath = [{x: 100, y: 100}, {x: 150, y: 120}, ...];
 
       p.setup = function() {
         console.log('p5 sketch setup called');
-        canvas = p.createCanvas(500, 500);
+        // Get container dimensions to ensure proper sizing
+        const container = document.getElementById('paintingCanvas');
+        const containerWidth = container ? container.offsetWidth : 500;
+        const containerHeight = container ? container.offsetHeight : 500;
+        
+        canvas = p.createCanvas(containerWidth, containerHeight);
         canvas.parent('paintingCanvas');
         console.log('Canvas created:', canvas);
 
@@ -1893,9 +1910,6 @@ text-transform: uppercase;
 
         // Set background
         p.background(245, 240, 232, 10); // Cream background with transparency
-
-        // Draw target circle guide (subtle)
-        drawTargetCircle();
       };
 
       function drawTargetCircle() {
@@ -1904,12 +1918,18 @@ text-transform: uppercase;
         p.strokeWeight(1);
         p.noFill();
         p.drawingContext.setLineDash([5, 5]);
-        p.circle(p.width/2, p.height/2, targetCircleRadius * 2);
+        // Ensure circle is centered
+        const centerX = p.width / 2;
+        const centerY = p.height / 2;
+        p.circle(centerX, centerY, targetCircleRadius * 2);
         p.drawingContext.setLineDash([]);
         p.pop();
       }
 
       p.draw = function() {
+        // Redraw the target circle guide each frame to ensure it's visible
+        drawTargetCircle();
+        
         // Only update if we're drawing
         if (isDrawing) {
           // Draw with brush
@@ -1922,6 +1942,16 @@ text-transform: uppercase;
         // Check circle completion every few frames
         if (p.frameCount % 10 === 0 && strokePoints.length > 50) {
           checkCircleCompletion();
+        }
+      };
+
+      p.windowResized = function() {
+        // Resize canvas to match container
+        const container = document.getElementById('paintingCanvas');
+        if (container) {
+          p.resizeCanvas(container.offsetWidth, container.offsetHeight);
+          // Redraw background
+          p.background(245, 240, 232, 10);
         }
       };
 
@@ -1975,12 +2005,12 @@ text-transform: uppercase;
         });
         avgRadius /= strokePoints.length;
 
-        // Check if the shape is close to the target circle
-        let targetCenterX = p.width / 2;
-        let targetCenterY = p.height / 2;
+        // Check if the shape is close to the target circle (centered)
+        const targetCenterX = p.width / 2;
+        const targetCenterY = p.height / 2;
 
-        let centerDistance = p.dist(centerX, centerY, targetCenterX, targetCenterY);
-        let radiusDifference = Math.abs(avgRadius - targetCircleRadius);
+        const centerDistance = p.dist(centerX, centerY, targetCenterX, targetCenterY);
+        const radiusDifference = Math.abs(avgRadius - targetCircleRadius);
 
         // Calculate completion score
         let centerAccuracy = Math.max(0, 1 - (centerDistance / 50)); // Within 50px of center
