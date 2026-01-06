@@ -1715,7 +1715,7 @@ text-transform: uppercase;
   <div class="app" role="main">
     
     <!-- LANDING SCREEN -->
-    <section class="screen landing-screen active" id="landingScreen" aria-label="Welcome screen">
+    <section class="screen landing-screen" id="landingScreen" aria-label="Welcome screen">
       <div class="landing-background" aria-hidden="true">
         <video class="landing-video" autoplay muted loop playsinline>
           <source src="../images/landing-bg.mp4" type="video/mp4">
@@ -1777,7 +1777,7 @@ text-transform: uppercase;
     </section>
     
     <!-- PAINTING SCREEN -->
-    <section class="screen painting-screen" id="paintingScreen" aria-label="Paint to enter">
+    <section class="screen painting-screen active" id="paintingScreen" aria-label="Paint to enter">
       <header class="painting-header">
         <span class="header-logo">The House of Suntory</span>
         <button class="header-profile" aria-label="User profile" tabindex="0">
@@ -1997,6 +1997,26 @@ text-transform: uppercase;
           </svg>
         </div>
         <h2 class="immersive-title">Toki Highball</h2>
+      </div>
+      
+      <!-- Share Button -->
+      <div class="share-btn-container" id="shareBtnContainer">
+        <button 
+          class="share-btn" 
+          id="shareBtn"
+          aria-label="Share recipe card"
+          tabindex="0"
+        >
+          SHARE
+        </button>
+        <button 
+          class="mix-another-btn" 
+          id="mixAnotherBtn"
+          aria-label="Mix another cocktail"
+          tabindex="0"
+        >
+          MIX ANOTHER COCKTAIL →
+        </button>
       </div>
     </section>
     
@@ -2260,9 +2280,9 @@ text-transform: uppercase;
         p.circle(p.width/2, p.height/2, targetCircleRadius * 2 + 20);
         p.pop();
 
-        // Navigate to chat screen
+        // Navigate to landing page
         setTimeout(() => {
-          navigateTo('chat');
+          navigateTo('landing');
         }, 1000);
       }
 
@@ -2434,7 +2454,7 @@ text-transform: uppercase;
     // STATE MANAGEMENT
     // ====================
     const state = {
-      currentScreen: 'landing',
+      currentScreen: 'painting',
       selectedDestination: 'listening-bar',
       selectedCocktail: null,
       chatHistory: [],
@@ -3133,13 +3153,6 @@ text-transform: uppercase;
       }
     };
 
-    // Show share button when experience is complete
-    const showShareButton = () => {
-      if (shareBtnContainer) {
-        shareBtnContainer.classList.add('visible');
-      }
-    };
-
     // ==================== 
     // SWIRL DETECTION SYSTEM
     // ====================
@@ -3230,10 +3243,22 @@ text-transform: uppercase;
         experienceOverlay.classList.add('active');
       }
 
-      // Navigate to landing page after a brief delay
+      // Navigate to immersive experience after a brief delay
       setTimeout(() => {
-        navigateTo('landing');
+        navigateTo('immersive');
+        // Show share button after immersive experience loads
+        setTimeout(() => {
+          showShareButton();
+        }, 2000);
       }, 1500);
+    };
+    
+    // Show share button when experience is complete
+    const showShareButton = () => {
+      const shareBtnContainer = document.getElementById('shareBtnContainer');
+      if (shareBtnContainer) {
+        shareBtnContainer.classList.add('visible');
+      }
     };
 
     // Start swirl detection
