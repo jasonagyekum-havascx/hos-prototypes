@@ -56,6 +56,34 @@
       max-width: 430px;
       margin: 0 auto;
       overflow: hidden;
+      transition: var(--transition-smooth);
+    }
+
+    /* Glowing border effect when speaking */
+    .app.speaking {
+      box-shadow: 
+        0 0 0 3px rgba(139, 115, 85, 0.3),
+        0 0 20px rgba(139, 115, 85, 0.4),
+        0 0 40px rgba(139, 115, 85, 0.2),
+        inset 0 0 20px rgba(139, 115, 85, 0.1);
+      animation: speakingGlow 2s ease-in-out infinite;
+    }
+
+    @keyframes speakingGlow {
+      0%, 100% {
+        box-shadow: 
+          0 0 0 3px rgba(139, 115, 85, 0.3),
+          0 0 20px rgba(139, 115, 85, 0.4),
+          0 0 40px rgba(139, 115, 85, 0.2),
+          inset 0 0 20px rgba(139, 115, 85, 0.1);
+      }
+      50% {
+        box-shadow: 
+          0 0 0 4px rgba(139, 115, 85, 0.5),
+          0 0 30px rgba(139, 115, 85, 0.6),
+          0 0 60px rgba(139, 115, 85, 0.3),
+          inset 0 0 30px rgba(139, 115, 85, 0.15);
+      }
     }
 
     @media (min-width: 431px) {
@@ -71,6 +99,17 @@
         max-height: 932px;
         border-radius: 0;
         box-shadow: 0 25px 80px rgba(0, 0, 0, 0.5);
+      }
+
+      /* Ensure speaking state overrides default shadow */
+      .app.speaking {
+        box-shadow: 
+          0 0 0 3px rgba(139, 115, 85, 0.3),
+          0 0 20px rgba(139, 115, 85, 0.4),
+          0 0 40px rgba(139, 115, 85, 0.2),
+          0 25px 80px rgba(0, 0, 0, 0.5),
+          inset 0 0 20px rgba(139, 115, 85, 0.1);
+        animation: speakingGlow 2s ease-in-out infinite;
       }
     }
 
@@ -485,6 +524,112 @@ text-transform: uppercase;
       align-self: flex-end;
       background: var(--color-bubble-user);
       border-bottom-right-radius: 6px;
+    }
+
+    /* Minimized text state during audio playback */
+    .message--minimized {
+      opacity: 0.5;
+      font-size: 13px;
+      padding: 10px 14px;
+      transition: var(--transition-smooth);
+    }
+
+    .message--minimized .message-text-preview {
+      display: inline;
+    }
+
+    .message--minimized .message-text-full {
+      display: none;
+    }
+
+    /* Full text state after audio completes */
+    .message--expanded {
+      opacity: 1;
+      transition: var(--transition-smooth);
+    }
+
+    .message--expanded .message-text-preview {
+      display: none;
+    }
+
+    .message--expanded .message-text-full {
+      display: inline;
+    }
+
+    /* Batched message with summary and transcript */
+    .message--batched {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .message-summary {
+      font-size: 15px;
+      line-height: 1.45;
+    }
+
+    .message-transcript {
+      display: none;
+      font-size: 13px;
+      line-height: 1.5;
+      color: rgba(255, 255, 255, 0.8);
+      padding-top: 8px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .message-transcript.expanded {
+      display: block;
+    }
+
+    .message-transcript-item {
+      margin-bottom: 8px;
+      padding-left: 12px;
+      position: relative;
+    }
+
+    .message-transcript-item::before {
+      content: '•';
+      position: absolute;
+      left: 0;
+      color: var(--color-gold);
+    }
+
+    .message-transcript-item:last-child {
+      margin-bottom: 0;
+    }
+
+    .message-expand-btn {
+      background: transparent;
+      border: none;
+      color: var(--color-gold);
+      font-family: var(--font-sans);
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      cursor: pointer;
+      padding: 4px 0;
+      margin-top: 4px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: var(--transition-smooth);
+      opacity: 0.8;
+    }
+
+    .message-expand-btn:hover {
+      opacity: 1;
+      color: var(--color-gold-light);
+    }
+
+    .message-expand-btn svg {
+      width: 12px;
+      height: 12px;
+      transition: transform 0.3s ease;
+    }
+
+    .message-expand-btn.expanded svg {
+      transform: rotate(180deg);
     }
 
     /* Cocktail Cards */
@@ -1584,7 +1729,164 @@ text-transform: uppercase;
     
   </div>
 
+  <!-- Load configuration from external file (gitignored) -->
+  <script src="config.js"></script>
+  
   <script>
+    // ==================== 
+    // AUDIO SERVICE (11labs Integration)
+    // ====================
+    class AudioService {
+      constructor() {
+        this.apiKey = ''; // Will be set via setApiKey method
+        this.voiceId = 'UgBBYS2sOqTuMpoF3BR0'; // Default voice ID (from config)
+        this.baseUrl = 'https://api.elevenlabs.io/v1/text-to-speech';
+        this.currentAudio = null;
+        this.isPlaying = false;
+      }
+
+      setApiKey(apiKey) {
+        this.apiKey = apiKey;
+      }
+
+      setVoiceId(voiceId) {
+        this.voiceId = voiceId;
+      }
+
+      async generateAudio(text) {
+        if (!this.apiKey) {
+          console.warn('⚠️ 11labs API key not set. Please set ELEVENLABS_API_KEY in config.js');
+          console.warn('💡 To enable voice features, add your API key to examples/config.js');
+          return null;
+        }
+
+        try {
+          console.log('📡 Calling 11labs API with multilingual_v2 model...');
+          const response = await fetch(`${this.baseUrl}/${this.voiceId}`, {
+            method: 'POST',
+            headers: {
+              'Accept': 'audio/mpeg',
+              'Content-Type': 'application/json',
+              'xi-api-key': this.apiKey
+            },
+            body: JSON.stringify({
+              text: text,
+              model_id: 'eleven_multilingual_v2',
+              voice_settings: {
+                stability: 0.5,
+                similarity_boost: 0.75
+              }
+            })
+          });
+
+          if (!response.ok) {
+            const errorText = await response.text();
+            console.error(`❌ 11labs API error (${response.status}):`, errorText);
+            throw new Error(`11labs API error: ${response.status} - ${errorText}`);
+          }
+
+          const audioBlob = await response.blob();
+          const audioUrl = URL.createObjectURL(audioBlob);
+          console.log('✅ Audio generated successfully');
+          return audioUrl;
+        } catch (error) {
+          console.error('❌ Error generating audio:', error);
+          return null;
+        }
+      }
+
+      async playAudio(audioUrl, onEnded) {
+        return new Promise((resolve, reject) => {
+          if (!audioUrl) {
+            console.warn('⚠️ No audio URL provided');
+            resolve();
+            return;
+          }
+
+          // Stop any currently playing audio
+          this.stopAudio();
+
+          const audio = new Audio(audioUrl);
+          this.currentAudio = audio;
+          this.isPlaying = true;
+
+          audio.addEventListener('loadeddata', () => {
+            console.log('📦 Audio loaded, duration:', audio.duration.toFixed(2), 'seconds');
+          });
+
+          audio.addEventListener('play', () => {
+            console.log('▶️ Audio playback started');
+          });
+
+          audio.addEventListener('ended', () => {
+            console.log('⏹️ Audio playback ended');
+            this.isPlaying = false;
+            this.currentAudio = null;
+            if (onEnded) onEnded();
+            resolve();
+          });
+
+          audio.addEventListener('error', (e) => {
+            this.isPlaying = false;
+            this.currentAudio = null;
+            console.error('❌ Audio playback error:', e);
+            console.error('Audio error details:', audio.error);
+            reject(e);
+          });
+
+          audio.play().catch(error => {
+            this.isPlaying = false;
+            this.currentAudio = null;
+            console.error('❌ Error playing audio:', error);
+            console.error('💡 This might be due to browser autoplay restrictions. User interaction may be required.');
+            reject(error);
+          });
+        });
+      }
+
+      stopAudio() {
+        if (this.currentAudio) {
+          this.currentAudio.pause();
+          this.currentAudio.currentTime = 0;
+          this.currentAudio = null;
+          this.isPlaying = false;
+        }
+      }
+
+      isCurrentlyPlaying() {
+        return this.isPlaying;
+      }
+    }
+
+    // Initialize audio service
+    const audioService = new AudioService();
+
+    // ==================== 
+    // API CONFIGURATION
+    // ====================
+    // Load configuration from config.js (gitignored file)
+    // Copy config.example.js to config.js and add your API key
+    const config = window.APP_CONFIG || {};
+    const ELEVENLABS_API_KEY = config.ELEVENLABS_API_KEY || '';
+    const ELEVENLABS_VOICE_ID = config.ELEVENLABS_VOICE_ID;
+    
+    if (ELEVENLABS_API_KEY) {
+      audioService.setApiKey(ELEVENLABS_API_KEY);
+      console.log('✅ 11labs API key configured from config.js');
+    } else {
+      console.warn('⚠️ 11labs API key not set. Voice features will be disabled.');
+      console.warn('💡 To enable voice features:');
+      console.warn('   1. Copy examples/config.example.js to examples/config.js');
+      console.warn('   2. Add your API key to config.js');
+      console.warn('   3. Get your API key at: https://elevenlabs.io/');
+    }
+
+    // Set custom voice ID if provided
+    if (ELEVENLABS_VOICE_ID) {
+      audioService.setVoiceId(ELEVENLABS_VOICE_ID);
+      console.log('✅ Custom voice ID configured:', ELEVENLABS_VOICE_ID);
+    }
+
     // ==================== 
     // STATE MANAGEMENT
     // ====================
@@ -1597,7 +1899,10 @@ text-transform: uppercase;
       waitingForUserInput: false,
       flowStep: 0,
       bartenderAnimationInterval: null,
-      isBartenderShaking: false
+      isBartenderShaking: false,
+      isAudioPlaying: false,
+      currentAudio: null,
+      audioQueue: []
     };
 
     // Chat conversation flow
@@ -1723,6 +2028,14 @@ text-transform: uppercase;
     // SCREEN NAVIGATION
     // ====================
     const navigateTo = (screenName) => {
+      // Stop any playing audio when navigating away
+      if (state.isAudioPlaying) {
+        audioService.stopAudio();
+        state.isAudioPlaying = false;
+        const appEl = document.querySelector('.app');
+        if (appEl) appEl.classList.remove('speaking');
+      }
+
       Object.values(screens).forEach(screen => screen.classList.remove('active'));
       screens[screenName].classList.add('active');
       state.currentScreen = screenName;
@@ -1753,19 +2066,115 @@ text-transform: uppercase;
     // ==================== 
     // CHAT FUNCTIONS
     // ====================
-    const addMessage = (type, text, delay = 0) => {
+    const addMessage = (type, text, delay = 0, options = {}) => {
       return new Promise(resolve => {
         setTimeout(() => {
           const messageEl = document.createElement('div');
           messageEl.className = `message message--${type}`;
-          messageEl.textContent = text;
           messageEl.setAttribute('role', type === 'ai' ? 'status' : 'log');
+          
+          const { useVoice = false, messageId = null, isBatched = false, transcriptItems = [] } = options;
+          
+          if (useVoice && type === 'ai' && isBatched) {
+            // Batched message with summary and transcript
+            messageEl.className += ' message--batched message--minimized';
+            messageEl.setAttribute('data-message-id', messageId || `msg-${Date.now()}`);
+            
+            // Summary text (first message or first 50 chars)
+            const summaryText = transcriptItems.length > 0 
+              ? transcriptItems[0].substring(0, 80) + (transcriptItems[0].length > 80 ? '...' : '')
+              : text.substring(0, 80) + (text.length > 80 ? '...' : '');
+            
+            const summaryEl = document.createElement('div');
+            summaryEl.className = 'message-summary';
+            summaryEl.textContent = summaryText;
+            
+            // Transcript container (hidden initially)
+            const transcriptEl = document.createElement('div');
+            transcriptEl.className = 'message-transcript';
+            transcriptItems.forEach((item, index) => {
+              const itemEl = document.createElement('div');
+              itemEl.className = 'message-transcript-item';
+              itemEl.textContent = item;
+              transcriptEl.appendChild(itemEl);
+            });
+            
+            // Expand button
+            const expandBtn = document.createElement('button');
+            expandBtn.className = 'message-expand-btn';
+            expandBtn.setAttribute('aria-label', 'Expand transcript');
+            expandBtn.innerHTML = `
+              <span>View Full Transcript</span>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+            `;
+            
+            expandBtn.addEventListener('click', () => {
+              const isExpanded = transcriptEl.classList.contains('expanded');
+              if (isExpanded) {
+                transcriptEl.classList.remove('expanded');
+                expandBtn.classList.remove('expanded');
+                expandBtn.querySelector('span').textContent = 'View Full Transcript';
+              } else {
+                transcriptEl.classList.add('expanded');
+                expandBtn.classList.add('expanded');
+                expandBtn.querySelector('span').textContent = 'Hide Transcript';
+              }
+            });
+            
+            messageEl.appendChild(summaryEl);
+            messageEl.appendChild(transcriptEl);
+            messageEl.appendChild(expandBtn);
+          } else if (useVoice && type === 'ai') {
+            // Single message with minimized preview
+            const previewText = text.length > 30 ? text.substring(0, 30) + '...' : text;
+            messageEl.className += ' message--minimized';
+            messageEl.setAttribute('data-message-id', messageId || `msg-${Date.now()}`);
+            
+            const previewSpan = document.createElement('span');
+            previewSpan.className = 'message-text-preview';
+            previewSpan.textContent = previewText;
+            
+            const fullSpan = document.createElement('span');
+            fullSpan.className = 'message-text-full';
+            fullSpan.textContent = text;
+            
+            messageEl.appendChild(previewSpan);
+            messageEl.appendChild(fullSpan);
+          } else {
+            messageEl.textContent = text;
+          }
+          
           chatMessages.appendChild(messageEl);
-          state.chatHistory.push({ type, text });
+          state.chatHistory.push({ type, text, messageId: messageEl.getAttribute('data-message-id') });
           scrollToBottom();
-          resolve();
+          resolve(messageEl);
         }, delay);
       });
+    };
+
+    const expandMessage = (messageEl) => {
+      if (messageEl && messageEl.classList.contains('message--minimized')) {
+        messageEl.classList.remove('message--minimized');
+        messageEl.classList.add('message--expanded');
+        
+        // If it's a batched message, show the summary
+        if (messageEl.classList.contains('message--batched')) {
+          const summaryEl = messageEl.querySelector('.message-summary');
+          if (summaryEl) {
+            summaryEl.style.opacity = '1';
+          }
+        }
+      }
+    };
+
+    // Helper function to generate summary from batched messages
+    const generateSummary = (messages) => {
+      if (messages.length === 0) return '';
+      // Use first message as summary, or first 80 chars if too long
+      const firstMessage = messages[0];
+      return firstMessage.length > 80 ? firstMessage.substring(0, 80) + '...' : firstMessage;
     };
 
     const addTypingIndicator = () => {
@@ -1877,17 +2286,124 @@ text-transform: uppercase;
       const flow = chatFlow[flowKey];
       if (!flow) return;
 
+      // Check if this flow should use voice (greeting or story)
+      const useVoice = flowKey === 'greeting' || flowKey === 'story';
+      const appEl = document.querySelector('.app');
+
+      // Batch consecutive AI messages together
+      const batchedMessages = [];
+      let currentBatch = { type: null, messages: [], indices: [] };
+
       for (let i = 0; i < flow.messages.length; i++) {
         const msg = flow.messages[i];
         
-        if (msg.type === 'ai') {
+        if (msg.type === 'ai' && useVoice) {
+          // Add to current batch if it's an AI message
+          if (currentBatch.type === 'ai') {
+            currentBatch.messages.push(msg.text);
+            currentBatch.indices.push(i);
+          } else {
+            // Start new batch
+            if (currentBatch.type !== null) {
+              batchedMessages.push(currentBatch);
+            }
+            currentBatch = { type: 'ai', messages: [msg.text], indices: [i] };
+          }
+        } else {
+          // Non-AI message or non-voice flow - finalize current batch and add this message
+          if (currentBatch.type !== null) {
+            batchedMessages.push(currentBatch);
+            currentBatch = { type: null, messages: [], indices: [] };
+          }
+          batchedMessages.push({ type: msg.type, messages: [msg.text], indices: [i] });
+        }
+      }
+      
+      // Add final batch if exists
+      if (currentBatch.type !== null) {
+        batchedMessages.push(currentBatch);
+      }
+
+      // Process batched messages
+      for (let batchIndex = 0; batchIndex < batchedMessages.length; batchIndex++) {
+        const batch = batchedMessages[batchIndex];
+        
+        if (batch.type === 'ai' && useVoice && batch.messages.length > 0) {
+          // Show typing indicator for batched AI messages
           addTypingIndicator();
           await wait(1200 + Math.random() * 800);
           removeTypingIndicator();
+          
+          // Combine all messages in the batch
+          const combinedText = batch.messages.join(' ');
+          const summary = generateSummary(batch.messages);
+          const messageId = `msg-${flowKey}-batch-${batchIndex}`;
+          
+          // Create batched message element
+          const messageEl = await addMessage('ai', summary, 100, {
+            useVoice: true,
+            messageId,
+            isBatched: true,
+            transcriptItems: batch.messages
+          });
+          
+          if (messageEl) {
+            try {
+              console.log(`🎤 Starting voice playback for batched message (${batch.messages.length} parts):`, combinedText.substring(0, 50) + '...');
+              
+              // Activate speaking state
+              state.isAudioPlaying = true;
+              if (appEl) {
+                appEl.classList.add('speaking');
+                console.log('✨ Speaking indicator activated');
+              }
+              
+              // Generate and play audio for combined text
+              const audioUrl = await audioService.generateAudio(combinedText);
+              
+              if (audioUrl) {
+                console.log('🔊 Audio generated, playing...');
+                await audioService.playAudio(audioUrl, () => {
+                  // Expand message to show summary after audio completes
+                  console.log('✅ Audio playback completed');
+                  expandMessage(messageEl);
+                  // Deactivate speaking state after audio ends
+                  state.isAudioPlaying = false;
+                  if (appEl) appEl.classList.remove('speaking');
+                });
+              } else {
+                console.warn('⚠️ Audio generation failed, showing full text');
+                // Fallback: if audio generation fails, expand message immediately
+                expandMessage(messageEl);
+                state.isAudioPlaying = false;
+                if (appEl) appEl.classList.remove('speaking');
+              }
+            } catch (error) {
+              console.error('❌ Error with voice playback:', error);
+              // Fallback: expand message on error
+              expandMessage(messageEl);
+              state.isAudioPlaying = false;
+              if (appEl) appEl.classList.remove('speaking');
+            }
+          }
+        } else {
+          // Non-voice messages or user messages - display normally
+          for (let i = 0; i < batch.messages.length; i++) {
+            const msg = flow.messages[batch.indices[i]];
+            if (msg.type === 'ai') {
+              addTypingIndicator();
+              await wait(1200 + Math.random() * 800);
+              removeTypingIndicator();
+            }
+            
+            const messageId = `msg-${flowKey}-${batch.indices[i]}`;
+            await addMessage(msg.type, msg.text, 100, { 
+              useVoice: false,
+              messageId 
+            });
+            await wait(400);
+          }
         }
-        
-        await addMessage(msg.type, msg.text, 100);
-        await wait(400);
       }
 
       if (flow.showCocktails) {

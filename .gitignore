@@ -22,3 +22,8 @@ test/unit/build
 
 **/node_modules
 .vercel
+
+# Configuration files with API keys
+examples/config.js
+.env
+.env.local

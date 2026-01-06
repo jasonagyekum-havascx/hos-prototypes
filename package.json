@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "npx live-server --port=3000 --open=examples/virtual-bartender.html --watch=examples,build",
     "start": "npx live-server --port=3000 --open=examples/virtual-bartender.html",
-    "build": "echo 'Static site - no build required'"
+    "build": "echo 'Static site - no build required'",
+    "config": "node scripts/generate-config.js"
   },
   "keywords": [
     "three.js",
