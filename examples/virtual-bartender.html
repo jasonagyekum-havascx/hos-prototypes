@@ -2605,7 +2605,20 @@ text-transform: uppercase;
       screens[screenName].classList.add('active');
       state.currentScreen = screenName;
 
-      if (screenName === 'chat' && !state.chatFlowStarted) {
+      // Reset chat state when navigating to landing
+      if (screenName === 'landing') {
+        state.chatHistory = [];
+        state.chatFlowStarted = false;
+        state.flowStep = 0;
+        state.waitingForUserInput = false;
+        // Clear chat messages
+        const chatMessages = document.getElementById('chatMessages');
+        if (chatMessages) {
+          chatMessages.innerHTML = '';
+        }
+      }
+
+      if (screenName === 'chat' && state.chatHistory.length === 0) {
         state.chatFlowStarted = true;
         startChatFlow();
       }
