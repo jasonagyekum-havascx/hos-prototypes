@@ -1,4 +1,5 @@
 import { state, navigateTo, registerScreen, wait, loadHTMLFragment } from './common.js';
+import { speakText, stopSpeaking, isPlaying } from './tts.js';
 
 // Chat conversation flow
 const chatFlow = {
@@ -119,18 +120,105 @@ export const showBartenderPose = (poseNumber) => {
 };
 
 // ==================== 
+// MESSAGE ID GENERATOR
+// ====================
+let messageIdCounter = 0;
+const generateMessageId = () => `msg-${++messageIdCounter}`;
+
+// ==================== 
 // CHAT FUNCTIONS
 // ====================
 const addMessage = (type, text, delay = 0) => {
   return new Promise(resolve => {
     setTimeout(() => {
+      const messageId = generateMessageId();
       const messageEl = document.createElement('div');
       messageEl.className = `message message--${type}`;
-      messageEl.textContent = text;
+      messageEl.id = messageId;
       messageEl.setAttribute('role', type === 'ai' ? 'status' : 'log');
-      chatMessages.appendChild(messageEl);
-      state.chatHistory.push({ type, text });
-      scrollToBottom();
+      
+      // Check if voice mode is enabled for AI messages
+      if (type === 'ai' && state.voiceEnabled) {
+        // Create audio indicator with transcript toggle
+        messageEl.classList.add('message--voice-mode');
+        messageEl.innerHTML = `
+          <div class="message__audio-indicator" aria-label="Playing audio">
+            <div class="audio-bars">
+              <span class="audio-bar"></span>
+              <span class="audio-bar"></span>
+              <span class="audio-bar"></span>
+              <span class="audio-bar"></span>
+              <span class="audio-bar"></span>
+            </div>
+            <span class="audio-status">Speaking...</span>
+          </div>
+          <div class="message__transcript" hidden>
+            <p class="message__text">${text}</p>
+          </div>
+          <button class="message__transcript-toggle" aria-expanded="false" aria-label="View transcript" tabindex="0">
+            View transcript
+          </button>
+        `;
+        
+        // Set up transcript toggle
+        const toggleBtn = messageEl.querySelector('.message__transcript-toggle');
+        const transcript = messageEl.querySelector('.message__transcript');
+        const audioIndicator = messageEl.querySelector('.message__audio-indicator');
+        
+        const handleToggleTranscript = () => {
+          const isExpanded = toggleBtn.getAttribute('aria-expanded') === 'true';
+          toggleBtn.setAttribute('aria-expanded', !isExpanded);
+          transcript.hidden = isExpanded;
+          toggleBtn.textContent = isExpanded ? 'View transcript' : 'Hide transcript';
+        };
+        
+        toggleBtn.addEventListener('click', handleToggleTranscript);
+        toggleBtn.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            handleToggleTranscript();
+          }
+        });
+        
+        chatMessages.appendChild(messageEl);
+        state.chatHistory.push({ type, text, messageId });
+        scrollToBottom();
+        
+        // Speak the text
+        speakText(
+          text,
+          messageId,
+          // onStart callback
+          (id) => {
+            const el = document.getElementById(id);
+            if (el) {
+              el.classList.add('message--speaking');
+            }
+          },
+          // onEnd callback
+          (id) => {
+            const el = document.getElementById(id);
+            if (el) {
+              el.classList.remove('message--speaking');
+              el.classList.add('message--spoken');
+              const indicator = el.querySelector('.message__audio-indicator');
+              if (indicator) {
+                const statusEl = indicator.querySelector('.audio-status');
+                if (statusEl) {
+                  statusEl.textContent = 'Finished';
+                }
+              }
+            }
+          }
+        );
+      } else {
+        // Standard text-only mode
+        messageEl.textContent = text;
+        chatMessages.appendChild(messageEl);
+        state.chatHistory.push({ type, text, messageId });
+        scrollToBottom();
+      }
+      
       resolve();
     }, delay);
   });
@@ -449,6 +537,7 @@ const initializeChatElements = (chatScreen) => {
       if (parsed.chatFlowStarted !== undefined) state.chatFlowStarted = parsed.chatFlowStarted;
       if (parsed.waitingForUserInput !== undefined) state.waitingForUserInput = parsed.waitingForUserInput;
       if (parsed.flowStep !== undefined) state.flowStep = parsed.flowStep;
+      if (parsed.voiceEnabled !== undefined) state.voiceEnabled = parsed.voiceEnabled;
       if (parsed.showRepeatability) {
         // Store flag to show repeatability flow
         state.showRepeatability = true;

@@ -15,6 +15,20 @@
 
     <p class="destination-prompt">Lorem tap a cocktail to get started</p>
     
+    <!-- Voice Toggle -->
+    <div class="voice-toggle-container" role="group" aria-label="Voice settings">
+      <label class="voice-toggle" tabindex="0" aria-label="Toggle bartender voice">
+        <input type="checkbox" id="voiceToggle" checked aria-describedby="voiceToggleLabel">
+        <span class="voice-toggle__track">
+          <span class="voice-toggle__thumb">
+            <span class="voice-toggle__icon voice-toggle__icon--on" aria-hidden="true">🔊</span>
+            <span class="voice-toggle__icon voice-toggle__icon--off" aria-hidden="true">🔇</span>
+          </span>
+        </span>
+        <span class="voice-toggle__label" id="voiceToggleLabel">Bartender Voice</span>
+      </label>
+    </div>
+    
     <div class="destination-grid" role="group" aria-label="Destination selection">
       <button 
         type="button"

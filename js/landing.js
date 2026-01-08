@@ -14,6 +14,31 @@ export const initLandingScreen = async () => {
 
   registerScreen('landing', landingScreen);
 
+  // Initialize voice toggle
+  const voiceToggle = document.getElementById('voiceToggle');
+  if (voiceToggle) {
+    // Set initial state (default: ON)
+    voiceToggle.checked = state.voiceEnabled;
+    
+    const handleVoiceToggle = () => {
+      state.voiceEnabled = voiceToggle.checked;
+    };
+    
+    voiceToggle.addEventListener('change', handleVoiceToggle);
+    
+    // Handle keyboard interaction on the label
+    const voiceToggleLabel = voiceToggle.closest('.voice-toggle');
+    if (voiceToggleLabel) {
+      voiceToggleLabel.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          voiceToggle.checked = !voiceToggle.checked;
+          handleVoiceToggle();
+        }
+      });
+    }
+  }
+
   const handleDestinationClick = async (btn) => {
     const destination = btn.dataset.destination;
 
@@ -48,7 +73,8 @@ export const initLandingScreen = async () => {
         chatHistory: state.chatHistory,
         chatFlowStarted: state.chatFlowStarted,
         waitingForUserInput: state.waitingForUserInput,
-        flowStep: state.flowStep
+        flowStep: state.flowStep,
+        voiceEnabled: state.voiceEnabled
       }));
     } catch (e) {
       console.warn('Could not save state to localStorage:', e);

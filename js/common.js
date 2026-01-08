@@ -11,7 +11,8 @@ export const state = {
   flowStep: 0,
   bartenderAnimationInterval: null,
   isBartenderShaking: false,
-  chatFlowStarted: false
+  chatFlowStarted: false,
+  voiceEnabled: true // Default: voice ON for bartender TTS
 };
 
 // ==================== 
