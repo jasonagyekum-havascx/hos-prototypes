@@ -2,7 +2,7 @@
 // STATE MANAGEMENT
 // ====================
 export const state = {
-  currentScreen: 'kanji',
+  currentScreen: 'landing',
   selectedDestination: 'listening-bar',
   selectedCocktail: null,
   chatHistory: [],

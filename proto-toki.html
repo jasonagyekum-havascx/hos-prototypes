@@ -444,6 +444,24 @@ The House of Suntory crafted Toki using a bolder grain whisky from the Chita Dis
 			</video>
 		</div>
 
+		<div id="panelEnso" class="hotspot-panel hotspot-panel--enso" role="dialog" aria-labelledby="panelEnsoTitle" aria-modal="true">
+			<div class="hotspot-panel-header">
+				<button class="hotspot-panel-close" aria-label="Close panel" tabindex="0">×</button>
+			</div>
+			<h2 id="panelEnsoTitle">Enso</h2>
+			<p class="highlight">The Art of the Strokes</p>
+			<p>
+				Trace the enso circle, a symbol of enlightenment and the beauty of imperfection in Japanese culture.
+			</p>
+			<div id="ensoCanvasContainer" style="width: 100%; height: 300px; margin: 16px 0; background: #F5F0E8; border-radius: 4px;"></div>
+			<div id="ensoProgress" style="margin-top: 12px;">
+				<div style="width: 100%; height: 4px; background: rgba(74, 63, 53, 0.2); border-radius: 2px; overflow: hidden; margin-bottom: 8px;">
+					<div id="ensoProgressFill" style="height: 100%; background: #8B7355; border-radius: 2px; width: 0%; transition: width 0.3s ease;"></div>
+				</div>
+				<div id="ensoProgressText" style="font-size: 11px; text-align: center; color: #4A3F35; text-transform: uppercase; letter-spacing: 1px;">Trace the circle</div>
+			</div>
+		</div>
+
 		<!-- Hotspot Label Tooltip -->
 		<div id="hotspotLabel" class="hotspot-label"></div>
 

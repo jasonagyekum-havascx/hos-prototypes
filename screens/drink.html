@@ -24,6 +24,17 @@
       <span class="video-hotspot-label">Perfect Serve</span>
     </button>
     
+    <!-- Kanji Hotspot Button -->
+    <button 
+      class="kanji-hotspot" 
+      id="kanjiHotspot"
+      aria-label="Trace the Enso"
+      tabindex="0"
+    >
+      <img src="../images/enso.png" alt="Enso" />
+      <span class="kanji-hotspot-label">Enso</span>
+    </button>
+    
     <div class="immersive-drink" id="drinkContainer" role="img" aria-label="Toki Highball drink" tabindex="0">
       <svg viewBox="0 0 200 380" fill="none" xmlns="http://www.w3.org/2000/svg">
         <!-- Glass outline -->
@@ -109,6 +120,37 @@
       <button class="video-modal__mix-btn" id="videoMixBtn" aria-label="Mix another cocktail" tabindex="0">
         MIX ANOTHER COCKTAIL →
       </button>
+    </div>
+  </div>
+</div>
+
+<!-- Kanji Modal -->
+<div class="kanji-modal" id="kanjiModal" role="dialog" aria-modal="true" aria-labelledby="kanjiModalTitle">
+  <div class="kanji-modal__panel">
+    <button class="kanji-modal__close" id="kanjiModalClose" aria-label="Close kanji tracing" tabindex="0">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+        <line x1="18" y1="6" x2="6" y2="18"/>
+        <line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+    
+    <div class="kanji-modal__header">
+      <h3 class="kanji-modal__title" id="kanjiModalTitle">Enso</h3>
+      <p class="kanji-modal__subtitle">The Art of the Strokes</p>
+      <p class="kanji-modal__description">
+        Trace the enso circle, a symbol of enlightenment and the beauty of imperfection in Japanese culture.
+      </p>
+    </div>
+    
+    <div class="kanji-modal__canvas-container">
+      <div id="kanjiModalCanvas"></div>
+    </div>
+    
+    <div class="kanji-modal__progress" id="kanjiModalProgress">
+      <div class="progress-bar">
+        <div class="progress-fill" id="kanjiModalProgressFill"></div>
+      </div>
+      <div class="progress-text" id="kanjiModalProgressText">Trace the circle to continue</div>
     </div>
   </div>
 </div>

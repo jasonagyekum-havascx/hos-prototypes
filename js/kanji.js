@@ -9,7 +9,9 @@ let progressFill = null;
 let progressText = null;
 
 // p5.js sketch for kanji tracing
-const createKanjiSketch = (p) => {
+// Pass onComplete callback to handle completion action
+// Pass containerId to specify which container to use (default: 'kanjiCanvas')
+export const createKanjiSketch = (onComplete = null, containerId = 'kanjiModalCanvas') => (p) => {
   let canvas;
   let isDrawing = false;
   let strokePoints = [];
@@ -23,12 +25,12 @@ const createKanjiSketch = (p) => {
   };
 
   p.setup = function() {
-    const container = document.getElementById('kanjiCanvas');
+    const container = document.getElementById(containerId);
     const containerWidth = container ? container.offsetWidth : 500;
     const containerHeight = container ? container.offsetHeight : 500;
     
     canvas = p.createCanvas(containerWidth, containerHeight);
-    canvas.parent('kanjiCanvas');
+    canvas.parent(containerId);
 
     // Set up ink-like brush with natural variations
     p.stroke('#8B7355'); // Gold stroke color
@@ -72,7 +74,7 @@ const createKanjiSketch = (p) => {
 
   p.windowResized = function() {
     // Resize canvas to match container
-    const container = document.getElementById('kanjiCanvas');
+    const container = document.getElementById(containerId);
     if (container) {
       p.resizeCanvas(container.offsetWidth, container.offsetHeight);
       // Redraw background to eggshell white
@@ -155,16 +157,20 @@ const createKanjiSketch = (p) => {
   };
 
   const updateProgressUI = (progress) => {
-    if (progressFill && progressText) {
-      progressFill.style.width = (progress * 100) + '%';
+    // Use modal progress elements if available (set globally by drink.js)
+    const fill = window.kanjiModalProgressFill || progressFill;
+    const text = window.kanjiModalProgressText || progressText;
+    
+    if (fill && text) {
+      fill.style.width = (progress * 100) + '%';
 
       if (progress > 0.4) {
-        progressText.textContent = 'Perfect! Entering...';
-        progressText.style.color = '#8B7355';
+        text.textContent = 'Perfect! Completing...';
+        text.style.color = '#8B7355';
       } else if (progress > 0.25) {
-        progressText.textContent = 'Almost there...';
+        text.textContent = 'Almost there...';
       } else {
-        progressText.textContent = 'Paint a circle to continue';
+        text.textContent = 'Trace the circle to continue';
       }
     }
   };
@@ -177,9 +183,13 @@ const createKanjiSketch = (p) => {
     p.circle(p.width/2, p.height/2, targetCircleRadius * 2 + 20);
     p.pop();
 
-    // Navigate to landing screen
+    // Call custom callback if provided, otherwise navigate to landing
     setTimeout(async () => {
-      await navigateTo('landing');
+      if (onComplete && typeof onComplete === 'function') {
+        onComplete();
+      } else {
+        await navigateTo('landing');
+      }
     }, 1000);
   };
 };
@@ -201,21 +211,19 @@ export const initKanjiScreen = async () => {
   progressFill = document.getElementById('progressFill');
   progressText = document.getElementById('progressText');
 
-  // Initialize p5.js sketch
+  // Initialize p5.js sketch (for standalone kanji screen if needed)
   // Load p5.js library dynamically
   if (typeof p5 === 'undefined') {
     const script = document.createElement('script');
     script.src = 'https://cdnjs.cloudflare.com/ajax/libs/p5.js/1.9.0/p5.min.js';
     script.onload = () => {
-      kanjiSketch = new p5(createKanjiSketch);
+      kanjiSketch = new p5(createKanjiSketch(null, 'kanjiCanvas'));
     };
     document.head.appendChild(script);
   } else {
-    kanjiSketch = new p5(createKanjiSketch);
+    kanjiSketch = new p5(createKanjiSketch(null, 'kanjiCanvas'));
   }
 
-  // Set kanji screen as initial active screen
-  kanjiScreen.classList.add('active');
-  state.currentScreen = 'kanji';
+  // No longer auto-activate - kanji is now accessed via hotspot on drink screen
 };
 

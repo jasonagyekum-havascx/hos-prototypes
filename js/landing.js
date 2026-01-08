@@ -14,6 +14,11 @@ export const initLandingScreen = async () => {
 
   registerScreen('landing', landingScreen);
 
+  // Activate landing screen if it's the initial screen
+  if (state.currentScreen === 'landing') {
+    landingScreen.classList.add('active');
+  }
+
   // Initialize voice toggle
   const voiceToggle = document.getElementById('voiceToggle');
   if (voiceToggle) {
