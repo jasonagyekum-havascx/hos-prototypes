@@ -4,8 +4,8 @@
   "description": "House of Suntory - Toki Highball Interactive Experience",
   "type": "module",
   "scripts": {
-    "dev": "npx live-server --port=3000 --open=examples/virtual-bartender.html --watch=examples,build",
-    "start": "npx live-server --port=3000 --open=examples/virtual-bartender.html",
+    "dev": "npx live-server --port=3000 --open=index.html --watch=js,screens,css,src,lib,models,textures,build",
+    "start": "npx live-server --port=3000 --open=index.html",
     "build": "echo 'Static site - no build required'",
     "config": "node scripts/generate-config.js"
   },
@@ -20,7 +20,8 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "live-server": "^1.2.2"
+    "@playwright/test": "^1.57.0",
+    "live-server": "^1.2.2",
+    "playwright": "^1.57.0"
   }
 }
-

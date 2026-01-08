@@ -2,7 +2,7 @@
   "buildCommand": null,
   "outputDirectory": ".",
   "redirects": [
-    { "source": "/", "destination": "/examples/virtual-bartender.html", "permanent": false }
+    { "source": "/", "destination": "/index.html", "permanent": false }
   ],
   "headers": [
     {
@@ -12,19 +12,19 @@
       ]
     },
     {
-      "source": "/examples/jsm/(.*)",
+      "source": "/lib/jsm/(.*)",
       "headers": [
         { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
       ]
     },
     {
-      "source": "/examples/models/(.*)",
+      "source": "/models/(.*)",
       "headers": [
         { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
       ]
     },
     {
-      "source": "/examples/textures/(.*)",
+      "source": "/textures/(.*)",
       "headers": [
         { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
       ]

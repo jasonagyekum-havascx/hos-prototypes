@@ -43,7 +43,7 @@ window.APP_CONFIG = {
 `;
 
   // Write config.js
-  const configPath = join(rootDir, 'examples', 'config.js');
+  const configPath = join(rootDir, 'config.js');
   writeFileSync(configPath, configContent, 'utf-8');
   
   console.log('✅ Generated config.js from .env file');
