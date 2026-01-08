@@ -1,0 +1,183 @@
+/* ==================== */
+/* KANJI TRACING SCREEN */
+/* ==================== */
+.kanji-screen {
+  background: #F5F0E8; /* Eggshell white */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.kanji-header {
+  position: absolute;
+  top: 16px;
+  left: 0;
+  right: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+}
+
+.kanji-header .header-logo {
+  color: #4A3F35; /* Dark brown for light background */
+  font-size: 12px;
+  letter-spacing: 2px;
+  text-align: center;
+  flex: 1;
+}
+
+.kanji-header .header-profile {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(74, 63, 53, 0.4);
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition-smooth);
+}
+
+.kanji-header .header-profile:hover {
+  border-color: var(--color-gold);
+}
+
+.kanji-header .header-profile svg {
+  width: 18px;
+  height: 18px;
+  stroke: rgba(74, 63, 53, 0.6);
+}
+
+.kanji-container {
+  position: relative;
+  width: 100%;
+  max-width: 500px;
+  height: 500px;
+}
+
+@media (max-width: 480px) {
+  .kanji-container {
+    height: 400px;
+  }
+
+  .kanji-instructions {
+    padding: 0 20px;
+    margin-top: 20px;
+  }
+
+  .kanji-title {
+    font-size: 20px;
+    letter-spacing: 1px;
+  }
+
+  .kanji-subtitle {
+    font-size: 13px;
+  }
+
+  .kanji-description {
+    font-size: 15px;
+  }
+
+  .kanji-progress {
+    bottom: 16px;
+    left: 16px;
+    right: 16px;
+    padding: 12px 20px;
+  }
+}
+
+.kanji-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+#kanjiCanvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.kanji-instructions {
+  text-align: center;
+  margin-top: 24px;
+  color: #4A3F35; /* Dark brown for light background */
+  max-width: 320px;
+}
+
+.kanji-title {
+  font-family: var(--font-serif);
+  font-size: 24px;
+  font-weight: 400;
+  letter-spacing: 2px;
+  color: var(--color-gold);
+  margin-bottom: 12px;
+  text-transform: uppercase;
+}
+
+.kanji-subtitle {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 2px;
+  color: rgba(74, 63, 53, 0.7); /* Muted dark brown */
+  margin-bottom: 16px;
+  text-transform: uppercase;
+}
+
+.kanji-description {
+  font-family: var(--font-sans);
+  font-size: 16px;
+  line-height: 1.5;
+  color: #4A3F35; /* Dark brown for light background */
+  opacity: 0;
+  animation: fadeInUp 0.8s ease forwards 0.3s;
+}
+
+.kanji-progress {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  right: 20px;
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(10px);
+  border-radius: 50px;
+  padding: 16px 24px;
+  opacity: 0;
+  transform: translateY(20px);
+  animation: fadeInUp 0.8s ease forwards 0.8s;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.progress-bar {
+  width: 100%;
+  height: 4px;
+  background: rgba(74, 63, 53, 0.2);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.progress-fill {
+  height: 100%;
+  background: var(--color-gold);
+  border-radius: 2px;
+  width: 0%;
+  transition: width 0.3s ease;
+}
+
+.progress-text {
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 1px;
+  color: #4A3F35; /* Dark brown for light background */
+  text-transform: uppercase;
+  text-align: center;
+}
+

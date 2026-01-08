@@ -2,7 +2,7 @@
 // STATE MANAGEMENT
 // ====================
 export const state = {
-  currentScreen: 'landing',
+  currentScreen: 'kanji',
   selectedDestination: 'listening-bar',
   selectedCocktail: null,
   chatHistory: [],
@@ -10,7 +10,8 @@ export const state = {
   waitingForUserInput: false,
   flowStep: 0,
   bartenderAnimationInterval: null,
-  isBartenderShaking: false
+  isBartenderShaking: false,
+  chatFlowStarted: false
 };
 
 // ==================== 
@@ -50,16 +51,56 @@ export const loadHTMLFragment = async (path) => {
 export const screens = {};
 
 export const navigateTo = (screenName) => {
+  // Remove active class from all screens
   Object.values(screens).forEach(screen => {
-    if (screen) screen.classList.remove('active');
+    if (screen) {
+      screen.classList.remove('active');
+    }
   });
-  if (screens[screenName]) {
-    screens[screenName].classList.add('active');
+  
+  // Add active class to target screen
+  const targetScreen = screens[screenName];
+  if (targetScreen) {
+    targetScreen.classList.add('active');
+    state.currentScreen = screenName;
+    
+    // Trigger a custom event for screen activation (useful for screens that need to initialize)
+    const event = new CustomEvent('screenActivated', { 
+      detail: { screenName, screen: targetScreen } 
+    });
+    targetScreen.dispatchEvent(event);
+  } else {
+    console.warn(`Screen "${screenName}" not found. Available screens:`, Object.keys(screens));
   }
-  state.currentScreen = screenName;
 };
 
 export const registerScreen = (name, element) => {
   screens[name] = element;
+};
+
+// ==================== 
+// PLATFORM DETECTION
+// ====================
+export const isWebXRSupported = () => {
+  return 'xr' in navigator;
+};
+
+export const isARSupported = async () => {
+  if (!isWebXRSupported()) return false;
+  try {
+    return await navigator.xr.isSessionSupported('immersive-ar');
+  } catch (error) {
+    console.warn('Error checking AR support:', error);
+    return false;
+  }
+};
+
+export const isIOS = () => {
+  return /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+         (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+};
+
+export const isAndroid = () => {
+  return /Android/.test(navigator.userAgent);
 };
 

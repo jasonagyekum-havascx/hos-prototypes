@@ -1,4 +1,4 @@
-import { state, navigateTo, registerScreen, loadHTMLFragment } from '../js/common.js';
+import { state, navigateTo, registerScreen, loadHTMLFragment, isWebXRSupported, isARSupported, isIOS, isAndroid } from '../js/common.js';
 import { navigateToRepeatability } from './chat.js';
 import { handleOpenRecipeModal } from './share.js';
 
@@ -16,6 +16,8 @@ const swirlState = {
 };
 
 let experienceOverlay, swirlContent, shareBtnContainer, shareBtn, mixAnotherBtn;
+let arBtn, iosArBtn, experienceIframe, arModelViewer;
+let arSupported = false;
 
 // Check if device supports motion
 const supportsDeviceMotion = () => {
@@ -83,7 +85,7 @@ const updateSwirlProgress = () => {
 };
 
 // Complete the swirl reveal
-const completeSwirl = () => {
+const completeSwirl = async () => {
   swirlState.isActive = false;
   window.removeEventListener('deviceorientation', handleSwirlOrientation);
   
@@ -91,10 +93,51 @@ const completeSwirl = () => {
     experienceOverlay.classList.add('active');
   }
 
+  // Check AR support and show appropriate buttons
+  await checkARSupport();
+
   // Show share button after a brief delay
   setTimeout(() => {
     showShareButton();
   }, 1500);
+};
+
+// Check AR support and show appropriate buttons
+const checkARSupport = async () => {
+  if (!experienceOverlay) return;
+
+  const isIOSDevice = isIOS();
+  const isAndroidDevice = isAndroid();
+  
+  // Check WebXR AR support for Android/Chrome
+  if (isWebXRSupported()) {
+    arSupported = await isARSupported();
+    
+    if (arSupported && arBtn) {
+      arBtn.style.display = 'block';
+    }
+  }
+  
+  // Show iOS AR Quick Look button if on iOS
+  if (isIOSDevice && iosArBtn && arModelViewer) {
+    iosArBtn.style.display = 'block';
+  }
+};
+
+// Handle AR button click (WebXR)
+const handleARClick = async () => {
+  if (!experienceIframe || !arSupported) return;
+  
+  // Send message to iframe to start AR session
+  experienceIframe.contentWindow.postMessage({ type: 'startAR' }, '*');
+};
+
+// Handle iOS AR button click (AR Quick Look)
+const handleIOSARClick = () => {
+  if (!arModelViewer) return;
+  
+  // Trigger AR Quick Look
+  arModelViewer.activateAR();
 };
 
 // Start swirl detection
@@ -168,6 +211,10 @@ export const initSwirlScreen = async () => {
   shareBtnContainer = document.getElementById('shareBtnContainer');
   shareBtn = document.getElementById('shareBtn');
   mixAnotherBtn = document.getElementById('mixAnotherBtn');
+  arBtn = document.getElementById('arBtn');
+  iosArBtn = document.getElementById('iosArBtn');
+  experienceIframe = document.getElementById('experienceIframe');
+  arModelViewer = document.getElementById('arModelViewer');
 
   // Reset swirl state when entering screen
   const resetSwirlState = () => {
@@ -180,6 +227,9 @@ export const initSwirlScreen = async () => {
     if (shareBtnContainer) {
       shareBtnContainer.classList.remove('visible');
     }
+    // Hide AR buttons
+    if (arBtn) arBtn.style.display = 'none';
+    if (iosArBtn) iosArBtn.style.display = 'none';
     // Start detection after a brief delay
     setTimeout(() => {
       startSwirlDetection();
@@ -230,6 +280,28 @@ export const initSwirlScreen = async () => {
       if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
         navigateToRepeatability();
+      }
+    });
+  }
+
+  // AR button events (WebXR)
+  if (arBtn) {
+    arBtn.addEventListener('click', handleARClick);
+    arBtn.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        handleARClick();
+      }
+    });
+  }
+
+  // iOS AR button events (AR Quick Look)
+  if (iosArBtn) {
+    iosArBtn.addEventListener('click', handleIOSARClick);
+    iosArBtn.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        handleIOSARClick();
       }
     });
   }

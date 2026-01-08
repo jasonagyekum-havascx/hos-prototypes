@@ -22,7 +22,40 @@
   
   <!-- 3D Experience Overlay -->
   <div class="experience-overlay" id="experienceOverlay">
-    <iframe src="proto-toki.html" title="Interactive Toki Highball Experience"></iframe>
+    <iframe src="proto-toki.html" title="Interactive Toki Highball Experience" id="experienceIframe"></iframe>
+    
+    <!-- AR Button (Android/Chrome WebXR) -->
+    <button 
+      class="ar-btn" 
+      id="arBtn"
+      aria-label="Enter AR mode"
+      tabindex="0"
+      style="display: none;"
+    >
+      ENTER AR
+    </button>
+    
+    <!-- iOS AR Quick Look (model-viewer) -->
+    <model-viewer
+      id="arModelViewer"
+      src="../models/glb/glass-01.glb"
+      ar
+      ar-modes="webxr scene-viewer quick-look"
+      camera-controls
+      environment-image="../textures/hdr_500.hdr"
+      style="display: none;"
+    ></model-viewer>
+    
+    <!-- iOS AR Button (AR Quick Look) -->
+    <button 
+      class="ar-btn ios-ar-btn" 
+      id="iosArBtn"
+      aria-label="View in AR"
+      tabindex="0"
+      style="display: none;"
+    >
+      VIEW IN AR
+    </button>
   </div>
   
   <!-- Share Button -->

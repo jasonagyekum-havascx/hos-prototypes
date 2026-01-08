@@ -14,12 +14,18 @@ export const initLandingScreen = async () => {
 
   registerScreen('landing', landingScreen);
 
-  const destinationBtns = landingScreen.querySelectorAll('.destination-btn');
-
   const handleDestinationClick = (e) => {
     const btn = e.currentTarget;
     const destination = btn.dataset.destination;
 
+    if (!destination) {
+      console.warn('Button clicked but no destination found');
+      return;
+    }
+
+    // Get all buttons fresh each time
+    const destinationBtns = landingScreen.querySelectorAll('.destination-btn');
+    
     // Update button states
     destinationBtns.forEach(b => {
       b.classList.remove('destination-btn--active');
@@ -30,21 +36,31 @@ export const initLandingScreen = async () => {
 
     state.selectedDestination = destination;
 
-    // Navigate to chat after short delay
-    setTimeout(() => {
-      navigateTo('chat');
-    }, 300);
+    // Reset chat state before navigating
+    state.chatHistory = [];
+    state.chatFlowStarted = false;
+    state.waitingForUserInput = false;
+    state.flowStep = 0;
+
+    // Navigate to chat immediately
+    navigateTo('chat');
   };
 
-  // Destination button events
-  destinationBtns.forEach(btn => {
-    btn.addEventListener('click', handleDestinationClick);
-    btn.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        handleDestinationClick(e);
-      }
-    });
+  // Use event delegation on the screen itself to handle clicks
+  landingScreen.addEventListener('click', (e) => {
+    const btn = e.target.closest('.destination-btn');
+    if (btn) {
+      e.preventDefault();
+      handleDestinationClick({ currentTarget: btn });
+    }
+  });
+
+  landingScreen.addEventListener('keydown', (e) => {
+    const btn = e.target.closest('.destination-btn');
+    if (btn && (e.key === 'Enter' || e.key === ' ')) {
+      e.preventDefault();
+      handleDestinationClick({ currentTarget: btn });
+    }
   });
 };
 

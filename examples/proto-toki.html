@@ -457,5 +457,26 @@ The House of Suntory crafted Toki using a bolder grain whisky from the Chita Dis
 		</script>
 
 		<script type="module" src="./src/js/toki/main.js"></script>
+		
+		<script>
+			// Listen for AR start messages from parent window
+			window.addEventListener('message', async (event) => {
+				if (event.data?.type === 'startAR') {
+					// Wait for main.js to load and expose startARSession
+					const maxWait = 5000;
+					const startTime = Date.now();
+					
+					const checkAndStart = () => {
+						if (window.startARSession) {
+							window.startARSession();
+						} else if (Date.now() - startTime < maxWait) {
+							setTimeout(checkAndStart, 100);
+						}
+					};
+					
+					checkAndStart();
+				}
+			});
+		</script>
 	</body>
 </html>

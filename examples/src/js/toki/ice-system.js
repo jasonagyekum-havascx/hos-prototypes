@@ -86,6 +86,13 @@ function applyIceMaterialToMesh(child, size) {
 }
 
 // Spawn an ice cube (only uses GLB model)
+// Store parent group for ice cubes (for AR grouping)
+let iceParentGroup = null;
+
+export function setIceParentGroup(parentGroup) {
+	iceParentGroup = parentGroup;
+}
+
 export function spawnIce(scene, gui, createIceCubeGUI) {
 	if (iceObjects.length >= iceConfig.maxQuantity) return;
 	
@@ -142,7 +149,9 @@ export function spawnIce(scene, gui, createIceCubeGUI) {
 		Math.random() * 0.3
 	);
 
-	scene.add(mesh);
+	// Add to parent group if set (for AR), otherwise add to scene
+	const parent = iceParentGroup || scene;
+	parent.add(mesh);
 	iceObjects.push(iceData);
 }
 
