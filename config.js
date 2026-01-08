@@ -6,3 +6,8 @@ window.APP_CONFIG = {
   ELEVENLABS_VOICE_ID: 'Mv8AjrYZCBkdsmDHNwcB' // Optional: Custom voice ID
 };
 
+// MALE ASIAN VOICE:
+// Mv8AjrYZCBkdsmDHNwcB
+
+// FEMALE ASIAN VOICE:
+// WQz3clzUdMqvBf0jswZQ

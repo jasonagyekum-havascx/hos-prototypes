@@ -27,3 +27,4 @@ test/unit/build
 examples/config.js
 .env
 .env.local
+config.js
