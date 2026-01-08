@@ -142,9 +142,8 @@
 }
 
 .destination-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  display: flex;
+  justify-content: center;
   max-width: 320px;
   margin: 0 auto;
   opacity: 0;
@@ -153,7 +152,7 @@
 
 .destination-btn {
   padding: 14px 15px;
-  border-radius: 50px;
+  border-radius: 0px;
   font-family: var(--font-sans);
   font-size: 12px;
   font-weight: 500;
