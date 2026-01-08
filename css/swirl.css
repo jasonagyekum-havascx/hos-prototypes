@@ -6,31 +6,6 @@
   position: relative;
 }
 
-.swirl-header {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  padding: 16px 20px;
-  background: transparent;
-}
-
-.swirl-header .header-logo {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  color: #1A1512;
-  font-size: 12px;
-  letter-spacing: 2px;
-}
-
-.swirl-header .header-profile {
-  border-color: rgba(0, 0, 0, 0.3);
-}
-
-.swirl-header .header-profile svg {
-  stroke: #333;
-}
-
 .swirl-content {
   flex: 1;
   display: flex;

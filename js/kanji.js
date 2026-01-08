@@ -15,6 +15,12 @@ const createKanjiSketch = (p) => {
   let strokePoints = [];
   let circleProgress = 0;
   let targetCircleRadius = 120;
+  let ensoImage;
+
+  p.preload = function() {
+    // Load the enso image
+    ensoImage = p.loadImage('./images/enso.png');
+  };
 
   p.setup = function() {
     const container = document.getElementById('kanjiCanvas');
@@ -34,17 +40,15 @@ const createKanjiSketch = (p) => {
   };
 
   const drawTargetCircle = () => {
-    p.push();
-    p.stroke(139, 115, 85, 60); // More visible gold on light background
-    p.strokeWeight(1);
-    p.noFill();
-    p.drawingContext.setLineDash([5, 5]);
-    // Ensure circle is centered
-    const centerX = p.width / 2;
-    const centerY = p.height / 2;
-    p.circle(centerX, centerY, targetCircleRadius * 2);
-    p.drawingContext.setLineDash([]);
-    p.pop();
+    if (ensoImage) {
+      p.push();
+      p.imageMode(p.CENTER);
+      const centerX = p.width / 2;
+      const centerY = p.height / 2;
+      // Draw enso image at target size (diameter = targetCircleRadius * 2)
+      p.image(ensoImage, centerX, centerY, targetCircleRadius * 2, targetCircleRadius * 2);
+      p.pop();
+    }
   };
 
   p.draw = function() {
@@ -143,7 +147,7 @@ const createKanjiSketch = (p) => {
     updateProgressUI(circleProgress);
 
     // Complete if progress is high enough
-    if (circleProgress > 0.7) {
+    if (circleProgress > 0.4) {
       setTimeout(() => {
         completeKanji();
       }, 500);
@@ -154,10 +158,10 @@ const createKanjiSketch = (p) => {
     if (progressFill && progressText) {
       progressFill.style.width = (progress * 100) + '%';
 
-      if (progress > 0.7) {
+      if (progress > 0.4) {
         progressText.textContent = 'Perfect! Entering...';
         progressText.style.color = '#8B7355';
-      } else if (progress > 0.4) {
+      } else if (progress > 0.25) {
         progressText.textContent = 'Almost there...';
       } else {
         progressText.textContent = 'Paint a circle to continue';

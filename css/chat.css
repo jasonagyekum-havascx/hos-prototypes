@@ -516,7 +516,7 @@
 /* Fixed cocktail selection area above carousel */
 .voice-cocktail-section {
   flex-shrink: 0;
-  padding: 16px 20px 20px;
+  padding: 16px 20px 8px;
   opacity: 0;
   transform: translateY(20px);
   animation: messageIn 0.4s ease forwards;
@@ -557,7 +557,7 @@
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
-  padding: 20px 20px 16px;
+  padding: 8px 20px 16px;
   gap: 16px;
   min-height: 220px;
   align-items: flex-end;

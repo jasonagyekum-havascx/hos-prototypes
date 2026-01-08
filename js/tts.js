@@ -11,9 +11,12 @@ let currentAudio = null;
 let onPlaybackStart = null;
 let onPlaybackEnd = null;
 
+// Selected voice ID (set once and reused throughout the session)
+let selectedVoiceId = null;
+
 /**
  * Get Eleven Labs configuration from window.APP_CONFIG
- * Randomly selects from available voice IDs if multiple are configured
+ * Selects a voice ID once at the start and reuses it for consistency
  */
 const getConfig = () => {
   if (!window.APP_CONFIG) {
@@ -28,22 +31,23 @@ const getConfig = () => {
     return null;
   }
   
-  let voiceId;
-  
-  // Check if multiple voice IDs are available
-  if (ELEVENLABS_VOICE_IDS && Array.isArray(ELEVENLABS_VOICE_IDS) && ELEVENLABS_VOICE_IDS.length > 0) {
-    // Randomly select one of the available voice IDs
-    const randomIndex = Math.floor(Math.random() * ELEVENLABS_VOICE_IDS.length);
-    voiceId = ELEVENLABS_VOICE_IDS[randomIndex];
-    console.log(`Using voice ${randomIndex + 1} of ${ELEVENLABS_VOICE_IDS.length}: ${voiceId}`);
-  } else {
-    // Fallback to single voice ID for backwards compatibility
-    voiceId = ELEVENLABS_VOICE_ID || '21m00Tcm4TlvDq8ikWAM'; // Default voice (Rachel)
+  // If voice has already been selected, use it
+  if (!selectedVoiceId) {
+    // Select voice for the first time
+    if (ELEVENLABS_VOICE_IDS && Array.isArray(ELEVENLABS_VOICE_IDS) && ELEVENLABS_VOICE_IDS.length > 0) {
+      // Randomly select one voice at the start
+      const randomIndex = Math.floor(Math.random() * ELEVENLABS_VOICE_IDS.length);
+      selectedVoiceId = ELEVENLABS_VOICE_IDS[randomIndex];
+      console.log(`🎙️ Selected voice ${randomIndex + 1} of ${ELEVENLABS_VOICE_IDS.length}: ${selectedVoiceId}`);
+    } else {
+      // Fallback to single voice ID for backwards compatibility
+      selectedVoiceId = ELEVENLABS_VOICE_ID || '21m00Tcm4TlvDq8ikWAM'; // Default voice (Rachel)
+    }
   }
   
   return {
     apiKey: ELEVENLABS_API_KEY,
-    voiceId: voiceId
+    voiceId: selectedVoiceId
   };
 };
 

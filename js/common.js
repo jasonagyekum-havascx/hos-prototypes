@@ -13,7 +13,7 @@ export const state = {
   isBartenderShaking: false,
   chatFlowStarted: false,
   voiceEnabled: true, // Default: voice ON for bartender TTS
-  simulateMode: false // Default: use real API calls
+  simulateMode: true // Default: simulate mode ON (no API usage)
 };
 
 // ==================== 

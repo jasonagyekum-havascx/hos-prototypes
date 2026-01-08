@@ -10,49 +10,6 @@
   padding: 20px;
 }
 
-.kanji-header {
-  position: absolute;
-  top: 16px;
-  left: 0;
-  right: 0;
-  z-index: 10;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 20px;
-}
-
-.kanji-header .header-logo {
-  color: #4A3F35; /* Dark brown for light background */
-  font-size: 12px;
-  letter-spacing: 2px;
-  text-align: center;
-  flex: 1;
-}
-
-.kanji-header .header-profile {
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  border: 1.5px solid rgba(74, 63, 53, 0.4);
-  background: transparent;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: var(--transition-smooth);
-}
-
-.kanji-header .header-profile:hover {
-  border-color: var(--color-gold);
-}
-
-.kanji-header .header-profile svg {
-  width: 18px;
-  height: 18px;
-  stroke: rgba(74, 63, 53, 0.6);
-}
-
 .kanji-container {
   position: relative;
   width: 100%;
