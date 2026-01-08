@@ -3,7 +3,11 @@
 
 window.APP_CONFIG = {
   ELEVENLABS_API_KEY: 'sk_dbfa2d26ffa76bb1a62b06fa0dd84d1f921f6e1ce4a6e99b', // Set your 11labs API key here
-  ELEVENLABS_VOICE_ID: 'Mv8AjrYZCBkdsmDHNwcB' // Optional: Custom voice ID
+  ELEVENLABS_VOICE_ID: 'Mv8AjrYZCBkdsmDHNwcB', // Optional: Custom voice ID (backwards compatibility)
+  ELEVENLABS_VOICE_IDS: [
+    'Mv8AjrYZCBkdsmDHNwcB', // Male Asian Voice
+    'WQz3clzUdMqvBf0jswZQ'  // Female Asian Voice
+  ]
 };
 
 // MALE ASIAN VOICE:

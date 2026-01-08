@@ -70,6 +70,9 @@ const chatFlow = {
 };
 
 let chatMessages, chatInput, sendBtn, bartenderContainer, bartenderImages;
+let voiceModeContainer, voiceCarouselTrack, voiceCarouselDots, voiceCocktailSection, voiceCtaSection;
+let currentSlideIndex = 0;
+let carouselCards = [];
 
 // ==================== 
 // BARTENDER ANIMATION
@@ -126,22 +129,133 @@ let messageIdCounter = 0;
 const generateMessageId = () => `msg-${++messageIdCounter}`;
 
 // ==================== 
+// VOICE MODE CAROUSEL
+// ====================
+const initVoiceModeUI = () => {
+  const chatBody = document.querySelector('.chat-body');
+  if (!chatBody || voiceModeContainer) return;
+  
+  // Create voice mode container
+  voiceModeContainer = document.createElement('div');
+  voiceModeContainer.className = 'voice-mode-container';
+  voiceModeContainer.innerHTML = `
+    <div class="voice-cocktail-section" id="voiceCocktailSection">
+      <div class="cocktail-cards" id="voiceCocktailCards"></div>
+    </div>
+    <div class="voice-carousel">
+      <div class="voice-carousel__track" id="voiceCarouselTrack"></div>
+      <div class="voice-carousel__dots" id="voiceCarouselDots"></div>
+    </div>
+    <div class="voice-cta-section" id="voiceCtaSection"></div>
+  `;
+  
+  chatBody.appendChild(voiceModeContainer);
+  
+  // Get references
+  voiceCarouselTrack = document.getElementById('voiceCarouselTrack');
+  voiceCarouselDots = document.getElementById('voiceCarouselDots');
+  voiceCocktailSection = document.getElementById('voiceCocktailSection');
+  voiceCtaSection = document.getElementById('voiceCtaSection');
+  
+  // Add scroll listener for manual swipe
+  voiceCarouselTrack.addEventListener('scroll', handleCarouselScroll);
+  
+  // Mark chat screen as voice mode
+  const chatScreen = document.getElementById('chatScreen');
+  if (chatScreen) {
+    chatScreen.classList.add('voice-mode-active');
+  }
+};
+
+const handleCarouselScroll = () => {
+  if (!voiceCarouselTrack || carouselCards.length === 0) return;
+  
+  const scrollLeft = voiceCarouselTrack.scrollLeft;
+  const cardWidth = carouselCards[0]?.offsetWidth || 280;
+  const gap = 16;
+  const newIndex = Math.round(scrollLeft / (cardWidth + gap));
+  
+  if (newIndex !== currentSlideIndex && newIndex >= 0 && newIndex < carouselCards.length) {
+    currentSlideIndex = newIndex;
+    updateCarouselState();
+  }
+};
+
+const updateCarouselState = () => {
+  // Update card active states
+  carouselCards.forEach((card, index) => {
+    card.classList.toggle('active', index === currentSlideIndex);
+  });
+  
+  // Update dots
+  const dots = voiceCarouselDots?.querySelectorAll('.voice-carousel__dot');
+  dots?.forEach((dot, index) => {
+    dot.classList.toggle('active', index === currentSlideIndex);
+  });
+};
+
+const scrollToSlide = (index) => {
+  if (!voiceCarouselTrack || !carouselCards[index]) return;
+  
+  const card = carouselCards[index];
+  const trackRect = voiceCarouselTrack.getBoundingClientRect();
+  const cardRect = card.getBoundingClientRect();
+  
+  // Calculate scroll position to center the card
+  const scrollLeft = card.offsetLeft - (trackRect.width / 2) + (cardRect.width / 2);
+  
+  voiceCarouselTrack.scrollTo({
+    left: scrollLeft,
+    behavior: 'smooth'
+  });
+  
+  currentSlideIndex = index;
+  updateCarouselState();
+};
+
+const addCarouselDot = (index) => {
+  if (!voiceCarouselDots) return;
+  
+  const dot = document.createElement('button');
+  dot.className = 'voice-carousel__dot';
+  dot.setAttribute('aria-label', `Go to message ${index + 1}`);
+  dot.setAttribute('tabindex', '0');
+  
+  if (index === currentSlideIndex) {
+    dot.classList.add('active');
+  }
+  
+  dot.addEventListener('click', () => scrollToSlide(index));
+  voiceCarouselDots.appendChild(dot);
+};
+
+const advanceToNextSlide = () => {
+  if (currentSlideIndex < carouselCards.length - 1) {
+    scrollToSlide(currentSlideIndex + 1);
+  }
+};
+
+// ==================== 
 // CHAT FUNCTIONS
 // ====================
 const addMessage = (type, text, delay = 0) => {
   return new Promise(resolve => {
     setTimeout(() => {
       const messageId = generateMessageId();
-      const messageEl = document.createElement('div');
-      messageEl.className = `message message--${type}`;
-      messageEl.id = messageId;
-      messageEl.setAttribute('role', type === 'ai' ? 'status' : 'log');
       
-      // Check if voice mode is enabled for AI messages
+      // Check if voice mode is enabled for AI messages - use carousel
       if (type === 'ai' && state.voiceEnabled) {
-        // Create audio indicator with transcript toggle
-        messageEl.classList.add('message--voice-mode');
-        messageEl.innerHTML = `
+        // Initialize voice mode UI if not done
+        if (!voiceModeContainer) {
+          initVoiceModeUI();
+        }
+        
+        // Create carousel card
+        const card = document.createElement('div');
+        card.className = 'voice-carousel__card';
+        card.id = messageId;
+        card.setAttribute('role', 'status');
+        card.innerHTML = `
           <div class="message__audio-indicator" aria-label="Playing audio">
             <div class="audio-bars">
               <span class="audio-bar"></span>
@@ -161,9 +275,8 @@ const addMessage = (type, text, delay = 0) => {
         `;
         
         // Set up transcript toggle
-        const toggleBtn = messageEl.querySelector('.message__transcript-toggle');
-        const transcript = messageEl.querySelector('.message__transcript');
-        const audioIndicator = messageEl.querySelector('.message__audio-indicator');
+        const toggleBtn = card.querySelector('.message__transcript-toggle');
+        const transcript = card.querySelector('.message__transcript');
         
         const handleToggleTranscript = () => {
           const isExpanded = toggleBtn.getAttribute('aria-expanded') === 'true';
@@ -180,9 +293,23 @@ const addMessage = (type, text, delay = 0) => {
           }
         });
         
-        chatMessages.appendChild(messageEl);
+        // Add to carousel
+        voiceCarouselTrack.appendChild(card);
+        carouselCards.push(card);
+        
+        // Add pagination dot
+        const cardIndex = carouselCards.length - 1;
+        addCarouselDot(cardIndex);
+        
+        // Make new card active and scroll to it
+        if (carouselCards.length === 1) {
+          card.classList.add('active');
+        } else {
+          // Auto-scroll to new card after a brief delay
+          setTimeout(() => scrollToSlide(cardIndex), 300);
+        }
+        
         state.chatHistory.push({ type, text, messageId });
-        scrollToBottom();
         
         // Speak the text
         speakText(
@@ -208,11 +335,17 @@ const addMessage = (type, text, delay = 0) => {
                   statusEl.textContent = 'Finished';
                 }
               }
+              // Auto-advance to next slide when audio finishes
+              advanceToNextSlide();
             }
           }
         );
       } else {
-        // Standard text-only mode
+        // Standard text-only mode (vertical messages)
+        const messageEl = document.createElement('div');
+        messageEl.className = `message message--${type}`;
+        messageEl.id = messageId;
+        messageEl.setAttribute('role', type === 'ai' ? 'status' : 'log');
         messageEl.textContent = text;
         chatMessages.appendChild(messageEl);
         state.chatHistory.push({ type, text, messageId });
@@ -239,9 +372,6 @@ const removeTypingIndicator = () => {
 };
 
 const addCocktailCards = () => {
-  const cardsContainer = document.createElement('div');
-  cardsContainer.className = 'cocktail-cards';
-  
   const cocktails = [
     { 
       id: 'toki-highball', 
@@ -257,26 +387,57 @@ const addCocktailCards = () => {
     }
   ];
 
-  cocktails.forEach(cocktail => {
-    const card = document.createElement('button');
-    card.className = 'cocktail-card';
-    card.setAttribute('tabindex', '0');
-    card.setAttribute('aria-label', `Select ${cocktail.name}`);
-    card.innerHTML = `<img src="${cocktail.imageSrc}" alt="${cocktail.imageAlt}" />`;
+  // Check if voice mode - use fixed section above carousel
+  if (state.voiceEnabled && voiceCocktailSection) {
+    const voiceCocktailCards = document.getElementById('voiceCocktailCards');
+    if (!voiceCocktailCards) return;
     
-    card.addEventListener('click', () => handleCocktailSelect(cocktail, card));
-    card.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault();
-        handleCocktailSelect(cocktail, card);
-      }
+    cocktails.forEach(cocktail => {
+      const card = document.createElement('button');
+      card.className = 'cocktail-card';
+      card.setAttribute('tabindex', '0');
+      card.setAttribute('aria-label', `Select ${cocktail.name}`);
+      card.innerHTML = `<img src="${cocktail.imageSrc}" alt="${cocktail.imageAlt}" />`;
+      
+      card.addEventListener('click', () => handleCocktailSelect(cocktail, card));
+      card.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          handleCocktailSelect(cocktail, card);
+        }
+      });
+      
+      voiceCocktailCards.appendChild(card);
     });
     
-    cardsContainer.appendChild(card);
-  });
+    // Show the cocktail section
+    voiceCocktailSection.classList.add('visible');
+  } else {
+    // Standard mode - add to chat messages
+    const cardsContainer = document.createElement('div');
+    cardsContainer.className = 'cocktail-cards';
+    
+    cocktails.forEach(cocktail => {
+      const card = document.createElement('button');
+      card.className = 'cocktail-card';
+      card.setAttribute('tabindex', '0');
+      card.setAttribute('aria-label', `Select ${cocktail.name}`);
+      card.innerHTML = `<img src="${cocktail.imageSrc}" alt="${cocktail.imageAlt}" />`;
+      
+      card.addEventListener('click', () => handleCocktailSelect(cocktail, card));
+      card.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          handleCocktailSelect(cocktail, card);
+        }
+      });
+      
+      cardsContainer.appendChild(card);
+    });
 
-  chatMessages.appendChild(cardsContainer);
-  scrollToBottom();
+    chatMessages.appendChild(cardsContainer);
+    scrollToBottom();
+  }
 };
 
 const handleCocktailSelect = (cocktail, cardEl) => {
@@ -297,9 +458,6 @@ const handleCocktailSelect = (cocktail, cardEl) => {
 const addExperienceCTA = () => {
   // Stop bartender shaking animation when drink is ready
   stopBartenderShaking();
-  
-  const ctaContainer = document.createElement('div');
-  ctaContainer.style.cssText = 'display: flex; justify-content: flex-start; padding: 8px 0;';
   
   const cta = document.createElement('button');
   cta.className = 'experience-cta';
@@ -325,9 +483,18 @@ const addExperienceCTA = () => {
     }
   });
 
-  ctaContainer.appendChild(cta);
-  chatMessages.appendChild(ctaContainer);
-  scrollToBottom();
+  // Check if voice mode - use fixed CTA section
+  if (state.voiceEnabled && voiceCtaSection) {
+    voiceCtaSection.appendChild(cta);
+    voiceCtaSection.classList.add('visible');
+  } else {
+    // Standard mode
+    const ctaContainer = document.createElement('div');
+    ctaContainer.style.cssText = 'display: flex; justify-content: flex-start; padding: 8px 0;';
+    ctaContainer.appendChild(cta);
+    chatMessages.appendChild(ctaContainer);
+    scrollToBottom();
+  }
 };
 
 const playChatSequence = async (flowKey) => {
@@ -338,13 +505,25 @@ const playChatSequence = async (flowKey) => {
     const msg = flow.messages[i];
     
     if (msg.type === 'ai') {
-      addTypingIndicator();
-      await wait(1200 + Math.random() * 800);
-      removeTypingIndicator();
+      // In voice mode, skip typing indicator (carousel cards appear directly)
+      if (!state.voiceEnabled) {
+        addTypingIndicator();
+        await wait(1200 + Math.random() * 800);
+        removeTypingIndicator();
+      } else {
+        // Small delay between voice carousel cards
+        await wait(500);
+      }
     }
     
     await addMessage(msg.type, msg.text, 100);
-    await wait(400);
+    
+    // In voice mode, wait longer between messages to allow audio to play
+    if (state.voiceEnabled && msg.type === 'ai') {
+      await wait(800);
+    } else {
+      await wait(400);
+    }
   }
 
   if (flow.showCocktails) {
@@ -538,6 +717,7 @@ const initializeChatElements = (chatScreen) => {
       if (parsed.waitingForUserInput !== undefined) state.waitingForUserInput = parsed.waitingForUserInput;
       if (parsed.flowStep !== undefined) state.flowStep = parsed.flowStep;
       if (parsed.voiceEnabled !== undefined) state.voiceEnabled = parsed.voiceEnabled;
+      if (parsed.simulateMode !== undefined) state.simulateMode = parsed.simulateMode;
       if (parsed.showRepeatability) {
         // Store flag to show repeatability flow
         state.showRepeatability = true;

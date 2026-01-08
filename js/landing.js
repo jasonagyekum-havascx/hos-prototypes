@@ -39,6 +39,31 @@ export const initLandingScreen = async () => {
     }
   }
 
+  // Initialize simulate mode toggle
+  const simulateToggle = document.getElementById('simulateToggle');
+  if (simulateToggle) {
+    // Set initial state (default: OFF)
+    simulateToggle.checked = state.simulateMode;
+    
+    const handleSimulateToggle = () => {
+      state.simulateMode = simulateToggle.checked;
+    };
+    
+    simulateToggle.addEventListener('change', handleSimulateToggle);
+    
+    // Handle keyboard interaction on the label
+    const simulateToggleLabel = simulateToggle.closest('.simulate-toggle');
+    if (simulateToggleLabel) {
+      simulateToggleLabel.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          simulateToggle.checked = !simulateToggle.checked;
+          handleSimulateToggle();
+        }
+      });
+    }
+  }
+
   const handleDestinationClick = async (btn) => {
     const destination = btn.dataset.destination;
 
@@ -74,7 +99,8 @@ export const initLandingScreen = async () => {
         chatFlowStarted: state.chatFlowStarted,
         waitingForUserInput: state.waitingForUserInput,
         flowStep: state.flowStep,
-        voiceEnabled: state.voiceEnabled
+        voiceEnabled: state.voiceEnabled,
+        simulateMode: state.simulateMode
       }));
     } catch (e) {
       console.warn('Could not save state to localStorage:', e);

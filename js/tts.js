@@ -13,6 +13,7 @@ let onPlaybackEnd = null;
 
 /**
  * Get Eleven Labs configuration from window.APP_CONFIG
+ * Randomly selects from available voice IDs if multiple are configured
  */
 const getConfig = () => {
   if (!window.APP_CONFIG) {
@@ -20,17 +21,47 @@ const getConfig = () => {
     return null;
   }
   
-  const { ELEVENLABS_API_KEY, ELEVENLABS_VOICE_ID } = window.APP_CONFIG;
+  const { ELEVENLABS_API_KEY, ELEVENLABS_VOICE_ID, ELEVENLABS_VOICE_IDS } = window.APP_CONFIG;
   
   if (!ELEVENLABS_API_KEY) {
     console.warn('ELEVENLABS_API_KEY not configured');
     return null;
   }
   
+  let voiceId;
+  
+  // Check if multiple voice IDs are available
+  if (ELEVENLABS_VOICE_IDS && Array.isArray(ELEVENLABS_VOICE_IDS) && ELEVENLABS_VOICE_IDS.length > 0) {
+    // Randomly select one of the available voice IDs
+    const randomIndex = Math.floor(Math.random() * ELEVENLABS_VOICE_IDS.length);
+    voiceId = ELEVENLABS_VOICE_IDS[randomIndex];
+    console.log(`Using voice ${randomIndex + 1} of ${ELEVENLABS_VOICE_IDS.length}: ${voiceId}`);
+  } else {
+    // Fallback to single voice ID for backwards compatibility
+    voiceId = ELEVENLABS_VOICE_ID || '21m00Tcm4TlvDq8ikWAM'; // Default voice (Rachel)
+  }
+  
   return {
     apiKey: ELEVENLABS_API_KEY,
-    voiceId: ELEVENLABS_VOICE_ID || '21m00Tcm4TlvDq8ikWAM' // Default voice (Rachel)
+    voiceId: voiceId
   };
+};
+
+/**
+ * Simulate audio playback (mock mode)
+ * @param {string} text - Text to simulate
+ * @returns {Promise<Blob|null>} - Returns null (no actual audio)
+ */
+const simulateAudio = async (text) => {
+  // Calculate realistic duration based on text length
+  // Average speaking rate: ~150 words per minute = 2.5 words per second
+  const wordCount = text.split(/\s+/).length;
+  const durationMs = Math.max(2000, (wordCount / 2.5) * 1000);
+  
+  // Wait to simulate audio playback
+  await new Promise(resolve => setTimeout(resolve, durationMs));
+  
+  return null; // No actual audio blob
 };
 
 /**
@@ -39,6 +70,12 @@ const getConfig = () => {
  * @returns {Promise<Blob|null>} - Audio blob or null on error
  */
 const fetchAudio = async (text) => {
+  // Check if simulate mode is enabled
+  if (window.state && window.state.simulateMode) {
+    console.log('🧪 Simulate mode: Mocking audio for:', text.substring(0, 50) + '...');
+    return await simulateAudio(text);
+  }
+  
   const config = getConfig();
   if (!config) return null;
   
@@ -122,9 +159,10 @@ const processQueue = async () => {
     if (onStart) onStart(messageId);
     if (onPlaybackStart) onPlaybackStart(messageId);
     
-    // Fetch and play audio
+    // Fetch and play audio (or simulate)
     const audioBlob = await fetchAudio(text);
     
+    // In simulate mode or if we have a real audio blob, play it
     if (audioBlob) {
       try {
         await playAudioBlob(audioBlob);
@@ -132,6 +170,8 @@ const processQueue = async () => {
         console.error('Error playing audio:', error);
       }
     }
+    // If audioBlob is null in simulate mode, fetchAudio already waited
+    // So we can proceed to notify end
     
     // Notify playback end
     if (onEnd) onEnd(messageId);
