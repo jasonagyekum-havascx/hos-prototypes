@@ -1,4 +1,4 @@
-import { state, navigateTo, registerScreen, loadHTMLFragment } from './common.js';
+import { state, navigateTo, registerScreen, loadHTMLFragment, screens } from './common.js';
 
 export const initLandingScreen = async () => {
   const app = document.querySelector('.app');
@@ -14,8 +14,7 @@ export const initLandingScreen = async () => {
 
   registerScreen('landing', landingScreen);
 
-  const handleDestinationClick = async (e) => {
-    const btn = e.currentTarget;
+  const handleDestinationClick = async (btn) => {
     const destination = btn.dataset.destination;
 
     if (!destination) {
@@ -42,8 +41,21 @@ export const initLandingScreen = async () => {
     state.waitingForUserInput = false;
     state.flowStep = 0;
 
-    // Navigate to chat (now async, waits for screen to be registered if needed)
-    await navigateTo('chat');
+    // Save state to localStorage for page navigation
+    try {
+      localStorage.setItem('appState', JSON.stringify({
+        selectedDestination: state.selectedDestination,
+        chatHistory: state.chatHistory,
+        chatFlowStarted: state.chatFlowStarted,
+        waitingForUserInput: state.waitingForUserInput,
+        flowStep: state.flowStep
+      }));
+    } catch (e) {
+      console.warn('Could not save state to localStorage:', e);
+    }
+
+    // Navigate to chat page using hard page load
+    window.location.href = './chat.html';
   };
 
   // Use event delegation on the screen itself to handle clicks
@@ -51,7 +63,8 @@ export const initLandingScreen = async () => {
     const btn = e.target.closest('.destination-btn');
     if (btn) {
       e.preventDefault();
-      handleDestinationClick({ currentTarget: btn });
+      e.stopPropagation();
+      handleDestinationClick(btn);
     }
   });
 
@@ -59,7 +72,8 @@ export const initLandingScreen = async () => {
     const btn = e.target.closest('.destination-btn');
     if (btn && (e.key === 'Enter' || e.key === ' ')) {
       e.preventDefault();
-      handleDestinationClick({ currentTarget: btn });
+      e.stopPropagation();
+      handleDestinationClick(btn);
     }
   });
 };

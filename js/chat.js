@@ -324,17 +324,30 @@ export const navigateToRepeatability = async () => {
 // ====================
 const checkAndStartChatFlow = () => {
   const chatScreen = document.getElementById('chatScreen');
-  if (!chatScreen) return;
+  if (!chatScreen) {
+    console.warn('Chat screen not found');
+    return;
+  }
+  
+  // Check if we're on a standalone page (chat.html)
+  const isStandalonePage = window.location.pathname.includes('chat.html');
   
   const isActive = chatScreen.classList.contains('active');
-  const isCurrentScreen = state.currentScreen === 'chat';
+  const isCurrentScreen = isStandalonePage || state.currentScreen === 'chat';
+  
+  // Ensure chatMessages is initialized
+  if (!chatMessages) {
+    chatMessages = document.getElementById('chatMessages');
+    if (!chatMessages) {
+      console.warn('Chat messages container not found');
+      return;
+    }
+  }
   
   // Only start if screen is active and we haven't started yet
   if (isActive && isCurrentScreen && state.chatHistory.length === 0 && !state.chatFlowStarted) {
     // Clear any existing messages in the container
-    if (chatMessages) {
-      chatMessages.innerHTML = '';
-    }
+    chatMessages.innerHTML = '';
     
     state.chatFlowStarted = true;
     // Small delay to ensure screen is fully visible
@@ -345,19 +358,53 @@ const checkAndStartChatFlow = () => {
 };
 
 export const initChatScreen = async () => {
-  const app = document.querySelector('.app');
-  if (!app) return;
-
-  // Load HTML fragment
-  const fragment = await loadHTMLFragment('./screens/chat.html');
-  if (!fragment) return;
-
-  app.appendChild(fragment);
+  // Check if we're on a standalone page (chat.html) or in SPA mode
   const chatScreen = document.getElementById('chatScreen');
-  if (!chatScreen) return;
+  if (!chatScreen) {
+    // SPA mode - try to load fragment
+    const app = document.querySelector('.app');
+    if (!app) return;
 
-  registerScreen('chat', chatScreen);
+    const fragment = await loadHTMLFragment('./screens/chat.html');
+    if (!fragment) return;
 
+    app.appendChild(fragment);
+    const loadedChatScreen = document.getElementById('chatScreen');
+    if (!loadedChatScreen) return;
+
+    registerScreen('chat', loadedChatScreen);
+    initializeChatElements(loadedChatScreen);
+    setupChatObservers(loadedChatScreen);
+  } else {
+    // Standalone page mode - chat screen is already in the DOM
+    // Set current screen state for standalone page
+    state.currentScreen = 'chat';
+    initializeChatElements(chatScreen);
+    
+    // Ensure chat screen is marked as active
+    if (!chatScreen.classList.contains('active')) {
+      chatScreen.classList.add('active');
+    }
+    
+    // Start chat flow immediately since we're on a standalone page
+    // Reset state to ensure fresh start
+    state.chatHistory = [];
+    state.chatFlowStarted = false;
+    state.waitingForUserInput = false;
+    state.flowStep = 0;
+    
+    // Use a small delay to ensure DOM is fully ready, then start flow
+    setTimeout(() => {
+      if (!state.chatFlowStarted && chatMessages) {
+        chatMessages.innerHTML = '';
+        state.chatFlowStarted = true;
+        startChatFlow();
+      }
+    }, 200);
+  }
+};
+
+const initializeChatElements = (chatScreen) => {
   chatMessages = document.getElementById('chatMessages');
   chatInput = document.getElementById('chatInput');
   sendBtn = document.getElementById('sendBtn');
@@ -371,7 +418,26 @@ export const initChatScreen = async () => {
   if (chatInput) {
     chatInput.addEventListener('keydown', handleKeyDown);
   }
+  
+  // Load state from localStorage if available (for page navigation)
+  try {
+    const savedState = localStorage.getItem('appState');
+    if (savedState) {
+      const parsed = JSON.parse(savedState);
+      if (parsed.selectedDestination) state.selectedDestination = parsed.selectedDestination;
+      if (parsed.chatHistory) state.chatHistory = parsed.chatHistory;
+      if (parsed.chatFlowStarted !== undefined) state.chatFlowStarted = parsed.chatFlowStarted;
+      if (parsed.waitingForUserInput !== undefined) state.waitingForUserInput = parsed.waitingForUserInput;
+      if (parsed.flowStep !== undefined) state.flowStep = parsed.flowStep;
+      // Clear the saved state after loading
+      localStorage.removeItem('appState');
+    }
+  } catch (e) {
+    console.warn('Could not load state from localStorage:', e);
+  }
+};
 
+const setupChatObservers = (chatScreen) => {
   // Listen for screen activation via both MutationObserver and custom event
   let lastActiveState = chatScreen.classList.contains('active');
   
