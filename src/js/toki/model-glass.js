@@ -11,7 +11,7 @@ let glassModelMaterial = null;
 // Load glass model
 export function loadGlassModel(scene, onMaterialReady) {
 	const dracoLoader = new DRACOLoader();
-	dracoLoader.setDecoderPath('jsm/libs/draco/gltf/');
+	dracoLoader.setDecoderPath('lib/jsm/libs/draco/gltf/');
 
 	const gltfLoader = new GLTFLoader();
 	gltfLoader.setDRACOLoader(dracoLoader);

@@ -11,7 +11,7 @@ let glassBottomModelMaterial = null;
 // Load glass bottom model
 export function loadGlassBottomModel(scene, onMaterialReady) {
 	const dracoLoader = new DRACOLoader();
-	dracoLoader.setDecoderPath('jsm/libs/draco/gltf/');
+	dracoLoader.setDecoderPath('lib/jsm/libs/draco/gltf/');
 
 	const gltfLoader = new GLTFLoader();
 	gltfLoader.setDRACOLoader(dracoLoader);

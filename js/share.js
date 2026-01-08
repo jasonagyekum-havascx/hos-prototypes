@@ -2,11 +2,17 @@ import { navigateToRepeatability } from './chat.js';
 import { loadHTMLFragment } from './common.js';
 
 let recipeModal, recipeModalClose, recipeShareBtn, recipeSaveBtn;
+let isInitialized = false;
 
 // ==================== 
 // RECIPE CARD MODAL HANDLERS
 // ====================
 export const handleOpenRecipeModal = () => {
+  // Auto-initialize if modal exists in DOM but wasn't initialized
+  if (!isInitialized) {
+    initRecipeModalElements();
+  }
+  
   if (recipeModal) {
     recipeModal.classList.add('active');
     document.body.style.overflow = 'hidden';
@@ -36,19 +42,18 @@ const handleRecipeModalKeyDown = (e) => {
   }
 };
 
-export const initShareScreen = async () => {
-  const app = document.querySelector('.app');
-  if (!app) return;
-
-  // Load HTML fragment
-  const fragment = await loadHTMLFragment('./screens/share.html');
-  if (!fragment) return;
-
-  app.appendChild(fragment);
+// Initialize modal elements and event handlers (for standalone pages or SPA)
+const initRecipeModalElements = () => {
+  if (isInitialized) return;
+  
   recipeModal = document.getElementById('recipeModal');
   recipeModalClose = document.getElementById('recipeModalClose');
   recipeShareBtn = document.getElementById('recipeShareBtn');
   recipeSaveBtn = document.getElementById('recipeSaveBtn');
+
+  if (!recipeModal) return;
+  
+  isInitialized = true;
 
   // Recipe modal close events
   if (recipeModalClose) {
@@ -62,13 +67,11 @@ export const initShareScreen = async () => {
   }
 
   // Recipe modal backdrop click
-  if (recipeModal) {
-    recipeModal.addEventListener('click', (e) => {
-      if (e.target === recipeModal || e.target.classList.contains('recipe-modal__background')) {
-        handleCloseRecipeModal();
-      }
-    });
-  }
+  recipeModal.addEventListener('click', (e) => {
+    if (e.target === recipeModal || e.target.classList.contains('recipe-modal__background')) {
+      handleCloseRecipeModal();
+    }
+  });
 
   // Recipe share and save button events
   if (recipeShareBtn) {
@@ -93,5 +96,26 @@ export const initShareScreen = async () => {
 
   // Close recipe modal on Escape key
   document.addEventListener('keydown', handleRecipeModalKeyDown);
+};
+
+export const initShareScreen = async () => {
+  // Check if modal already exists in DOM (standalone page)
+  if (document.getElementById('recipeModal')) {
+    initRecipeModalElements();
+    return;
+  }
+  
+  // SPA mode - load fragment
+  const app = document.querySelector('.app');
+  if (!app) return;
+
+  // Load HTML fragment
+  const fragment = await loadHTMLFragment('./screens/share.html');
+  if (!fragment) return;
+
+  app.appendChild(fragment);
+  
+  // Initialize the modal elements and event handlers
+  initRecipeModalElements();
 };
 

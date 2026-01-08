@@ -24,6 +24,26 @@
   <div class="experience-overlay" id="experienceOverlay">
     <iframe src="../proto-toki.html" title="Interactive Toki Highball Experience" id="experienceIframe"></iframe>
     
+    <!-- Glass Model Viewer -->
+    <model-viewer
+      id="glassModelViewer"
+      src="../models/glb/glass-01.glb"
+      camera-controls
+      environment-image="../textures/hdr_500.hdr"
+      alt="Toki Highball Glass"
+      aria-label="3D model of Toki Highball glass"
+    ></model-viewer>
+    
+    <!-- Coaster/Floor Model Viewer -->
+    <model-viewer
+      id="coasterModelViewer"
+      src="../models/glb/floor-01.glb"
+      camera-controls
+      environment-image="../textures/hdr_500.hdr"
+      alt="Drink Coaster"
+      aria-label="3D model of drink coaster"
+    ></model-viewer>
+    
     <!-- AR Button (Android/Chrome WebXR) -->
     <button 
       class="ar-btn" 

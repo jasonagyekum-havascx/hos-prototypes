@@ -225,14 +225,15 @@ const addExperienceCTA = () => {
     </svg>
   `;
   
-  cta.addEventListener('click', async () => {
-    await navigateTo('swirl');
+  cta.addEventListener('click', () => {
+    // Navigate to swirl page using hard page load
+    window.location.href = './swirl.html';
   });
   
-  cta.addEventListener('keydown', async (e) => {
+  cta.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
-      await navigateTo('swirl');
+      window.location.href = './swirl.html';
     }
   });
 
@@ -308,15 +309,21 @@ const handleKeyDown = (e) => {
 };
 
 export const navigateToRepeatability = async () => {
-  // Navigate to chat screen
-  await navigateTo('chat');
+  // Save state to indicate we should show repeatability flow
+  try {
+    localStorage.setItem('appState', JSON.stringify({
+      showRepeatability: true,
+      chatHistory: [],
+      chatFlowStarted: false,
+      waitingForUserInput: false,
+      flowStep: 0
+    }));
+  } catch (e) {
+    console.warn('Could not save state to localStorage:', e);
+  }
   
-  // Switch to bartender pose 3 (welcoming gesture)
-  showBartenderPose(3);
-  
-  // Play the repeatability messages
-  await wait(500);
-  await playChatSequence('repeatability');
+  // Navigate to chat page using hard page load
+  window.location.href = './chat.html';
 };
 
 // ==================== 
@@ -387,18 +394,31 @@ export const initChatScreen = async () => {
     }
     
     // Start chat flow immediately since we're on a standalone page
-    // Reset state to ensure fresh start
-    state.chatHistory = [];
-    state.chatFlowStarted = false;
-    state.waitingForUserInput = false;
-    state.flowStep = 0;
+    // Reset state to ensure fresh start (unless showing repeatability)
+    if (!state.showRepeatability) {
+      state.chatHistory = [];
+      state.chatFlowStarted = false;
+      state.waitingForUserInput = false;
+      state.flowStep = 0;
+    }
     
     // Use a small delay to ensure DOM is fully ready, then start flow
     setTimeout(() => {
       if (!state.chatFlowStarted && chatMessages) {
         chatMessages.innerHTML = '';
         state.chatFlowStarted = true;
-        startChatFlow();
+        
+        if (state.showRepeatability) {
+          // Show repeatability flow
+          showBartenderPose(3);
+          wait(500).then(() => {
+            playChatSequence('repeatability');
+          });
+          state.showRepeatability = false; // Clear flag
+        } else {
+          // Start normal chat flow
+          startChatFlow();
+        }
       }
     }, 200);
   }
@@ -429,6 +449,10 @@ const initializeChatElements = (chatScreen) => {
       if (parsed.chatFlowStarted !== undefined) state.chatFlowStarted = parsed.chatFlowStarted;
       if (parsed.waitingForUserInput !== undefined) state.waitingForUserInput = parsed.waitingForUserInput;
       if (parsed.flowStep !== undefined) state.flowStep = parsed.flowStep;
+      if (parsed.showRepeatability) {
+        // Store flag to show repeatability flow
+        state.showRepeatability = true;
+      }
       // Clear the saved state after loading
       localStorage.removeItem('appState');
     }

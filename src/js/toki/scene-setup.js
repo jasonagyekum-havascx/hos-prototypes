@@ -25,7 +25,7 @@ export function initScene() {
 	
 	// Load background image
 	const textureLoader = new THREE.TextureLoader();
-	textureLoader.load('../../images/mr-background.jpg', (bgTexture) => {
+	textureLoader.load('./images/mr-background.jpg', (bgTexture) => {
 		bgTexture.colorSpace = THREE.SRGBColorSpace;
 		scene.background = bgTexture;
 	}, undefined, (error) => {

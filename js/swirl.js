@@ -17,6 +17,7 @@ const swirlState = {
 
 let experienceOverlay, swirlContent, shareBtnContainer, shareBtn, mixAnotherBtn;
 let arBtn, iosArBtn, experienceIframe, arModelViewer;
+let videoModal, videoModalClose, perfectServeVideo, videoShareBtn, videoMixBtn;
 let arSupported = false;
 
 // Check if device supports motion
@@ -193,19 +194,40 @@ const showShareButton = () => {
 };
 
 export const initSwirlScreen = async () => {
-  const app = document.querySelector('.app');
-  if (!app) return;
-
-  // Load HTML fragment
-  const fragment = await loadHTMLFragment('./screens/swirl.html');
-  if (!fragment) return;
-
-  app.appendChild(fragment);
+  // Check if we're on a standalone page (swirl.html) or in SPA mode
   const swirlScreen = document.getElementById('swirlScreen');
-  if (!swirlScreen) return;
+  
+  if (!swirlScreen) {
+    // SPA mode - try to load fragment
+    const app = document.querySelector('.app');
+    if (!app) return;
 
-  registerScreen('swirl', swirlScreen);
+    const fragment = await loadHTMLFragment('./screens/swirl.html');
+    if (!fragment) return;
 
+    app.appendChild(fragment);
+    const loadedSwirlScreen = document.getElementById('swirlScreen');
+    if (!loadedSwirlScreen) return;
+
+    registerScreen('swirl', loadedSwirlScreen);
+    initializeSwirlElements(loadedSwirlScreen);
+    setupSwirlObservers(loadedSwirlScreen);
+  } else {
+    // Standalone page mode - swirl screen is already in the DOM
+    state.currentScreen = 'swirl';
+    // Ensure swirl screen is marked as active
+    if (!swirlScreen.classList.contains('active')) {
+      swirlScreen.classList.add('active');
+    }
+    initializeSwirlElements(swirlScreen);
+    // Start swirl detection immediately on standalone page
+    setTimeout(() => {
+      resetSwirlState();
+    }, 500);
+  }
+};
+
+const initializeSwirlElements = (swirlScreen) => {
   experienceOverlay = document.getElementById('experienceOverlay');
   swirlContent = document.getElementById('swirlContent');
   shareBtnContainer = document.getElementById('shareBtnContainer');
@@ -215,28 +237,38 @@ export const initSwirlScreen = async () => {
   iosArBtn = document.getElementById('iosArBtn');
   experienceIframe = document.getElementById('experienceIframe');
   arModelViewer = document.getElementById('arModelViewer');
+  
+  // Video modal elements
+  videoModal = document.getElementById('videoModal');
+  videoModalClose = document.getElementById('videoModalClose');
+  perfectServeVideo = document.getElementById('perfectServeVideo');
+  videoShareBtn = document.getElementById('videoShareBtn');
+  videoMixBtn = document.getElementById('videoMixBtn');
 
-  // Reset swirl state when entering screen
-  const resetSwirlState = () => {
-    swirlState.progress = 0;
-    swirlState.cumulativeMotion = 0;
-    if (experienceOverlay) {
-      experienceOverlay.style.opacity = '0';
-      experienceOverlay.classList.remove('active');
-    }
-    if (shareBtnContainer) {
-      shareBtnContainer.classList.remove('visible');
-    }
-    // Hide AR buttons
-    if (arBtn) arBtn.style.display = 'none';
-    if (iosArBtn) iosArBtn.style.display = 'none';
-    // Start detection after a brief delay
-    setTimeout(() => {
-      startSwirlDetection();
-    }, 500);
-  };
+  setupSwirlEventHandlers();
+};
 
-  // Listen for screen navigation
+const resetSwirlState = () => {
+  swirlState.progress = 0;
+  swirlState.cumulativeMotion = 0;
+  if (experienceOverlay) {
+    experienceOverlay.style.opacity = '0';
+    experienceOverlay.classList.remove('active');
+  }
+  if (shareBtnContainer) {
+    shareBtnContainer.classList.remove('visible');
+  }
+  // Hide AR buttons
+  if (arBtn) arBtn.style.display = 'none';
+  if (iosArBtn) iosArBtn.style.display = 'none';
+  // Start detection after a brief delay
+  setTimeout(() => {
+    startSwirlDetection();
+  }, 500);
+};
+
+const setupSwirlObservers = (swirlScreen) => {
+  // Listen for screen navigation (SPA mode only)
   const observer = new MutationObserver((mutations) => {
     mutations.forEach((mutation) => {
       if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
@@ -250,6 +282,9 @@ export const initSwirlScreen = async () => {
   });
 
   observer.observe(swirlScreen, { attributes: true });
+};
+
+const setupSwirlEventHandlers = () => {
 
   // Tap to continue on swirl screen
   if (swirlContent) {
@@ -275,7 +310,10 @@ export const initSwirlScreen = async () => {
 
   // Mix another cocktail button events
   if (mixAnotherBtn) {
-    mixAnotherBtn.addEventListener('click', navigateToRepeatability);
+    mixAnotherBtn.addEventListener('click', () => {
+      // Navigate to chat page with repeatability flow
+      navigateToRepeatability();
+    });
     mixAnotherBtn.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
@@ -318,5 +356,77 @@ export const initSwirlScreen = async () => {
       shareBtnContainer.style.pointerEvents = '';
     }
   });
+
+  // Video modal close events
+  if (videoModalClose) {
+    videoModalClose.addEventListener('click', handleCloseVideoModal);
+    videoModalClose.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        handleCloseVideoModal();
+      }
+    });
+  }
+
+  // Video modal backdrop click to close
+  if (videoModal) {
+    videoModal.addEventListener('click', (e) => {
+      if (e.target === videoModal || e.target.classList.contains('video-modal__panel')) {
+        // Don't close if clicking on panel content
+      }
+    });
+  }
+
+  // Video share button
+  if (videoShareBtn) {
+    videoShareBtn.addEventListener('click', () => {
+      handleCloseVideoModal();
+      handleOpenRecipeModal();
+    });
+    videoShareBtn.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        handleCloseVideoModal();
+        handleOpenRecipeModal();
+      }
+    });
+  }
+
+  // Video mix another button
+  if (videoMixBtn) {
+    videoMixBtn.addEventListener('click', () => {
+      handleCloseVideoModal();
+      navigateToRepeatability();
+    });
+    videoMixBtn.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        handleCloseVideoModal();
+        navigateToRepeatability();
+      }
+    });
+  }
+};
+
+// Video modal handlers
+const handleOpenVideoModal = () => {
+  if (videoModal) {
+    videoModal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+    if (perfectServeVideo) {
+      perfectServeVideo.play();
+    }
+  }
+};
+
+const handleCloseVideoModal = () => {
+  if (videoModal) {
+    videoModal.classList.remove('active');
+    document.body.style.overflow = '';
+    if (perfectServeVideo) {
+      perfectServeVideo.pause();
+      perfectServeVideo.currentTime = 0;
+    }
+  }
 };
 

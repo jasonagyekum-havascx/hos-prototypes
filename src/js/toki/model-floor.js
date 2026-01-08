@@ -21,7 +21,7 @@ const floorMaterialConfig = {
 // Load floor-01.glb model
 export function loadFloorModel(scene, onModelReady) {
 	const dracoLoader = new DRACOLoader();
-	dracoLoader.setDecoderPath('jsm/libs/draco/gltf/');
+	dracoLoader.setDecoderPath('lib/jsm/libs/draco/gltf/');
 
 	const gltfLoader = new GLTFLoader();
 	gltfLoader.setDRACOLoader(dracoLoader);

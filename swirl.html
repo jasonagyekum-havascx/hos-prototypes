@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Experience - House of Suntory</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+  <!-- Adobe Fonts - Futura PT -->
+  <link rel="stylesheet" href="https://use.typekit.net/yfq5vqz.css">
+  
+  <!-- CSS Files -->
+  <link rel="stylesheet" href="./css/common.css">
+  <link rel="stylesheet" href="./css/swirl.css">
+  <link rel="stylesheet" href="./css/share.css">
+  <link rel="stylesheet" href="./css/drink.css">
+  
+  <!-- Model Viewer for iOS AR Quick Look -->
+  <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.3.0/model-viewer.min.js"></script>
+  
+  <style>
+    /* Make screen always visible on standalone page */
+    .screen {
+      opacity: 1 !important;
+      visibility: visible !important;
+    }
+  </style>
+</head>
+<body>
+  <div class="app" role="main">
+    <!-- SWIRL INTRO SCREEN -->
+    <section class="screen swirl-screen active" id="swirlScreen" aria-label="Swirl to experience your highball">
+      <header class="swirl-header">
+        <span class="header-logo">The House of Suntory</span>
+        <button class="header-profile" aria-label="User profile" tabindex="0">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <circle cx="12" cy="8" r="4"/>
+            <path d="M4 20c0-4 4-6 8-6s8 2 8 6"/>
+          </svg>
+        </button>
+      </header>
+      
+      <div class="swirl-content" id="swirlContent" role="button" tabindex="0" aria-label="Tap to continue to experience">
+        <p class="swirl-instruction">Swirl to experience your highball</p>
+        
+        <div class="swirl-drink-image">
+          <img src="./images/toki-big.png" alt="Toki Highball" />
+        </div>
+        
+        <h2 class="swirl-title">Toki Highball</h2>
+      </div>
+      
+      <!-- 3D Experience Overlay -->
+      <div class="experience-overlay" id="experienceOverlay">
+        <iframe src="./proto-toki.html" title="Interactive Toki Highball Experience" id="experienceIframe"></iframe>
+        
+        <!-- AR Button (Android/Chrome WebXR) -->
+        <button 
+          class="ar-btn" 
+          id="arBtn"
+          aria-label="Enter AR mode"
+          tabindex="0"
+          style="display: none;"
+        >
+          ENTER AR
+        </button>
+        
+        <!-- iOS AR Quick Look (model-viewer) -->
+        <model-viewer
+          id="arModelViewer"
+          src="./models/glb/glass-01.glb"
+          ar
+          ar-modes="webxr scene-viewer quick-look"
+          camera-controls
+          environment-image="./textures/hdr_500.hdr"
+          style="display: none;"
+        ></model-viewer>
+        
+        <!-- iOS AR Button (AR Quick Look) -->
+        <button 
+          class="ar-btn ios-ar-btn" 
+          id="iosArBtn"
+          aria-label="View in AR"
+          tabindex="0"
+          style="display: none;"
+        >
+          VIEW IN AR
+        </button>
+      </div>
+      
+      <!-- Video Modal -->
+      <div class="video-modal" id="videoModal" role="dialog" aria-modal="true" aria-labelledby="videoModalTitle">
+        <div class="video-modal__panel">
+          <button class="video-modal__close" id="videoModalClose" aria-label="Close video" tabindex="0">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <line x1="18" y1="6" x2="6" y2="18"/>
+              <line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+          
+          <div class="video-modal__header">
+            <h3 class="video-modal__header-title" id="videoModalTitle">The Perfect Serve</h3>
+            <p class="video-modal__header-desc">Watch how Japanese bartenders craft the <a href="#">perfect Toki Highball</a>—a ritual of precision and care.</p>
+          </div>
+          
+          <div class="video-modal__content">
+            <video 
+              class="video-modal__video" 
+              id="perfectServeVideo"
+              src="./images/perfect-serve.mp4"
+              controls
+              playsinline
+              preload="metadata"
+            >
+              Your browser does not support the video tag.
+            </video>
+          </div>
+          
+          <div class="video-modal__actions">
+            <button class="video-modal__share-btn" id="videoShareBtn" aria-label="Share" tabindex="0">
+              SHARE
+            </button>
+            <button class="video-modal__mix-btn" id="videoMixBtn" aria-label="Mix another cocktail" tabindex="0">
+              MIX ANOTHER COCKTAIL →
+            </button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Share Button -->
+      <div class="share-btn-container" id="shareBtnContainer">
+        <button 
+          class="share-btn" 
+          id="shareBtn"
+          aria-label="Share recipe card"
+          tabindex="0"
+        >
+          SHARE
+        </button>
+        <button 
+          class="mix-another-btn" 
+          id="mixAnotherBtn"
+          aria-label="Mix another cocktail"
+          tabindex="0"
+        >
+          MIX ANOTHER COCKTAIL →
+        </button>
+      </div>
+      
+      <!-- Recipe Card Modal -->
+      <div class="recipe-modal" id="recipeModal" role="dialog" aria-modal="true" aria-labelledby="recipeModalTitle">
+        <div class="recipe-modal__background"></div>
+        <div class="recipe-modal__container">
+          <header class="recipe-modal__header">
+            <span class="header-logo">The House of Suntory</span>
+            <button class="recipe-modal__close" id="recipeModalClose" aria-label="Close recipe card" tabindex="0">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18"/>
+                <line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+            </button>
+          </header>
+          
+          <div class="recipe-modal__content">
+            <!-- Recipe Card Image -->
+            <img 
+              src="./images/assets/recipe-card-toki.png" 
+              alt="Toki Highball Recipe Card" 
+              class="recipe-card-image"
+              id="recipeModalTitle"
+            />
+            
+            <!-- Action Buttons -->
+            <div class="recipe-modal__actions">
+              <button class="recipe-share-btn" id="recipeShareBtn" aria-label="Share recipe" tabindex="0">
+                Share Recipe
+              </button>
+              <button class="recipe-save-btn" id="recipeSaveBtn" aria-label="Save to profile" tabindex="0">
+                Save to Profile
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script type="module">
+    import { initSwirlScreen } from './js/swirl.js';
+    
+    // Initialize swirl screen on page load
+    // Wait for DOM to be fully ready
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', () => {
+        initSwirlScreen().catch(err => {
+          console.error('Error initializing swirl screen:', err);
+        });
+      });
+    } else {
+      initSwirlScreen().catch(err => {
+        console.error('Error initializing swirl screen:', err);
+      });
+    }
+  </script>
+</body>
+</html>
+

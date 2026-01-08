@@ -255,7 +255,7 @@ export function updateIceAnimation(time) {
 // Load ice cube GLB model
 export function loadIceCubeGLB(scene, gui, createIceCubeGUI) {
 	const dracoLoader = new DRACOLoader();
-	dracoLoader.setDecoderPath('jsm/libs/draco/gltf/');
+	dracoLoader.setDecoderPath('lib/jsm/libs/draco/gltf/');
 
 	const gltfLoader = new GLTFLoader();
 	gltfLoader.setDRACOLoader(dracoLoader);
