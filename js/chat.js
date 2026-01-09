@@ -68,7 +68,7 @@ const chatFlow = {
   }
 };
 
-let chatMessages, chatInput, sendBtn, bartenderContainer, bartenderImages, chatIntroVideo, chatVideoIntro;
+let chatMessages, chatInput, sendBtn, bartenderContainer, bartenderImages, chatIntroVideo, chatVideoIntro, drinkCounter;
 
 // ==================== 
 // BARTENDER ANIMATION
@@ -161,61 +161,78 @@ const removeTypingIndicator = () => {
   if (typing) typing.remove();
 };
 
-const addCocktailCards = () => {
-  const cocktails = [
-    { 
-      id: 'toki-highball', 
-      name: 'Toki Highball', 
-      imageSrc: './images/toki-thumbnail.png',
-      imageAlt: 'Toki Highball cocktail thumbnail'
-    },
-    { 
-      id: 'roku-gin-fizz', 
-      name: 'Roku Gin Fizz', 
-      imageSrc: './images/roku-thumbnail.png',
-      imageAlt: 'Roku Gin Fizz cocktail thumbnail'
-    }
-  ];
-
-  // Standard mode - add to chat messages
-  const cardsContainer = document.createElement('div');
-  cardsContainer.className = 'cocktail-cards';
+const showDrinkCounter = () => {
+  if (!drinkCounter) return;
   
-  cocktails.forEach(cocktail => {
-    const card = document.createElement('button');
-    card.className = 'cocktail-card';
-    card.setAttribute('tabindex', '0');
-    card.setAttribute('aria-label', `Select ${cocktail.name}`);
-    card.innerHTML = `<img src="${cocktail.imageSrc}" alt="${cocktail.imageAlt}" />`;
-    
-    card.addEventListener('click', () => handleCocktailSelect(cocktail, card));
-    card.addEventListener('keydown', (e) => {
+  // Show the drink counter on the bar
+  drinkCounter.classList.add('visible');
+  
+  // Set up bottle selection handlers
+  const bottles = drinkCounter.querySelectorAll('.drink-bottle');
+  bottles.forEach(bottle => {
+    bottle.addEventListener('click', () => handleBottleSelect(bottle));
+    bottle.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
-        handleCocktailSelect(cocktail, card);
+        handleBottleSelect(bottle);
       }
     });
-    
-    cardsContainer.appendChild(card);
   });
-
-  chatMessages.appendChild(cardsContainer);
-  scrollToBottom();
 };
 
-const handleCocktailSelect = (cocktail, cardEl) => {
+const handleBottleSelect = (bottleEl) => {
   // Remove previous selection
-  document.querySelectorAll('.cocktail-card').forEach(c => c.classList.remove('selected'));
-  cardEl.classList.add('selected');
-  state.selectedCocktail = cocktail;
+  document.querySelectorAll('.drink-bottle').forEach(b => b.classList.remove('selected'));
+  bottleEl.classList.add('selected');
+  
+  const drinkType = bottleEl.getAttribute('data-drink');
+  state.selectedCocktail = {
+    id: drinkType === 'toki' ? 'toki-highball' : 'haku-cocktail',
+    name: drinkType === 'toki' ? 'Toki Highball' : 'Haku Vodka'
+  };
 
-  // Start bartender shaking animation
-  startBartenderShaking();
-
-  // Continue to story
+  // Animate bottle selection
   setTimeout(() => {
+    // Hide drink counter with fade out
+    if (drinkCounter) {
+      drinkCounter.style.opacity = '0';
+      drinkCounter.style.transform = 'translateX(-50%) translateY(-50%) translateY(-20px)';
+      setTimeout(() => {
+        drinkCounter.classList.remove('visible');
+        drinkCounter.style.opacity = '';
+        drinkCounter.style.transform = '';
+        // Reset selection for next time
+        document.querySelectorAll('.drink-bottle').forEach(b => b.classList.remove('selected'));
+        
+        // Show bartender
+        if (bartenderContainer) {
+          bartenderContainer.classList.add('visible');
+          // Start with first bartender image active
+          if (bartenderImages.length > 0) {
+            bartenderImages[0].classList.add('active');
+          }
+          
+          // Add class to chat screen to adjust layout
+          const chatScreen = document.getElementById('chatScreen');
+          if (chatScreen) {
+            chatScreen.classList.add('bartender-visible');
+          }
+        }
+        
+        // Show messages and input again
+        if (chatMessages) {
+          chatMessages.style.opacity = '1';
+          chatMessages.style.pointerEvents = 'auto';
+        }
+        
+        // Start bartender shaking animation
+        startBartenderShaking();
+      }, 400);
+    }
+    
+    // Continue to story
     playChatSequence('story');
-  }, 500);
+  }, 800);
 };
 
 const addExperienceCTA = () => {
@@ -273,7 +290,7 @@ const playChatSequence = async (flowKey) => {
 
   if (flow.showCocktails) {
     await wait(500);
-    addCocktailCards();
+    showDrinkCounter();
   }
 
   if (flow.showCTA) {
@@ -333,7 +350,11 @@ const startChatFlow = async () => {
 };
 
 const scrollToBottom = () => {
-  chatMessages.scrollTop = chatMessages.scrollHeight;
+  if (!chatMessages) return;
+  // Use requestAnimationFrame to ensure DOM has updated
+  requestAnimationFrame(() => {
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  });
 };
 
 // ==================== 
@@ -488,6 +509,7 @@ const initializeChatElements = (chatScreen) => {
   bartenderImages = bartenderContainer ? bartenderContainer.querySelectorAll('.bartender-image') : [];
   chatIntroVideo = document.getElementById('chatIntroVideo');
   chatVideoIntro = document.getElementById('chatVideoIntro');
+  drinkCounter = document.getElementById('drinkCounter');
 
   // Chat input events
   if (sendBtn) {

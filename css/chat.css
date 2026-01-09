@@ -98,47 +98,34 @@
   overflow: hidden;
 }
 
-/* Bartender Background with actual bar image */
+/* Bartender Background with actual bar image - Full screen, no overlay */
 .bartender-bg {
   position: absolute;
   top: 0;
   left: 0;
   width: 100%;
-  height: 55%;
-  background: 
-    linear-gradient(180deg, 
-      rgba(26, 21, 18, 0) 0%,
-      rgba(26, 21, 18, 0.4) 50%,
-      rgba(26, 21, 18, 1) 100%
-    ),
-    url('/images/assets/AI-bar-background.jpg');
+  height: 100%;
+  background: url('/images/assets/AI-bar-background.jpg');
   background-size: cover;
-  background-position: center 20%;
+  background-position: center center;
   z-index: 0;
 }
 
-/* Warm ambient glow overlay */
-.bartender-bg::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: 
-    radial-gradient(ellipse 80% 50% at 50% 40%, rgba(200, 150, 80, 0.08) 0%, transparent 60%),
-    linear-gradient(180deg, rgba(26, 21, 18, 0.3) 0%, transparent 30%);
-}
-
-/* Bartender container */
+/* Bartender container - Positioned above counter */
 .bartender-container {
   position: absolute;
-  top: 2%;
+  top: 15%;
   left: 50%;
   transform: translateX(-50%);
   width: 280px;
   height: 300px;
-  z-index: 1;
+  z-index: 5;
+  opacity: 0;
+  transition: opacity 0.6s ease;
+}
+
+.bartender-container.visible {
+  opacity: 1;
 }
 
 /* Bartender images */
@@ -162,25 +149,34 @@
   transition: opacity 0.5s ease-in-out;
 }
 
-/* Chat Messages Container */
+/* Chat Messages Container - Anchored at bottom, stays below counter */
 .chat-messages {
   position: absolute;
-  top: 260px;
+  top: 45%;
   bottom: 0;
   left: 0;
   right: 0;
   z-index: 2;
   overflow-y: auto;
-  padding: 30px 20px 20px 20px;
+  overflow-x: hidden;
+  padding: 20px;
+  padding-bottom: 100px; /* Extra padding at bottom for input area */
   display: flex;
   flex-direction: column;
+  justify-content: flex-end;
   gap: 12px;
   scroll-behavior: smooth;
-  background: linear-gradient(180deg, transparent 0%, rgba(26, 21, 18, 0.95) 10%);
-  /* Smooth fade-out effect at the top */
-  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 6%);
-  mask-image: linear-gradient(to bottom, transparent 0%, black 6%);
+  opacity: 1;
+  transition: opacity 0.4s ease, top 0.4s ease;
+  -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+  max-height: 100%; /* Ensure container respects height constraints */
 }
+
+/* When bartender is visible, constrain messages more */
+.chat-screen.bartender-visible .chat-messages {
+  top: 50%;
+}
+
 
 .chat-messages::-webkit-scrollbar {
   width: 4px;
@@ -203,7 +199,7 @@
   flex-shrink: 0;
 }
 
-/* Message Bubbles */
+/* Message Bubbles - Solid dark brown backgrounds */
 .message {
   max-width: 85%;
   padding: 14px 18px;
@@ -211,68 +207,176 @@
   font-size: 15px;
   line-height: 1.45;
   opacity: 0;
-  transform: translateY(20px);
-  animation: messageIn 0.4s ease forwards;
+  transform: translateY(30px);
+  animation: messageSlideUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+@keyframes messageSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .message--ai {
   align-self: flex-start;
-  background: var(--color-bubble-ai);
+  background: rgba(45, 35, 28, 0.95);
   border-bottom-left-radius: 6px;
-  backdrop-filter: blur(10px);
 }
 
 .message--user {
   align-self: flex-end;
-  background: var(--color-bubble-user);
+  background: var(--color-gold);
+  color: rgba(255, 255, 255, 0.95);
   border-bottom-right-radius: 6px;
 }
 
-/* Cocktail Cards */
-.cocktail-cards {
-  display: flex;
-  gap: 14px;
-  padding: 10px 0 12px;
-  overflow-x: auto;
-  overflow-y: visible;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: none;
-  opacity: 0;
-  transform: translateY(20px);
-  animation: messageIn 0.4s ease forwards;
-  min-height: 190px;
-}
-
-.cocktail-cards::-webkit-scrollbar {
+/* Drink Counter - Positioned on bar */
+.drink-counter {
+  position: absolute;
+  top: 40%;
+  left: 50%;
+  transform: translateX(-50%) translateY(-50%);
+  width: 100%;
+  max-width: 400px;
+  z-index: 15;
   display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  padding: 0 20px;
+  opacity: 0;
+  transition: opacity 0.4s ease, transform 0.4s ease;
 }
 
-.cocktail-card {
-  flex-shrink: 0;
+/* Counter title */
+.drink-counter-title {
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--color-text-light);
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+/* Bottles container */
+.drink-bottles-container {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 60px;
+  width: 100%;
+}
+
+.drink-counter.visible {
+  display: flex;
+  animation: bottlesAppear 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* Hide chat messages and input when drink counter is visible */
+.drink-counter.visible ~ .chat-messages {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.chat-screen:has(.drink-counter.visible) .chat-input-container {
+  opacity: 0;
+  pointer-events: none;
+}
+
+@keyframes bottlesAppear {
+  0% {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-50%) translateY(30px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(-50%) translateY(-50%);
+  }
+}
+
+.drink-bottle {
   background: transparent;
   border: none;
   padding: 0;
   cursor: pointer;
-  transition: var(--transition-smooth);
-  border-radius: 16px;
-  overflow: hidden;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  opacity: 0;
+  animation: bottleFadeIn 0.5s ease forwards;
 }
 
-.cocktail-card:hover,
-.cocktail-card:focus {
-  transform: translateY(-6px);
+.drink-bottle:nth-child(1) {
+  animation-delay: 0.2s;
 }
 
-.cocktail-card.selected {
-  outline: 3px solid var(--color-gold);
-  outline-offset: 2px;
+.drink-bottle:nth-child(2) {
+  animation-delay: 0.35s;
 }
 
-.cocktail-card img {
+.drink-bottle .haku {
+  position: relative;
+  top: -25px;
+}
+
+@keyframes bottleFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.drink-bottle:hover {
+  transform: translateY(-12px);
+}
+
+.drink-bottle:active {
+  transform: translateY(-8px) scale(0.98);
+}
+
+.drink-bottle.selected {
+  transform: scale(1.15) translateY(-8px);
+  animation: bottlePulse 0.6s ease;
+}
+
+@keyframes bottlePulse {
+  0%, 100% {
+    transform: scale(1.15) translateY(-8px);
+  }
+  50% {
+    transform: scale(1.2) translateY(-12px);
+  }
+}
+
+.drink-bottle img {
   display: block;
-  height: 180px;
+  height: 280px;
   width: auto;
-  border-radius: 16px;
+  filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.3));
+  transition: filter 0.3s ease;
+}
+
+.drink-bottle:hover img {
+  filter: drop-shadow(0 12px 24px rgba(0, 0, 0, 0.4));
+}
+
+.drink-bottle.selected img {
+  filter: drop-shadow(0 16px 32px rgba(139, 115, 85, 0.6)) brightness(1.1);
+}
+
+/* Cocktail Cards - Hidden when drink counter is visible */
+.cocktail-cards {
+  display: none;
 }
 
 /* CTA Button */
@@ -296,8 +400,8 @@
   transition: var(--transition-smooth);
   margin-top: 8px;
   opacity: 0;
-  transform: translateY(20px);
-  animation: messageIn 0.4s ease forwards;
+  transform: translateY(30px);
+  animation: messageSlideUp 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
 }
 
 .experience-cta:hover {
@@ -343,6 +447,8 @@
   padding: 12px 20px 20px;
   background: rgba(26, 21, 18, 1);
   flex-shrink: 0;
+  opacity: 1;
+  transition: opacity 0.4s ease;
 }
 
 .chat-input-wrapper {
