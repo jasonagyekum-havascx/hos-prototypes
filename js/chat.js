@@ -68,7 +68,7 @@ const chatFlow = {
   }
 };
 
-let chatMessages, chatInput, sendBtn, bartenderContainer, bartenderImages;
+let chatMessages, chatInput, sendBtn, bartenderContainer, bartenderImages, chatIntroVideo, chatVideoIntro;
 
 // ==================== 
 // BARTENDER ANIMATION
@@ -282,7 +282,50 @@ const playChatSequence = async (flowKey) => {
   }
 };
 
+const playVideoIntro = () => {
+  return new Promise((resolve) => {
+    if (!chatIntroVideo || !chatVideoIntro) {
+      resolve();
+      return;
+    }
+
+    // Check if video intro was already played in this session
+    if (state.videoIntroPlayed) {
+      chatVideoIntro.style.display = 'none';
+      resolve();
+      return;
+    }
+
+    const handleVideoEnd = () => {
+      state.videoIntroPlayed = true;
+      
+      // Fade out the video overlay
+      chatVideoIntro.classList.add('fade-out');
+      
+      // Remove the video element after fade out completes
+      setTimeout(() => {
+        chatVideoIntro.style.display = 'none';
+        resolve();
+      }, 800);
+      
+      chatIntroVideo.removeEventListener('ended', handleVideoEnd);
+    };
+
+    chatIntroVideo.addEventListener('ended', handleVideoEnd);
+    
+    // Fallback in case video doesn't load or play
+    setTimeout(() => {
+      if (!state.videoIntroPlayed) {
+        handleVideoEnd();
+      }
+    }, 15000); // 15 second timeout
+  });
+};
+
 const startChatFlow = async () => {
+  // Play video intro first
+  await playVideoIntro();
+  
   await wait(800);
   await playChatSequence('greeting');
   // Wait for user to send a message - flow continues in handleSendMessage
@@ -328,7 +371,8 @@ export const navigateToRepeatability = async () => {
       chatHistory: [],
       chatFlowStarted: false,
       waitingForUserInput: false,
-      flowStep: 0
+      flowStep: 0,
+      videoIntroPlayed: true // Skip video intro when returning from immersive experience
     }));
   } catch (e) {
     console.warn('Could not save state to localStorage:', e);
@@ -442,6 +486,8 @@ const initializeChatElements = (chatScreen) => {
   sendBtn = document.getElementById('sendBtn');
   bartenderContainer = document.getElementById('bartenderContainer');
   bartenderImages = bartenderContainer ? bartenderContainer.querySelectorAll('.bartender-image') : [];
+  chatIntroVideo = document.getElementById('chatIntroVideo');
+  chatVideoIntro = document.getElementById('chatVideoIntro');
 
   // Chat input events
   if (sendBtn) {
@@ -461,6 +507,7 @@ const initializeChatElements = (chatScreen) => {
       if (parsed.chatFlowStarted !== undefined) state.chatFlowStarted = parsed.chatFlowStarted;
       if (parsed.waitingForUserInput !== undefined) state.waitingForUserInput = parsed.waitingForUserInput;
       if (parsed.flowStep !== undefined) state.flowStep = parsed.flowStep;
+      if (parsed.videoIntroPlayed !== undefined) state.videoIntroPlayed = parsed.videoIntroPlayed;
       if (parsed.showRepeatability) {
         // Store flag to show repeatability flow
         state.showRepeatability = true;

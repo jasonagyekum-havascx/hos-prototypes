@@ -38,6 +38,20 @@
   <div class="app" role="main">
     <!-- CHAT SCREEN -->
     <section class="screen chat-screen active" id="chatScreen" aria-label="Chat with AI Bartender">
+      <!-- Video Intro Overlay -->
+      <div class="chat-video-intro" id="chatVideoIntro">
+        <video 
+          id="chatIntroVideo" 
+          class="chat-intro-video" 
+          autoplay 
+          muted 
+          playsinline
+          preload="auto"
+        >
+          <source src="./images/bar-background.mp4" type="video/mp4">
+        </video>
+      </div>
+      
       <header class="chat-header">
         <img src="./images/assets/logo-chat.png" alt="The House of Suntory" class="header-logo-img" />
         <button class="header-profile" aria-label="User profile" tabindex="0">
