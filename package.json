@@ -7,7 +7,8 @@
     "dev": "npx live-server --port=3000 --open=index.html --watch=js,screens,css,src,lib,models,textures,build",
     "start": "npx live-server --port=3000 --open=index.html",
     "build": "echo 'Static site - no build required'",
-    "config": "node scripts/generate-config.js"
+    "config": "node scripts/generate-config.js",
+    "scale-usdz": "node scripts/scale-usdz.js"
   },
   "keywords": [
     "three.js",
@@ -22,6 +23,7 @@
   "devDependencies": {
     "@playwright/test": "^1.57.0",
     "live-server": "^1.2.2",
-    "playwright": "^1.57.0"
+    "playwright": "^1.57.0",
+    "three": "^0.182.0"
   }
 }
