@@ -6,45 +6,36 @@ const chatFlow = {
     messages: [
       {
         type: 'ai',
-        text: "Hi, I'm Kenji, your personal AI mixologist. Tell me what you want to drink and I'll turn it into an experience you'll never forget."
-      },
-      {
-        type: 'ai',
-        text: "What are you in the mood for?"
-      }
-    ],
-    waitForUser: true
-  },
-  userMood: {
-    messages: [
-      {
-        type: 'user',
-        text: "It's been a long day, I need something refreshing."
-      }
-    ]
-  },
-  recommendation: {
-    messages: [
-      {
-        type: 'ai',
-        text: "Sorry to hear about your day. I have two great options to help you relax this evening."
+        text: "Hi, I'm Kenji, your personal AI mixologist. What are you in the mood for today?"
       }
     ],
     showCocktails: true
+  },
+  userSelection: {
+    messages: [
+      {
+        type: 'user',
+        text: "I'd like a highball"
+      }
+    ]
   },
   story: {
     messages: [
       {
         type: 'ai',
-        text: "Mixing whisky and soda is easy. Making a perfect highball? That's an art."
+        text: "A classic choice. The Highball's simplicity belies the subtle techniques that help create the perfect drink."
       },
       {
         type: 'ai',
-        text: "Take ice for example. A perfect highball should stay effervescent, but rough ice causes bubbles to form and the drink to fizz out."
+        text: "Here's how to make the perfect highball."
       },
       {
         type: 'ai',
-        text: "So, I temper the ice by resting it at room temperature for a few minutes. As it begins to melt, surface imperfections are smoothed, helping the highball stay fizzy longer."
+        text: "Let's start with the ice. I like to carve a spear-shaped ice cube to reduce surface area and help retain bubbles."
+      },
+      {
+        type: 'ai',
+        text: "Try it yourself"
       },
       {
         type: 'ai',
@@ -64,7 +55,7 @@ const chatFlow = {
         text: "What are you drinking next?"
       }
     ],
-    waitForUser: true
+    showCocktails: true
   }
 };
 
@@ -180,7 +171,7 @@ const showDrinkCounter = () => {
   });
 };
 
-const handleBottleSelect = (bottleEl) => {
+const handleBottleSelect = async (bottleEl) => {
   // Remove previous selection
   document.querySelectorAll('.drink-bottle').forEach(b => b.classList.remove('selected'));
   bottleEl.classList.add('selected');
@@ -191,48 +182,53 @@ const handleBottleSelect = (bottleEl) => {
     name: drinkType === 'toki' ? 'Toki Highball' : 'Haku Vodka'
   };
 
-  // Animate bottle selection
-  setTimeout(() => {
-    // Hide drink counter with fade out
-    if (drinkCounter) {
-      drinkCounter.style.opacity = '0';
-      drinkCounter.style.transform = 'translateX(-50%) translateY(-50%) translateY(-20px)';
-      setTimeout(() => {
-        drinkCounter.classList.remove('visible');
-        drinkCounter.style.opacity = '';
-        drinkCounter.style.transform = '';
-        // Reset selection for next time
-        document.querySelectorAll('.drink-bottle').forEach(b => b.classList.remove('selected'));
-        
-        // Show bartender
-        if (bartenderContainer) {
-          bartenderContainer.classList.add('visible');
-          // Start with first bartender image active
-          if (bartenderImages.length > 0) {
-            bartenderImages[0].classList.add('active');
-          }
-          
-          // Add class to chat screen to adjust layout
-          const chatScreen = document.getElementById('chatScreen');
-          if (chatScreen) {
-            chatScreen.classList.add('bartender-visible');
-          }
-        }
-        
-        // Show messages and input again
-        if (chatMessages) {
-          chatMessages.style.opacity = '1';
-          chatMessages.style.pointerEvents = 'auto';
-        }
-        
-        // Start bartender shaking animation
-        startBartenderShaking();
-      }, 400);
+  // Wait for selection animation
+  await wait(800);
+  
+  // Hide drink counter with fade out
+  if (drinkCounter) {
+    drinkCounter.style.opacity = '0';
+    drinkCounter.style.transform = 'translateX(-50%) translateY(-50%) translateY(-20px)';
+    
+    await wait(400);
+    
+    drinkCounter.classList.remove('visible');
+    drinkCounter.style.opacity = '';
+    drinkCounter.style.transform = '';
+    // Reset selection for next time
+    document.querySelectorAll('.drink-bottle').forEach(b => b.classList.remove('selected'));
+    
+    // Show bartender
+    if (bartenderContainer) {
+      bartenderContainer.classList.add('visible');
+      // Start with first bartender image active
+      if (bartenderImages.length > 0) {
+        bartenderImages[0].classList.add('active');
+      }
+      
+      // Add class to chat screen to adjust layout
+      const chatScreen = document.getElementById('chatScreen');
+      if (chatScreen) {
+        chatScreen.classList.add('bartender-visible');
+      }
     }
     
-    // Continue to story
-    playChatSequence('story');
-  }, 800);
+    // Show messages and input again
+    if (chatMessages) {
+      chatMessages.style.opacity = '1';
+      chatMessages.style.pointerEvents = 'auto';
+    }
+    
+    // Start bartender shaking animation
+    startBartenderShaking();
+  }
+  
+  // Show user selection message
+  await playChatSequence('userSelection');
+  await wait(500);
+  
+  // Continue to story
+  await playChatSequence('story');
 };
 
 const addExperienceCTA = () => {
@@ -242,9 +238,9 @@ const addExperienceCTA = () => {
   const cta = document.createElement('button');
   cta.className = 'experience-cta';
   cta.setAttribute('tabindex', '0');
-  cta.setAttribute('aria-label', 'Experience your highball in immersive view');
+  cta.setAttribute('aria-label', 'Experience your highball');
   cta.innerHTML = `
-    Experience Your Highball
+    EXPERIENCE YOUR HIGHBALL
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
       <line x1="5" y1="12" x2="19" y2="12"/>
       <polyline points="12 5 19 12 12 19"/>
@@ -289,7 +285,7 @@ const playChatSequence = async (flowKey) => {
   }
 
   if (flow.showCocktails) {
-    await wait(500);
+    await wait(3000); // 3 second delay before drinks appear
     showDrinkCounter();
   }
 
@@ -345,8 +341,7 @@ const startChatFlow = async () => {
   
   await wait(800);
   await playChatSequence('greeting');
-  // Wait for user to send a message - flow continues in handleSendMessage
-  state.waitingForUserInput = true;
+  // Flow continues when user selects a drink
 };
 
 const scrollToBottom = () => {
@@ -365,17 +360,9 @@ const handleSendMessage = async () => {
   if (!text) return;
 
   chatInput.value = '';
-
-  // Always use the default flow regardless of what user types
-  if (state.waitingForUserInput && state.flowStep === 0) {
-    state.waitingForUserInput = false;
-    state.flowStep = 1;
-    
-    // Show the default user message from the screens
-    await playChatSequence('userMood');
-    await wait(800);
-    await playChatSequence('recommendation');
-  }
+  
+  // For future interactivity - currently not used in main flow
+  // User selects drinks via bottle tap instead
 };
 
 const handleKeyDown = (e) => {
@@ -488,8 +475,8 @@ export const initChatScreen = async () => {
         if (state.showRepeatability) {
           // Show repeatability flow
           showBartenderPose(3);
-          wait(500).then(() => {
-            playChatSequence('repeatability');
+          wait(500).then(async () => {
+            await playChatSequence('repeatability');
           });
           state.showRepeatability = false; // Clear flag
         } else {

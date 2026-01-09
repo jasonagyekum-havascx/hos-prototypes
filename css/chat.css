@@ -179,16 +179,20 @@
 
 
 .chat-messages::-webkit-scrollbar {
-  width: 4px;
+  width: 6px;
 }
 
 .chat-messages::-webkit-scrollbar-track {
-  background: transparent;
+  background: rgba(0, 0, 0, 0.1);
 }
 
 .chat-messages::-webkit-scrollbar-thumb {
-  background: rgba(139, 115, 85, 0.3);
-  border-radius: 2px;
+  background: rgba(139, 115, 85, 0.5);
+  border-radius: 3px;
+}
+
+.chat-messages::-webkit-scrollbar-thumb:hover {
+  background: rgba(139, 115, 85, 0.7);
 }
 
 /* Extra padding at the bottom for content visibility */
