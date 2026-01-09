@@ -19,56 +19,6 @@ export const initLandingScreen = async () => {
     landingScreen.classList.add('active');
   }
 
-  // Initialize voice toggle
-  const voiceToggle = document.getElementById('voiceToggle');
-  if (voiceToggle) {
-    // Set initial state (default: ON)
-    voiceToggle.checked = state.voiceEnabled;
-    
-    const handleVoiceToggle = () => {
-      state.voiceEnabled = voiceToggle.checked;
-    };
-    
-    voiceToggle.addEventListener('change', handleVoiceToggle);
-    
-    // Handle keyboard interaction on the label
-    const voiceToggleLabel = voiceToggle.closest('.voice-toggle');
-    if (voiceToggleLabel) {
-      voiceToggleLabel.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          voiceToggle.checked = !voiceToggle.checked;
-          handleVoiceToggle();
-        }
-      });
-    }
-  }
-
-  // Initialize simulate mode toggle
-  const simulateToggle = document.getElementById('simulateToggle');
-  if (simulateToggle) {
-    // Set initial state (default: OFF)
-    simulateToggle.checked = state.simulateMode;
-    
-    const handleSimulateToggle = () => {
-      state.simulateMode = simulateToggle.checked;
-    };
-    
-    simulateToggle.addEventListener('change', handleSimulateToggle);
-    
-    // Handle keyboard interaction on the label
-    const simulateToggleLabel = simulateToggle.closest('.simulate-toggle');
-    if (simulateToggleLabel) {
-      simulateToggleLabel.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          simulateToggle.checked = !simulateToggle.checked;
-          handleSimulateToggle();
-        }
-      });
-    }
-  }
-
   const handleDestinationClick = async (btn) => {
     const destination = btn.dataset.destination;
 
@@ -103,9 +53,7 @@ export const initLandingScreen = async () => {
         chatHistory: state.chatHistory,
         chatFlowStarted: state.chatFlowStarted,
         waitingForUserInput: state.waitingForUserInput,
-        flowStep: state.flowStep,
-        voiceEnabled: state.voiceEnabled,
-        simulateMode: state.simulateMode
+        flowStep: state.flowStep
       }));
     } catch (e) {
       console.warn('Could not save state to localStorage:', e);
