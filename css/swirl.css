@@ -4,6 +4,70 @@
 .swirl-screen {
   background: #FFFFFF;
   position: relative;
+  overflow: hidden;
+}
+
+/* Swirl Header */
+.swirl-header {
+  position: relative;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 16px 20px;
+}
+
+.swirl-header .header-logo-img {
+  max-width: 160px;
+  width: 100%;
+  height: auto;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  filter: brightness(0); /* Black logo initially */
+  transition: filter 0.4s ease;
+}
+
+/* White logo when 3D experience is active */
+.swirl-screen.experience-active .swirl-header .header-logo-img {
+  filter: brightness(0) invert(1); /* White logo */
+}
+
+.swirl-header .header-profile {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(0, 0, 0, 0.6);
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition-smooth);
+}
+
+.swirl-header .header-profile:hover {
+  border-color: var(--color-gold);
+}
+
+.swirl-header .header-profile svg {
+  width: 18px;
+  height: 18px;
+  stroke: rgba(0, 0, 0, 0.7);
+  transition: stroke 0.4s ease;
+}
+
+/* White profile icon when 3D experience is active */
+.swirl-screen.experience-active .swirl-header .header-profile {
+  border-color: rgba(255, 255, 255, 0.6);
+}
+
+.swirl-screen.experience-active .swirl-header .header-profile:hover {
+  border-color: var(--color-gold);
+}
+
+.swirl-screen.experience-active .swirl-header .header-profile svg {
+  stroke: rgba(255, 255, 255, 0.7);
 }
 
 .swirl-content {
@@ -81,6 +145,7 @@
   opacity: 0;
   pointer-events: none;
   transition: opacity 0.3s ease;
+  overflow: hidden;
 }
 
 .experience-overlay.active {
@@ -92,6 +157,8 @@
   width: 100%;
   height: 100%;
   border: none;
+  display: block;
+  overflow: hidden;
 }
 
 /* Share Button */

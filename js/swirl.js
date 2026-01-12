@@ -92,6 +92,11 @@ const completeSwirl = async () => {
   
   if (experienceOverlay) {
     experienceOverlay.classList.add('active');
+    // Add class to swirl screen to trigger header color change
+    const swirlScreen = document.getElementById('swirlScreen');
+    if (swirlScreen) {
+      swirlScreen.classList.add('experience-active');
+    }
   }
 
   // Check AR support and show appropriate buttons
@@ -254,6 +259,11 @@ const resetSwirlState = () => {
   if (experienceOverlay) {
     experienceOverlay.style.opacity = '0';
     experienceOverlay.classList.remove('active');
+  }
+  // Remove experience-active class to reset header to black
+  const swirlScreen = document.getElementById('swirlScreen');
+  if (swirlScreen) {
+    swirlScreen.classList.remove('experience-active');
   }
   if (shareBtnContainer) {
     shareBtnContainer.classList.remove('visible');

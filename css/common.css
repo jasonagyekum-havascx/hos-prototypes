@@ -71,6 +71,7 @@ body {
   transition: var(--transition-smooth);
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .screen.active {

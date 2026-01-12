@@ -34,7 +34,7 @@
     <!-- SWIRL INTRO SCREEN -->
     <section class="screen swirl-screen active" id="swirlScreen" aria-label="Swirl to experience your highball">
       <header class="swirl-header">
-        <span class="header-logo">The House of Suntory</span>
+        <img src="./images/assets/logo-swirl.png" alt="The House of Suntory" class="header-logo-img" />
         <button class="header-profile" aria-label="User profile" tabindex="0">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
             <circle cx="12" cy="8" r="4"/>
@@ -56,6 +56,17 @@
       <!-- 3D Experience Overlay -->
       <div class="experience-overlay" id="experienceOverlay">
         <iframe src="./proto-toki.html" title="Interactive Toki Highball Experience" id="experienceIframe"></iframe>
+        
+        <!-- Video Hotspot Button -->
+        <button 
+          class="video-hotspot" 
+          id="videoHotspot"
+          aria-label="Watch Perfect Serve video"
+          tabindex="0"
+        >
+          <img src="./images/assets/play-sign.png" alt="Play video" />
+          <span class="video-hotspot-label">Perfect Serve</span>
+        </button>
         
         <!-- AR Button (Android/Chrome WebXR) -->
         <button 
