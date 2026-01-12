@@ -57,17 +57,6 @@
       <div class="experience-overlay" id="experienceOverlay">
         <iframe src="./proto-toki.html" title="Interactive Toki Highball Experience" id="experienceIframe"></iframe>
         
-        <!-- Video Hotspot Button -->
-        <button 
-          class="video-hotspot" 
-          id="videoHotspot"
-          aria-label="Watch Perfect Serve video"
-          tabindex="0"
-        >
-          <img src="./images/assets/play-sign.png" alt="Play video" />
-          <span class="video-hotspot-label">Perfect Serve</span>
-        </button>
-        
         <!-- AR Button (Android/Chrome WebXR) -->
         <button 
           class="ar-btn" 
@@ -103,45 +92,6 @@
         </button>
       </div>
       
-      <!-- Video Modal -->
-      <div class="video-modal" id="videoModal" role="dialog" aria-modal="true" aria-labelledby="videoModalTitle">
-        <div class="video-modal__panel">
-          <button class="video-modal__close" id="videoModalClose" aria-label="Close video" tabindex="0">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-              <line x1="18" y1="6" x2="6" y2="18"/>
-              <line x1="6" y1="6" x2="18" y2="18"/>
-            </svg>
-          </button>
-          
-          <div class="video-modal__header">
-            <h3 class="video-modal__header-title" id="videoModalTitle">The Perfect Serve</h3>
-            <p class="video-modal__header-desc">Watch how Japanese bartenders craft the <a href="#">perfect Toki Highball</a>—a ritual of precision and care.</p>
-          </div>
-          
-          <div class="video-modal__content">
-            <video 
-              class="video-modal__video" 
-              id="perfectServeVideo"
-              src="./images/perfect-serve.mp4"
-              controls
-              playsinline
-              preload="metadata"
-            >
-              Your browser does not support the video tag.
-            </video>
-          </div>
-          
-          <div class="video-modal__actions">
-            <button class="video-modal__share-btn" id="videoShareBtn" aria-label="Share" tabindex="0">
-              SHARE
-            </button>
-            <button class="video-modal__mix-btn" id="videoMixBtn" aria-label="Mix another cocktail" tabindex="0">
-              MIX ANOTHER COCKTAIL →
-            </button>
-          </div>
-        </div>
-      </div>
-      
       <!-- Share Button -->
       <div class="share-btn-container" id="shareBtnContainer">
         <button 
@@ -150,7 +100,7 @@
           aria-label="Share recipe card"
           tabindex="0"
         >
-          SHARE
+          SHARE & SAVE
         </button>
         <button 
           class="mix-another-btn" 
@@ -202,18 +152,25 @@
 
   <script type="module">
     import { initSwirlScreen } from './js/swirl.js';
+    import { initShareScreen } from './js/share.js';
     
-    // Initialize swirl screen on page load
+    // Initialize screens on page load
     // Wait for DOM to be fully ready
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', () => {
-        initSwirlScreen().catch(err => {
-          console.error('Error initializing swirl screen:', err);
+        Promise.all([
+          initSwirlScreen(),
+          initShareScreen()
+        ]).catch(err => {
+          console.error('Error initializing screens:', err);
         });
       });
     } else {
-      initSwirlScreen().catch(err => {
-        console.error('Error initializing swirl screen:', err);
+      Promise.all([
+        initSwirlScreen(),
+        initShareScreen()
+      ]).catch(err => {
+        console.error('Error initializing screens:', err);
       });
     }
   </script>

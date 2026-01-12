@@ -1,4 +1,4 @@
-import { state, navigateTo, registerScreen, wait, loadHTMLFragment } from './common.js';
+import { state, wait } from './common.js';
 
 // Chat conversation flow
 const chatFlow = {
@@ -59,7 +59,19 @@ const chatFlow = {
   }
 };
 
-let chatMessages, chatInput, sendBtn, bartenderContainer, bartenderImages, chatIntroVideo, chatVideoIntro, drinkCounter;
+let chatMessages, chatInput, sendBtn, bartenderContainer, bartenderImages, chatIntroVideo, chatVideoIntro, drinkCounter, drinkName, drinkDescription;
+
+// Drink data
+const drinksData = {
+  toki: {
+    name: 'Toki Highball',
+    description: 'A whisky blended for crafting highballs. The House of Suntory crafted Toki using a bolder grain whisky from the Chita Distillery, with more flavor than is typical in blended whiskies.'
+  },
+  haku: {
+    name: 'Haku Vodka',
+    description: 'A premium Japanese vodka crafted with precision. Haku Vodka is made from 100% Japanese white rice and filtered through bamboo charcoal for a smooth, clean finish.'
+  }
+};
 
 // ==================== 
 // BARTENDER ANIMATION
@@ -152,16 +164,193 @@ const removeTypingIndicator = () => {
   if (typing) typing.remove();
 };
 
+const updateDrinkInfo = (drinkType) => {
+  if (!drinkName || !drinkDescription) return;
+  
+  const drink = drinksData[drinkType];
+  if (drink) {
+    drinkName.textContent = drink.name;
+    drinkDescription.textContent = drink.description;
+  }
+};
+
+// Swipe detection state
+let swipeState = {
+  startX: 0,
+  startY: 0,
+  isSwiping: false
+};
+
+// Double tap detection state
+let tapState = {
+  lastTap: 0,
+  tapTimeout: null
+};
+
+const TOTAL_DRINKS = 5;
+const CENTER_INDEX = 2; // Toki is in the middle (index 2 of 5)
+
+const getAvailableDrinks = () => {
+  const bottles = drinkCounter.querySelectorAll('.drink-bottle:not([style*="display: none"])');
+  return Array.from(bottles).map(bottle => ({
+    type: bottle.getAttribute('data-drink'),
+    element: bottle,
+    index: parseInt(bottle.getAttribute('data-index'))
+  }));
+};
+
+const getCurrentDrinkIndex = () => {
+  const selectedBottle = drinkCounter.querySelector('.drink-bottle.selected');
+  if (!selectedBottle) return CENTER_INDEX;
+  return parseInt(selectedBottle.getAttribute('data-index'));
+};
+
+const updateCarouselPositions = (centerIndex) => {
+  const bottles = drinkCounter.querySelectorAll('.drink-bottle');
+  const carousel = document.getElementById('drinkBottlesCarousel');
+  if (!carousel) return;
+  
+  bottles.forEach(bottle => {
+    const bottleIndex = parseInt(bottle.getAttribute('data-index'));
+    const position = bottleIndex - centerIndex;
+    
+    // Only show drinks within visible range (positions -2 to +2)
+    if (Math.abs(position) <= 2) {
+      // Show the bottle if it was hidden
+      const currentDisplay = window.getComputedStyle(bottle).display;
+      if (currentDisplay === 'none' || bottle.style.display === 'none') {
+        bottle.style.display = '';
+      }
+      bottle.setAttribute('data-position', position);
+      
+      // Update scaling and opacity based on position (inline styles override CSS)
+      if (position === 0) {
+        bottle.style.transform = 'scale(1.15)';
+        bottle.style.opacity = '1';
+        bottle.classList.add('selected');
+      } else if (Math.abs(position) === 1) {
+        bottle.style.transform = 'scale(0.8)';
+        bottle.style.opacity = '0.7';
+        bottle.classList.remove('selected');
+      } else {
+        bottle.style.transform = 'scale(0.6)';
+        bottle.style.opacity = '0.5';
+        bottle.classList.remove('selected');
+      }
+    } else {
+      bottle.style.display = 'none';
+    }
+  });
+  
+  // Update drink info for center drink
+  const centerBottle = Array.from(bottles).find(b => parseInt(b.getAttribute('data-index')) === centerIndex);
+  if (centerBottle) {
+    const drinkType = centerBottle.getAttribute('data-drink');
+    if (drinksData[drinkType]) {
+      updateDrinkInfo(drinkType);
+      
+      state.selectedCocktail = {
+        id: drinkType === 'toki' ? 'toki-highball' : 'haku-cocktail',
+        name: drinksData[drinkType].name
+      };
+    }
+  }
+};
+
+const selectDrinkByIndex = (index) => {
+  if (index < 0 || index >= TOTAL_DRINKS) return;
+  
+  updateCarouselPositions(index);
+};
+
+const handleSwipeStart = (e) => {
+  const touch = e.touches ? e.touches[0] : e;
+  swipeState.startX = touch.clientX;
+  swipeState.startY = touch.clientY;
+  swipeState.isSwiping = true;
+};
+
+const handleSwipeMove = (e) => {
+  if (!swipeState.isSwiping) return;
+  e.preventDefault(); // Prevent scrolling while swiping
+};
+
+const handleSwipeEnd = (e) => {
+  if (!swipeState.isSwiping) {
+    // Check for double tap if it wasn't a swipe
+    handleDoubleTap(e);
+    return;
+  }
+  
+  const touch = e.changedTouches ? e.changedTouches[0] : e;
+  const deltaX = touch.clientX - swipeState.startX;
+  const deltaY = touch.clientY - swipeState.startY;
+  const minSwipeDistance = 50; // Minimum distance for a swipe
+  
+  // Check if it's a horizontal swipe (more horizontal than vertical)
+  if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > minSwipeDistance) {
+    const currentIndex = getCurrentDrinkIndex();
+    
+    if (deltaX > 0) {
+      // Swipe right - go to previous drink
+      const prevIndex = currentIndex > 0 ? currentIndex - 1 : TOTAL_DRINKS - 1;
+      selectDrinkByIndex(prevIndex);
+    } else {
+      // Swipe left - go to next drink
+      const nextIndex = currentIndex < TOTAL_DRINKS - 1 ? currentIndex + 1 : 0;
+      selectDrinkByIndex(nextIndex);
+    }
+  } else {
+    // Not a swipe, check for double tap
+    handleDoubleTap(e);
+  }
+  
+  swipeState.isSwiping = false;
+};
+
+const handleDoubleTap = (e) => {
+  const currentTime = Date.now();
+  const tapLength = currentTime - tapState.lastTap;
+  
+  if (tapLength < 400 && tapLength > 0) {
+    // Double tap detected - proceed to next screen
+    e.preventDefault();
+    e.stopPropagation();
+    const selectedBottle = drinkCounter.querySelector('.drink-bottle.selected');
+    if (selectedBottle) {
+      handleBottleSelect(selectedBottle);
+    }
+    tapState.lastTap = 0; // Reset to prevent triple tap
+  } else {
+    tapState.lastTap = currentTime;
+  }
+};
+
 const showDrinkCounter = () => {
   if (!drinkCounter) return;
+  
+  // Get drink info elements
+  drinkName = document.getElementById('drinkName');
+  drinkDescription = document.getElementById('drinkDescription');
+  
+  // Set default to Toki Highball (center position)
+  selectDrinkByIndex(CENTER_INDEX);
   
   // Show the drink counter on the bar
   drinkCounter.classList.add('visible');
   
-  // Set up bottle selection handlers
+  // Set up swipe handlers on the drink counter
+  drinkCounter.addEventListener('touchstart', handleSwipeStart, { passive: false });
+  drinkCounter.addEventListener('touchmove', handleSwipeMove, { passive: false });
+  drinkCounter.addEventListener('touchend', handleSwipeEnd, { passive: false });
+  
+  // Set up bottle selection handlers (single tap still works for selection)
   const bottles = drinkCounter.querySelectorAll('.drink-bottle');
   bottles.forEach(bottle => {
-    bottle.addEventListener('click', () => handleBottleSelect(bottle));
+    bottle.addEventListener('click', () => {
+      const index = parseInt(bottle.getAttribute('data-index'));
+      selectDrinkByIndex(index);
+    });
     bottle.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
@@ -177,9 +366,14 @@ const handleBottleSelect = async (bottleEl) => {
   bottleEl.classList.add('selected');
   
   const drinkType = bottleEl.getAttribute('data-drink');
+  const drink = drinksData[drinkType];
+  
+  // Update drink info
+  updateDrinkInfo(drinkType);
+  
   state.selectedCocktail = {
     id: drinkType === 'toki' ? 'toki-highball' : 'haku-cocktail',
-    name: drinkType === 'toki' ? 'Toki Highball' : 'Haku Vodka'
+    name: drink ? drink.name : (drinkType === 'toki' ? 'Toki Highball' : 'Haku Vodka')
   };
 
   // Wait for selection animation
@@ -390,102 +584,48 @@ export const navigateToRepeatability = async () => {
   window.location.href = './chat.html';
 };
 
-// ==================== 
-// INITIALIZATION
-// ====================
-const checkAndStartChatFlow = () => {
-  const chatScreen = document.getElementById('chatScreen');
-  if (!chatScreen) {
-    console.warn('Chat screen not found');
-    return;
-  }
-  
-  // Check if we're on a standalone page (chat.html)
-  const isStandalonePage = window.location.pathname.includes('chat.html');
-  
-  const isActive = chatScreen.classList.contains('active');
-  const isCurrentScreen = isStandalonePage || state.currentScreen === 'chat';
-  
-  // Ensure chatMessages is initialized
-  if (!chatMessages) {
-    chatMessages = document.getElementById('chatMessages');
-    if (!chatMessages) {
-      console.warn('Chat messages container not found');
-      return;
-    }
-  }
-  
-  // Only start if screen is active and we haven't started yet
-  if (isActive && isCurrentScreen && state.chatHistory.length === 0 && !state.chatFlowStarted) {
-    // Clear any existing messages in the container
-    chatMessages.innerHTML = '';
-    
-    state.chatFlowStarted = true;
-    // Small delay to ensure screen is fully visible
-    setTimeout(() => {
-      startChatFlow();
-    }, 100);
-  }
-};
 
 export const initChatScreen = async () => {
-  // Check if we're on a standalone page (chat.html) or in SPA mode
   const chatScreen = document.getElementById('chatScreen');
-  if (!chatScreen) {
-    // SPA mode - try to load fragment
-    const app = document.querySelector('.app');
-    if (!app) return;
-
-    const fragment = await loadHTMLFragment('./screens/chat.html');
-    if (!fragment) return;
-
-    app.appendChild(fragment);
-    const loadedChatScreen = document.getElementById('chatScreen');
-    if (!loadedChatScreen) return;
-
-    registerScreen('chat', loadedChatScreen);
-    initializeChatElements(loadedChatScreen);
-    setupChatObservers(loadedChatScreen);
-  } else {
-    // Standalone page mode - chat screen is already in the DOM
-    // Set current screen state for standalone page
-    state.currentScreen = 'chat';
-    initializeChatElements(chatScreen);
-    
-    // Ensure chat screen is marked as active
-    if (!chatScreen.classList.contains('active')) {
-      chatScreen.classList.add('active');
-    }
-    
-    // Start chat flow immediately since we're on a standalone page
-    // Reset state to ensure fresh start (unless showing repeatability)
-    if (!state.showRepeatability) {
-      state.chatHistory = [];
-      state.chatFlowStarted = false;
-      state.waitingForUserInput = false;
-      state.flowStep = 0;
-    }
-    
-    // Use a small delay to ensure DOM is fully ready, then start flow
-    setTimeout(() => {
-      if (!state.chatFlowStarted && chatMessages) {
-        chatMessages.innerHTML = '';
-        state.chatFlowStarted = true;
-        
-        if (state.showRepeatability) {
-          // Show repeatability flow
-          showBartenderPose(3);
-          wait(500).then(async () => {
-            await playChatSequence('repeatability');
-          });
-          state.showRepeatability = false; // Clear flag
-        } else {
-          // Start normal chat flow
-          startChatFlow();
-        }
-      }
-    }, 200);
+  if (!chatScreen) return;
+  
+  // Set current screen state
+  state.currentScreen = 'chat';
+  initializeChatElements(chatScreen);
+  
+  // Ensure chat screen is marked as active
+  if (!chatScreen.classList.contains('active')) {
+    chatScreen.classList.add('active');
   }
+  
+  // Start chat flow immediately
+  // Reset state to ensure fresh start (unless showing repeatability)
+  if (!state.showRepeatability) {
+    state.chatHistory = [];
+    state.chatFlowStarted = false;
+    state.waitingForUserInput = false;
+    state.flowStep = 0;
+  }
+  
+  // Use a small delay to ensure DOM is fully ready, then start flow
+  setTimeout(() => {
+    if (!state.chatFlowStarted && chatMessages) {
+      chatMessages.innerHTML = '';
+      state.chatFlowStarted = true;
+      
+      if (state.showRepeatability) {
+        // Show repeatability flow
+        showBartenderPose(3);
+        wait(500).then(async () => {
+          await playChatSequence('repeatability');
+        });
+        state.showRepeatability = false; // Clear flag
+      } else {
+        // Start normal chat flow
+        startChatFlow();
+      }
+    }
+  }, 200);
 };
 
 const initializeChatElements = (chatScreen) => {
@@ -497,6 +637,8 @@ const initializeChatElements = (chatScreen) => {
   chatIntroVideo = document.getElementById('chatIntroVideo');
   chatVideoIntro = document.getElementById('chatVideoIntro');
   drinkCounter = document.getElementById('drinkCounter');
+  drinkName = document.getElementById('drinkName');
+  drinkDescription = document.getElementById('drinkDescription');
 
   // Chat input events
   if (sendBtn) {
@@ -529,43 +671,4 @@ const initializeChatElements = (chatScreen) => {
   }
 };
 
-const setupChatObservers = (chatScreen) => {
-  // Listen for screen activation via both MutationObserver and custom event
-  let lastActiveState = chatScreen.classList.contains('active');
-  
-  // Listen for custom screen activation event
-  chatScreen.addEventListener('screenActivated', () => {
-    requestAnimationFrame(() => {
-      checkAndStartChatFlow();
-    });
-  });
-  
-  const observer = new MutationObserver((mutations) => {
-    mutations.forEach((mutation) => {
-      if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
-        const isActive = chatScreen.classList.contains('active');
-        const wasInactive = !lastActiveState;
-        
-        // Only trigger when transitioning from inactive to active
-        if (isActive && wasInactive) {
-          // Use requestAnimationFrame to ensure DOM is updated
-          requestAnimationFrame(() => {
-            checkAndStartChatFlow();
-          });
-        }
-        
-        lastActiveState = isActive;
-      }
-    });
-  });
-
-  observer.observe(chatScreen, { attributes: true });
-  
-  // Also check immediately if screen is already active (for direct navigation)
-  if (chatScreen.classList.contains('active')) {
-    requestAnimationFrame(() => {
-      checkAndStartChatFlow();
-    });
-  }
-};
 

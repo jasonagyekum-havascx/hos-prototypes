@@ -15,54 +15,94 @@
   <!-- CSS Files -->
   <link rel="stylesheet" href="./css/common.css">
   <link rel="stylesheet" href="./css/landing.css">
-  <link rel="stylesheet" href="./css/chat.css">
-  <link rel="stylesheet" href="./css/swirl.css">
-  <link rel="stylesheet" href="./css/drink.css">
-  <link rel="stylesheet" href="./css/share.css">
-  <link rel="stylesheet" href="./css/kanji.css">
-  
-  <!-- Model Viewer for iOS AR Quick Look -->
-  <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.3.0/model-viewer.min.js"></script>
   
   <style>
-    /* Animation delays for messages */
-    .message:nth-child(1) { animation-delay: 0.1s; }
-    .message:nth-child(2) { animation-delay: 0.3s; }
-    .message:nth-child(3) { animation-delay: 0.5s; }
-    .message:nth-child(4) { animation-delay: 0.7s; }
-    .message:nth-child(5) { animation-delay: 0.9s; }
-    .message:nth-child(6) { animation-delay: 1.1s; }
-    .cocktail-cards { animation-delay: 0.8s; }
-    .experience-cta { animation-delay: 1.2s; }
+    /* Make screen always visible on standalone page */
+    .screen {
+      opacity: 1 !important;
+      visibility: visible !important;
+    }
   </style>
 </head>
 <body>
   <div class="app" role="main">
-    <!-- Screens will be loaded dynamically -->
+    <!-- LANDING SCREEN -->
+    <section class="screen landing-screen active" id="landingScreen" aria-label="Welcome screen">
+      <div class="landing-background" aria-hidden="true">
+        <video class="landing-video" autoplay muted loop playsinline>
+          <source src="./images/landing-vid.mp4" type="video/mp4">
+        </video>
+      </div>
+      
+      <div class="landing-content">
+        <img src="./images/assets/logo-landing.png" alt="The House of Suntory" class="landing-logo" />
+        <h1 class="landing-title">VIRTUAL<br>BARTENDER</h1>
+      </div>
+      
+      <footer class="landing-footer">
+        <p class="destination-prompt">Choose your vibe to get started</p>
+        
+        <div class="destination-grid" role="group" aria-label="Destination selection">
+          <button 
+            type="button"
+            class="destination-btn destination-btn--default" 
+            data-destination="izakaya"
+            aria-label="Cocktail Bar - Start chat"
+            tabindex="0"
+          >
+            Cocktail Bar
+          </button>
+          <button 
+            type="button"
+            class="destination-btn destination-btn--default" 
+            data-destination="izakaya"
+            aria-label="Izakaya - Start chat"
+            tabindex="0"
+          >
+            Izakaya
+          </button>
+          <button 
+            type="button"
+            class="destination-btn destination-btn--default" 
+            style="background-color: #966937; color: #FFF;"
+            data-destination="izakaya"
+            aria-label="Listening Bar - Start chat"
+            tabindex="0"
+          >
+            Listening Bar
+          </button>
+          <button 
+            type="button"
+            class="destination-btn destination-btn--default" 
+            data-destination="izakaya"
+            aria-label="Speakeasy - Start chat"
+            tabindex="0"
+          >
+            Speakeasy
+          </button>
+        </div>
+      </footer>
+    </section>
   </div>
 
   <!-- Config (must load before modules) -->
   <script src="./config.js"></script>
   
   <script type="module">
-    import { initKanjiScreen } from './js/kanji.js';
     import { initLandingScreen } from './js/landing.js';
-    import { initChatScreen } from './js/chat.js';
-    import { initSwirlScreen } from './js/swirl.js';
-    import { initDrinkScreen } from './js/drink.js';
-    import { initShareScreen } from './js/share.js';
-
-    // Initialize all screens (they will load their HTML fragments)
-    (async () => {
-      await Promise.all([
-        initKanjiScreen(),
-        initLandingScreen(),
-        initChatScreen(),
-        initSwirlScreen(),
-        initDrinkScreen(),
-        initShareScreen()
-      ]);
-    })();
+    
+    // Initialize landing screen on page load
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', () => {
+        initLandingScreen().catch(err => {
+          console.error('Error initializing landing screen:', err);
+        });
+      });
+    } else {
+      initLandingScreen().catch(err => {
+        console.error('Error initializing landing screen:', err);
+      });
+    }
   </script>
 </body>
 </html>

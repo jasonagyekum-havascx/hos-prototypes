@@ -1,4 +1,4 @@
-import { state, navigateTo, registerScreen, loadHTMLFragment } from './common.js';
+import { state } from './common.js';
 
 // ==================== 
 // KANJI TRACING SYSTEM
@@ -188,25 +188,15 @@ export const createKanjiSketch = (onComplete = null, containerId = 'kanjiModalCa
       if (onComplete && typeof onComplete === 'function') {
         onComplete();
       } else {
-        await navigateTo('landing');
+        window.location.href = './index.html';
       }
     }, 1000);
   };
 };
 
 export const initKanjiScreen = async () => {
-  const app = document.querySelector('.app');
-  if (!app) return;
-
-  // Load HTML fragment
-  const fragment = await loadHTMLFragment('./screens/kanji.html');
-  if (!fragment) return;
-
-  app.appendChild(fragment);
   kanjiScreen = document.getElementById('kanjiScreen');
   if (!kanjiScreen) return;
-
-  registerScreen('kanji', kanjiScreen);
 
   progressFill = document.getElementById('progressFill');
   progressText = document.getElementById('progressText');
@@ -223,7 +213,5 @@ export const initKanjiScreen = async () => {
   } else {
     kanjiSketch = new p5(createKanjiSketch(null, 'kanjiCanvas'));
   }
-
-  // No longer auto-activate - kanji is now accessed via hotspot on drink screen
 };
 

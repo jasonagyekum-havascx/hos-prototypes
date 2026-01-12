@@ -114,11 +114,11 @@
 /* Bartender container - Positioned above counter */
 .bartender-container {
   position: absolute;
-  top: 15%;
+  top: 9%;
   left: 50%;
   transform: translateX(-50%);
-  width: 280px;
-  height: 300px;
+  width: 317px;
+  height: 375px;
   z-index: 5;
   opacity: 0;
   transition: opacity 0.6s ease;
@@ -160,7 +160,7 @@
   overflow-y: auto;
   overflow-x: hidden;
   padding: 20px;
-  padding-bottom: 100px; /* Extra padding at bottom for input area */
+  /* padding-bottom: 100px; Extra padding at bottom for input area */
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
@@ -228,13 +228,15 @@
 
 .message--ai {
   align-self: flex-start;
-  background: rgba(45, 35, 28, 0.95);
+  border-radius: 12px 12px 12px 0;
+background: rgba(35, 24, 21, 0.80);
   border-bottom-left-radius: 6px;
 }
 
 .message--user {
   align-self: flex-end;
-  background: var(--color-gold);
+  border-radius: 12px 12px 0 12px;
+  background: rgba(150, 105, 55, 0.80);
   color: rgba(255, 255, 255, 0.95);
   border-bottom-right-radius: 6px;
 }
@@ -260,13 +262,63 @@
 /* Counter title */
 .drink-counter-title {
   font-family: var(--font-sans);
-  font-size: 14px;
-  font-weight: 500;
-  letter-spacing: 3px;
-  text-transform: uppercase;
-  color: var(--color-text-light);
-  margin-bottom: 20px;
+  color: #FFF;
+text-align: center;
+font-family: Futura;
+font-size: 15px;
+font-style: normal;
+font-weight: 500;
+line-height: normal;
+letter-spacing: 0.75px;
+text-transform: uppercase;
+}
+
+/* Drink info section */
+.drink-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  position: relative;
+  top: 50px;
   text-align: center;
+  opacity: 0;
+  animation: fadeInUp 0.6s ease forwards 0.4s;
+}
+
+.drink-name {
+  font-family: var(--font-serif);
+  color: #FFF;
+text-align: center;
+font-family: "SUNTORY Sabon";
+font-size: 26px;
+font-style: normal;
+font-weight: 700;
+line-height: normal;
+letter-spacing: 0.78px;
+text-transform: uppercase;
+}
+
+.drink-description {
+  font-family: var(--font-sans);
+  color: #FFF;
+text-align: center;
+/* font-family: "Futura PT"; */
+font-size: 18px;
+font-style: normal;
+font-weight: 400;
+line-height: normal;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Bottles container */
@@ -274,8 +326,21 @@
   display: flex;
   justify-content: center;
   align-items: flex-end;
-  gap: 60px;
   width: 100%;
+  overflow: hidden;
+  position: relative;
+  height: 320px;
+}
+
+.drink-bottles-carousel {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  top: 40px;
+  gap: 10px;
+  width: 100%;
+  position: relative;
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .drink-counter.visible {
@@ -310,18 +375,41 @@
   border: none;
   padding: 0;
   cursor: pointer;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease;
   position: relative;
+  opacity: 1;
+  flex-shrink: 0;
+  transform-origin: center bottom;
+}
+
+/* Initial fade in only on first load */
+.drink-counter.visible .drink-bottle {
   opacity: 0;
   animation: bottleFadeIn 0.5s ease forwards;
 }
 
-.drink-bottle:nth-child(1) {
+.drink-counter.visible .drink-bottle:nth-child(1) {
+  animation-delay: 0.1s;
+}
+
+.drink-counter.visible .drink-bottle:nth-child(2) {
   animation-delay: 0.2s;
 }
 
-.drink-bottle:nth-child(2) {
-  animation-delay: 0.35s;
+.drink-counter.visible .drink-bottle:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+.drink-counter.visible .drink-bottle:nth-child(4) {
+  animation-delay: 0.4s;
+}
+
+.drink-counter.visible .drink-bottle:nth-child(5) {
+  animation-delay: 0.5s;
+}
+
+.drink-bottle .roku {
+  position: relative;
 }
 
 .drink-bottle .haku {
@@ -341,25 +429,34 @@
 }
 
 .drink-bottle:hover {
-  transform: translateY(-12px);
+  transform: translateY(-8px);
 }
 
 .drink-bottle:active {
-  transform: translateY(-8px) scale(0.98);
+  transform: translateY(-4px) scale(0.98);
+}
+
+/* Scaling based on position - center drink is largest */
+/* Styles are set inline via JS, these are fallbacks */
+.drink-bottle[data-position="0"],
+.drink-bottle[data-position="4"] {
+  transform: scale(0.6);
+  opacity: 0.5;
+}
+
+.drink-bottle[data-position="1"],
+.drink-bottle[data-position="3"] {
+  transform: scale(0.8);
+  opacity: 0.7;
+}
+
+.drink-bottle[data-position="2"] {
+  transform: scale(1.15);
+  opacity: 1;
 }
 
 .drink-bottle.selected {
-  transform: scale(1.15) translateY(-8px);
-  animation: bottlePulse 0.6s ease;
-}
-
-@keyframes bottlePulse {
-  0%, 100% {
-    transform: scale(1.15) translateY(-8px);
-  }
-  50% {
-    transform: scale(1.2) translateY(-12px);
-  }
+  z-index: 10;
 }
 
 .drink-bottle img {

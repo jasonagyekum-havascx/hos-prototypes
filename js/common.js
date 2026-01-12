@@ -20,83 +20,9 @@ export const state = {
 // ====================
 export const wait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-// Load HTML fragment from file
-export const loadHTMLFragment = async (path) => {
-  try {
-    const response = await fetch(path);
-    if (!response.ok) {
-      throw new Error(`Failed to load HTML fragment: ${path}`);
-    }
-    const html = await response.text();
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(html, 'text/html');
-    
-    // Return all top-level elements (for cases like drink.html with multiple elements)
-    const elements = Array.from(doc.body.children);
-    if (elements.length === 1) {
-      return elements[0];
-    }
-    // If multiple elements, return a document fragment containing all
-    const fragment = document.createDocumentFragment();
-    elements.forEach(el => fragment.appendChild(el));
-    return fragment;
-  } catch (error) {
-    console.error(`Error loading HTML fragment from ${path}:`, error);
-    return null;
-  }
-};
-
-// ==================== 
-// SCREEN NAVIGATION
-// ====================
-export const screens = {};
-
-export const navigateTo = async (screenName) => {
-  // Remove active class from all screens
-  Object.values(screens).forEach(screen => {
-    if (screen) {
-      screen.classList.remove('active');
-    }
-  });
-  
-  // Wait for screen to be registered if it doesn't exist yet (handles race conditions)
-  let targetScreen = screens[screenName];
-  if (!targetScreen) {
-    // Wait up to 5 seconds for the screen to be registered
-    const maxWaitTime = 5000;
-    const checkInterval = 50;
-    let waited = 0;
-    
-    while (!targetScreen && waited < maxWaitTime) {
-      await wait(checkInterval);
-      waited += checkInterval;
-      targetScreen = screens[screenName];
-    }
-  }
-  
-  if (targetScreen) {
-    targetScreen.classList.add('active');
-    state.currentScreen = screenName;
-    
-    // Trigger a custom event for screen activation (useful for screens that need to initialize)
-    const event = new CustomEvent('screenActivated', { 
-      detail: { screenName, screen: targetScreen } 
-    });
-    targetScreen.dispatchEvent(event);
-  } else {
-    console.warn(`Screen "${screenName}" not found after waiting. Available screens:`, Object.keys(screens));
-  }
-};
-
-export const registerScreen = (name, element) => {
-  screens[name] = element;
-};
-
 // Expose to window for testing/debugging
 if (typeof window !== 'undefined') {
-  window.navigateTo = navigateTo;
   window.state = state;
-  window.screens = screens;
 }
 
 // ==================== 

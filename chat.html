@@ -88,14 +88,34 @@
         
         <!-- Drink Counter on Bar -->
         <div class="drink-counter" id="drinkCounter">
-          <div class="drink-counter-title">LOREM SELECT A COCKTAIL</div>
+          <div class="drink-counter-title">SELECT A COCKTAIL</div>
           <div class="drink-bottles-container">
-            <button class="drink-bottle" data-drink="toki" aria-label="Select Toki Highball" tabindex="0">
-              <img src="./images/toki-big.png" alt="Toki Whisky Bottle" />
-            </button>
-            <button class="drink-bottle" data-drink="haku" aria-label="Select Haku Vodka" tabindex="0">
-              <img src="./images/haku.png" alt="Haku Vodka Bottle" class="haku" />
-            </button>
+            <div class="drink-bottles-carousel" id="drinkBottlesCarousel">
+              <!-- Drink 1 - Placeholder for future drink -->
+              <button class="drink-bottle" data-drink="drink1" data-index="0" aria-label="Select Drink 1" tabindex="0" style="display: none;">
+                <img src="./images/roku.png" alt="Drink 1" />
+              </button>
+              <!-- Drink 2 - Placeholder for future drink -->
+              <button class="drink-bottle" data-drink="drink2" data-index="1" aria-label="Select Drink 2" tabindex="0" style="display: none;">
+                <img src="./images/toki-big.png" alt="Drink 2" />
+              </button>
+              <!-- Drink 3 - Toki Highball (center) -->
+              <button class="drink-bottle selected" data-drink="toki" data-index="2" aria-label="Select Toki Highball" tabindex="0">
+                <img src="./images/roku.png" alt="Toki Whisky Bottle" class="roku" />
+              </button>
+              <!-- Drink 4 - Placeholder for future drink -->
+              <button class="drink-bottle" data-drink="drink4" data-index="3" aria-label="Select Drink 4" tabindex="0" style="display: none;">
+                <img src="./images/haku.png" alt="Drink 4" />
+              </button>
+              <!-- Drink 5 - Placeholder for future drink -->
+              <button class="drink-bottle" data-drink="drink5" data-index="4" aria-label="Select Drink 5" tabindex="0" style="display: none;">
+                <img src="./images/toki-big.png" alt="Drink 5" />
+              </button>
+            </div>
+          </div>
+          <div class="drink-info">
+            <div class="drink-name" id="drinkName">Toki Highball</div>
+            <div class="drink-description" id="drinkDescription">A whisky blended for crafting highballs. The House of Suntory crafted Toki using a bolder grain whisky from the Chita Distillery, with more flavor than is typical in blended whiskies.</div>
           </div>
         </div>
         

@@ -1,5 +1,4 @@
 import { navigateToRepeatability } from './chat.js';
-import { loadHTMLFragment } from './common.js';
 
 let recipeModal, recipeModalClose, recipeShareBtn, recipeSaveBtn;
 let isInitialized = false;
@@ -99,23 +98,9 @@ const initRecipeModalElements = () => {
 };
 
 export const initShareScreen = async () => {
-  // Check if modal already exists in DOM (standalone page)
+  // Initialize modal if it exists in DOM
   if (document.getElementById('recipeModal')) {
     initRecipeModalElements();
-    return;
   }
-  
-  // SPA mode - load fragment
-  const app = document.querySelector('.app');
-  if (!app) return;
-
-  // Load HTML fragment
-  const fragment = await loadHTMLFragment('./screens/share.html');
-  if (!fragment) return;
-
-  app.appendChild(fragment);
-  
-  // Initialize the modal elements and event handlers
-  initRecipeModalElements();
 };
 

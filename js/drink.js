@@ -1,4 +1,3 @@
-import { registerScreen, loadHTMLFragment } from './common.js';
 import { navigateToRepeatability } from './chat.js';
 import { handleOpenRecipeModal } from './share.js';
 import { createKanjiSketch } from './kanji.js';
@@ -115,28 +114,8 @@ const handleKanjiModalKeyDown = (e) => {
 };
 
 export const initDrinkScreen = async () => {
-  const app = document.querySelector('.app');
-  if (!app) return;
-
-  // Load HTML fragment (contains both immersive screen and video modal)
-  const fragment = await loadHTMLFragment('./screens/drink.html');
-  if (!fragment) return;
-
-  // Append all elements from fragment
-  if (fragment.nodeType === Node.DOCUMENT_FRAGMENT_NODE) {
-    // Multiple elements - append each one
-    while (fragment.firstChild) {
-      app.appendChild(fragment.firstChild);
-    }
-  } else {
-    // Single element
-    app.appendChild(fragment);
-  }
-
   const immersiveScreen = document.getElementById('immersiveScreen');
   if (!immersiveScreen) return;
-
-  registerScreen('immersive', immersiveScreen);
 
   videoModal = document.getElementById('videoModal');
   videoModalClose = document.getElementById('videoModalClose');

@@ -161,6 +161,19 @@
   overflow: hidden;
 }
 
+/* Black gradient overlay at bottom */
+.experience-overlay::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 25%; /* Adjust height to control gradient coverage */
+  background: linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.3) 30%, rgba(0, 0, 0, 0.8) 70%, #000000 100%);
+  pointer-events: none; /* Allow interactions through the gradient */
+  z-index: 10;
+}
+
 /* Share Button */
 .share-btn-container {
   position: absolute;
@@ -225,7 +238,7 @@
   font-weight: 500;
   letter-spacing: 2px;
   text-transform: uppercase;
-  color: var(--color-gold);
+  color: #FFF;
   cursor: pointer;
   transition: var(--transition-smooth);
   margin-top: 20px;
@@ -233,19 +246,15 @@
 }
 
 .mix-another-btn:hover {
-  color: var(--color-gold-light);
+  color: #FFF;
 }
 
-.mix-another-btn:focus-visible {
-  outline: 2px solid var(--color-gold);
-  outline-offset: 2px;
-}
 
 /* AR Buttons */
 .ar-btn {
   position: absolute;
-  top: 20px;
-  right: 20px;
+  top: 50px;
+  right: 33%;
   z-index: 200;
   padding: 12px 24px;
   background: rgba(126, 200, 232, 0.9);

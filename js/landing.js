@@ -1,23 +1,8 @@
-import { state, navigateTo, registerScreen, loadHTMLFragment, screens } from './common.js';
+import { state } from './common.js';
 
 export const initLandingScreen = async () => {
-  const app = document.querySelector('.app');
-  if (!app) return;
-
-  // Load HTML fragment
-  const fragment = await loadHTMLFragment('./screens/landing.html');
-  if (!fragment) return;
-
-  app.appendChild(fragment);
   const landingScreen = document.getElementById('landingScreen');
   if (!landingScreen) return;
-
-  registerScreen('landing', landingScreen);
-
-  // Activate landing screen if it's the initial screen
-  if (state.currentScreen === 'landing') {
-    landingScreen.classList.add('active');
-  }
 
   const handleDestinationClick = async (btn) => {
     const destination = btn.dataset.destination;
