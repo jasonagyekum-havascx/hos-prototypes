@@ -52,10 +52,11 @@ const chatFlow = {
       },
       {
         type: 'ai',
-        text: "What are you drinking next?"
+        text: "For more The House of Suntory stories,"
       }
     ],
-    showCocktails: true
+    showMemberButton: true,
+    showCocktails: false
   }
 };
 
@@ -461,6 +462,38 @@ const addExperienceCTA = () => {
   scrollToBottom();
 };
 
+const addMemberButton = () => {
+  const memberBtn = document.createElement('button');
+  memberBtn.className = 'experience-cta';
+  memberBtn.setAttribute('tabindex', '0');
+  memberBtn.setAttribute('aria-label', 'Become a member');
+  memberBtn.innerHTML = `
+    BECOME A MEMBER
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <line x1="5" y1="12" x2="19" y2="12"/>
+      <polyline points="12 5 19 12 12 19"/>
+    </svg>
+  `;
+  
+  memberBtn.addEventListener('click', () => {
+    // TODO: Handle member signup flow
+    console.log('Become a member clicked');
+  });
+  
+  memberBtn.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      console.log('Become a member clicked');
+    }
+  });
+
+  const btnContainer = document.createElement('div');
+  btnContainer.style.cssText = 'display: flex; justify-content: flex-start; padding: 8px 0;';
+  btnContainer.appendChild(memberBtn);
+  chatMessages.appendChild(btnContainer);
+  scrollToBottom();
+};
+
 const playChatSequence = async (flowKey) => {
   const flow = chatFlow[flowKey];
   if (!flow) return;
@@ -476,6 +509,17 @@ const playChatSequence = async (flowKey) => {
     
     await addMessage(msg.type, msg.text, 100);
     await wait(400);
+  }
+
+  if (flow.showMemberButton) {
+    await wait(600);
+    addMemberButton();
+    await wait(600);
+    // Add the final message after the button
+    addTypingIndicator();
+    await wait(1200 + Math.random() * 800);
+    removeTypingIndicator();
+    await addMessage('ai', "What are you drinking next?", 100);
   }
 
   if (flow.showCocktails) {
@@ -546,6 +590,44 @@ const scrollToBottom = () => {
   });
 };
 
+// Restore chat history to the DOM
+const restoreChatHistory = (history) => {
+  if (!chatMessages || !history || history.length === 0) return;
+  
+  // Clear existing messages
+  chatMessages.innerHTML = '';
+  
+  // Update messageIdCounter to avoid conflicts with restored messages
+  // Extract the highest number from existing message IDs
+  let maxId = 0;
+  history.forEach((msg) => {
+    if (msg.messageId) {
+      const match = msg.messageId.match(/msg-(\d+)/);
+      if (match) {
+        const idNum = parseInt(match[1], 10);
+        if (idNum > maxId) maxId = idNum;
+      }
+    }
+  });
+  // Set counter to maxId so next generated ID will be higher
+  messageIdCounter = maxId;
+  
+  // Restore each message from history
+  history.forEach((msg) => {
+    const messageEl = document.createElement('div');
+    messageEl.className = `message message--${msg.type}`;
+    messageEl.id = msg.messageId || generateMessageId();
+    messageEl.setAttribute('role', msg.type === 'ai' ? 'status' : 'log');
+    messageEl.textContent = msg.text;
+    // Make messages visible immediately (no animation delay for restored messages)
+    messageEl.style.opacity = '1';
+    messageEl.style.transform = 'translateY(0)';
+    chatMessages.appendChild(messageEl);
+  });
+  
+  scrollToBottom();
+};
+
 // ==================== 
 // EVENT HANDLERS
 // ====================
@@ -567,10 +649,11 @@ const handleKeyDown = (e) => {
 
 export const navigateToRepeatability = async () => {
   // Save state to indicate we should show repeatability flow
+  // Include current chat history so we can restore it
   try {
     localStorage.setItem('appState', JSON.stringify({
       showRepeatability: true,
-      chatHistory: [],
+      chatHistory: state.chatHistory, // Save current chat history
       chatFlowStarted: false,
       waitingForUserInput: false,
       flowStep: 0,
@@ -610,18 +693,49 @@ export const initChatScreen = async () => {
   // Use a small delay to ensure DOM is fully ready, then start flow
   setTimeout(() => {
     if (!state.chatFlowStarted && chatMessages) {
-      chatMessages.innerHTML = '';
       state.chatFlowStarted = true;
       
       if (state.showRepeatability) {
-        // Show repeatability flow
+        // Ensure video is hidden
+        if (chatVideoIntro) {
+          chatVideoIntro.style.display = 'none';
+        }
+        if (chatIntroVideo) {
+          chatIntroVideo.pause();
+          chatIntroVideo.currentTime = 0;
+        }
+        
+        // Show bartender immediately
         showBartenderPose(3);
-        wait(500).then(async () => {
-          await playChatSequence('repeatability');
-        });
+        if (bartenderContainer) {
+          bartenderContainer.classList.add('visible');
+        }
+        const chatScreen = document.getElementById('chatScreen');
+        if (chatScreen) {
+          chatScreen.classList.add('bartender-visible');
+        }
+        if (chatMessages) {
+          chatMessages.style.opacity = '1';
+          chatMessages.style.pointerEvents = 'auto';
+        }
+        
+        // Restore previous chat history if available
+        if (state.chatHistory && state.chatHistory.length > 0) {
+          restoreChatHistory(state.chatHistory);
+          // Wait a bit before showing new messages to make it feel like continuation
+          wait(800).then(async () => {
+            await playChatSequence('repeatability');
+          });
+        } else {
+          // No previous history, just show repeatability flow
+          wait(500).then(async () => {
+            await playChatSequence('repeatability');
+          });
+        }
         state.showRepeatability = false; // Clear flag
       } else {
         // Start normal chat flow
+        chatMessages.innerHTML = '';
         startChatFlow();
       }
     }
@@ -662,6 +776,14 @@ const initializeChatElements = (chatScreen) => {
       if (parsed.showRepeatability) {
         // Store flag to show repeatability flow
         state.showRepeatability = true;
+        // Hide video intro immediately when showing repeatability
+        if (chatVideoIntro) {
+          chatVideoIntro.style.display = 'none';
+        }
+        if (chatIntroVideo) {
+          chatIntroVideo.pause();
+          chatIntroVideo.currentTime = 0;
+        }
       }
       // Clear the saved state after loading
       localStorage.removeItem('appState');
