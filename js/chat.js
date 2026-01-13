@@ -114,7 +114,7 @@ const startBartenderShaking = () => {
     bartenderImages.forEach(img => img.classList.remove('active'));
     currentImage = currentImage === 0 ? 1 : 0;
     bartenderImages[currentImage].classList.add('active');
-  }, 800);
+  }, 1600);
 };
 
 const stopBartenderShaking = () => {
@@ -240,8 +240,8 @@ const updateCarouselPositions = (centerIndex) => {
     const bottleIndex = parseInt(bottle.getAttribute('data-index'));
     const position = bottleIndex - centerIndex;
     
-    // Only show drinks within visible range (positions -3 to +3 for 8 drinks)
-    if (Math.abs(position) <= 3) {
+    // Only show drinks within visible range (positions -1 to +1 for 3 drinks max)
+    if (Math.abs(position) <= 1) {
       // Show the bottle if it was hidden
       const currentDisplay = window.getComputedStyle(bottle).display;
       if (currentDisplay === 'none' || bottle.style.display === 'none') {
@@ -251,20 +251,14 @@ const updateCarouselPositions = (centerIndex) => {
       
       // Update scaling and opacity based on position (inline styles override CSS)
       if (position === 0) {
-        bottle.style.transform = 'scale(1.15)';
+        // Center drink - largest and fully visible
+        bottle.style.transform = 'scale(1.2)';
         bottle.style.opacity = '1';
         bottle.classList.add('selected');
-      } else if (Math.abs(position) === 1) {
-        bottle.style.transform = 'scale(0.8)';
-        bottle.style.opacity = '0.7';
-        bottle.classList.remove('selected');
-      } else if (Math.abs(position) === 2) {
-        bottle.style.transform = 'scale(0.65)';
-        bottle.style.opacity = '0.55';
-        bottle.classList.remove('selected');
       } else {
-        bottle.style.transform = 'scale(0.5)';
-        bottle.style.opacity = '0.4';
+        // Side drinks - smaller and slightly faded
+        bottle.style.transform = 'scale(0.7)';
+        bottle.style.opacity = '0.5';
         bottle.classList.remove('selected');
       }
     } else {
