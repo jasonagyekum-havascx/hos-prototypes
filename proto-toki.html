@@ -527,7 +527,8 @@
 		left: 0;
 		right: 0;
 		width: 100%;
-		background: #3D2E1F;
+		height: 100%;
+		background: #231815;
 		border-radius: 20px 20px 0 0;
 		z-index: 250;
 		max-height: 90vh;
@@ -570,7 +571,6 @@
 		justify-content: center;
 		position: relative;
 		padding: 12px 20px;
-		border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 	}
 
 	.map-slider-handle {
@@ -632,13 +632,13 @@
 		letter-spacing: 1px;
 		text-transform: uppercase;
 		margin: 0 0 20px 0;
-		text-align: left;
+		text-align: center;
 	}
 
 	.map-slider-map-container {
 		width: 100%;
-		margin-bottom: 20px;
-		border-radius: 8px;
+		margin-bottom: 42px;
+		border-radius: 0px;
 		overflow: hidden;
 	}
 
@@ -650,61 +650,49 @@
 
 	.map-slider-buttons {
 		display: flex;
+		align-items: center;
 		flex-direction: column;
-		gap: 12px;
+		gap: 20px;
 		margin-bottom: 20px;
 	}
 
 	.map-slider-btn {
-		width: 100%;
+		width: 253px;
+		height: 57px;
 		padding: 16px 24px;
-		background: #5A4A3A;
+		background: #966937;
 		border: none;
-		border-radius: 8px;
+		border-radius: 0px;
 		color: #ffffff;
 		font-family: "futura-pt", sans-serif;
-		font-size: 14px;
-		font-weight: 500;
-		letter-spacing: 1px;
+		font-size: 15px;
+		line-height: 21px; /* 140% */
+		font-weight: 450;
+		letter-spacing: 1.8px;
 		text-transform: uppercase;
 		cursor: pointer;
 		transition: all 0.2s ease;
 	}
 
-	.map-slider-btn:hover {
-		background: #6B5A4A;
-		transform: translateY(-2px);
-	}
-
-	.map-slider-btn:active {
-		transform: translateY(0);
-	}
-
-	.map-slider-btn:focus-visible {
-		outline: 2px solid #ffffff;
-		outline-offset: 2px;
-	}
 
 	.map-slider-footer {
 		display: flex;
+		flex-direction: column;
 		align-items: center;
 		justify-content: center;
 		gap: 8px;
 		padding-top: 12px;
-		border-top: 1px solid rgba(255, 255, 255, 0.1);
 	}
 
 	.map-slider-info-icon {
 		color: #ffffff;
 		font-size: 16px;
-		opacity: 0.7;
 	}
 
 	.map-slider-learn-more {
 		color: #ffffff;
 		font-family: "futura-pt", sans-serif;
 		font-size: 12px;
-		opacity: 0.7;
 	}
 
 	/* Prevent body scroll when slider is open */
@@ -831,7 +819,7 @@
 				<button class="map-slider-close" aria-label="Close map slider" tabindex="0">×</button>
 			</div>
 			<div class="map-slider-content">
-				<h2 id="mapSliderTitle" class="map-slider-title">GET A HIGHBALL AT A BAR NEAR YOU</h2>
+				<h2 id="mapSliderTitle" class="map-slider-title">GET A HIGHBALL AT<br>A BAR NEAR YOU</h2>
 				<div class="map-slider-map-container">
 					<img src="./images/assets/map.jpg" alt="Map showing nearby bars" class="map-slider-map" />
 				</div>

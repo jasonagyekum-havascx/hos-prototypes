@@ -486,6 +486,11 @@ export function showMapSlider() {
 	mapSlider.classList.remove('open');
 	isMapSliderOpen = false;
 
+	// Notify parent window that map slider is visible (for z-index handling)
+	if (window.parent !== window) {
+		window.parent.postMessage({ type: 'mapSliderOpen' }, '*');
+	}
+
 	// Then after a brief moment, slide it up smoothly to fully open
 	setTimeout(() => {
 		if (mapSlider) {
@@ -493,6 +498,11 @@ export function showMapSlider() {
 			mapSlider.classList.add('open');
 			isMapSliderOpen = true;
 			document.body.classList.add('map-slider-open');
+
+			// Notify parent window that map slider is open (for z-index handling)
+			if (window.parent !== window) {
+				window.parent.postMessage({ type: 'mapSliderOpen' }, '*');
+			}
 
 			// Focus trap - focus on close button
 			if (mapSliderCloseBtn) {
@@ -513,6 +523,11 @@ export function openMapSlider() {
 	isMapSliderOpen = true;
 	document.body.classList.add('map-slider-open');
 
+	// Notify parent window that map slider is open (for z-index handling)
+	if (window.parent !== window) {
+		window.parent.postMessage({ type: 'mapSliderOpen' }, '*');
+	}
+
 	// Focus trap - focus on close button
 	if (mapSliderCloseBtn) {
 		mapSliderCloseBtn.focus();
@@ -527,5 +542,8 @@ export function closeMapSlider() {
 	mapSlider.classList.add('peek');
 	isMapSliderOpen = false;
 	document.body.classList.remove('map-slider-open');
+
+	// Don't send close message - keep buttons hidden since slider is still visible in peek state
+	// The buttons will remain hidden as long as the slider is visible
 }
 

@@ -85,16 +85,10 @@
 .landing-title {
   color: #FFF;
   text-align: center;
-  text-shadow: 0 4px 4px rgba(0, 0, 0, 0.25);
-  font-family: "futura-pt", sans-serif;
-  font-size: 44px;
-  font-style: normal;
-  font-weight: 700;
-  line-height: normal;
-  letter-spacing: 0.88px;
-  text-transform: uppercase;
+  width: 350px;
   transform: translateY(20px);
   animation: fadeInUp 0.8s ease forwards 0.4s;
+  margin-top: 20px;
 }
 
 .landing-footer {

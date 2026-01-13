@@ -312,7 +312,7 @@ const setupSwirlEventHandlers = () => {
     });
   }
 
-  // Listen for messages from iframe (proto-toki.html) for hotspot panel visibility
+  // Listen for messages from iframe (proto-toki.html) for hotspot panel visibility and map slider
   window.addEventListener('message', (event) => {
     if (!shareBtnContainer) return;
     
@@ -320,6 +320,12 @@ const setupSwirlEventHandlers = () => {
       shareBtnContainer.style.opacity = '0';
       shareBtnContainer.style.pointerEvents = 'none';
     } else if (event.data?.type === 'hotspotPanelClose') {
+      shareBtnContainer.style.opacity = '';
+      shareBtnContainer.style.pointerEvents = '';
+    } else if (event.data?.type === 'mapSliderOpen') {
+      shareBtnContainer.style.opacity = '0';
+      shareBtnContainer.style.pointerEvents = 'none';
+    } else if (event.data?.type === 'mapSliderClose') {
       shareBtnContainer.style.opacity = '';
       shareBtnContainer.style.pointerEvents = '';
     }
