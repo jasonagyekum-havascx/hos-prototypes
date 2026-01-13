@@ -486,10 +486,7 @@ export function showMapSlider() {
 	mapSlider.classList.remove('open');
 	isMapSliderOpen = false;
 
-	// Notify parent window that map slider is visible (for z-index handling)
-	if (window.parent !== window) {
-		window.parent.postMessage({ type: 'mapSliderOpen' }, '*');
-	}
+	// Don't hide buttons in peek state - they should be visible above the 50px peek
 
 	// Then after a brief moment, slide it up smoothly to fully open
 	setTimeout(() => {
@@ -543,7 +540,9 @@ export function closeMapSlider() {
 	isMapSliderOpen = false;
 	document.body.classList.remove('map-slider-open');
 
-	// Don't send close message - keep buttons hidden since slider is still visible in peek state
-	// The buttons will remain hidden as long as the slider is visible
+	// Notify parent window that map slider is closed to peek state (show buttons again)
+	if (window.parent !== window) {
+		window.parent.postMessage({ type: 'mapSliderClose' }, '*');
+	}
 }
 

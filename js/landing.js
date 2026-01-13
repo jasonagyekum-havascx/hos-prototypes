@@ -1,4 +1,5 @@
 import { state } from './common.js';
+import { playAudio } from './audio.js';
 
 export const initLandingScreen = async () => {
   const landingScreen = document.getElementById('landingScreen');
@@ -24,6 +25,9 @@ export const initLandingScreen = async () => {
     btn.classList.add('destination-btn--active');
 
     state.selectedDestination = destination;
+
+    // Start background audio when user interacts with CTA
+    playAudio();
 
     // Reset chat state before navigating
     state.chatHistory = [];

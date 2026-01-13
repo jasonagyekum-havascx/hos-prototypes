@@ -1,6 +1,7 @@
 import { state, isWebXRSupported, isARSupported, isIOS, isAndroid } from './common.js';
 import { navigateToRepeatability } from './chat.js';
 import { handleOpenRecipeModal } from './share.js';
+import { initAudio, toggleMute, isMuted, playAudio } from './audio.js';
 
 // ==================== 
 // SWIRL DETECTION SYSTEM
@@ -253,6 +254,47 @@ const resetSwirlState = () => {
 
 
 const setupSwirlEventHandlers = () => {
+  // Initialize audio and continue playing if not muted
+  initAudio();
+  if (!isMuted()) {
+    playAudio();
+  }
+
+  // Initialize mute button
+  const muteBtn = document.querySelector('.header-mute');
+  if (muteBtn) {
+    const muteIcon = muteBtn.querySelector('.mute-icon');
+    const swirlScreen = document.getElementById('swirlScreen');
+    
+    // Set initial icon state
+    updateSwirlMuteIcon(muteIcon, isMuted(), swirlScreen);
+    
+    // Handle mute button click
+    muteBtn.addEventListener('click', () => {
+      const muted = toggleMute();
+      updateSwirlMuteIcon(muteIcon, muted, swirlScreen);
+    });
+    
+    // Handle keyboard navigation
+    muteBtn.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        const muted = toggleMute();
+        updateSwirlMuteIcon(muteIcon, muted, swirlScreen);
+      }
+    });
+    
+    // Watch for experience-active class changes to update icon color
+    if (swirlScreen) {
+      const observer = new MutationObserver(() => {
+        updateSwirlMuteIcon(muteIcon, isMuted(), swirlScreen);
+      });
+      observer.observe(swirlScreen, {
+        attributes: true,
+        attributeFilter: ['class']
+      });
+    }
+  }
 
   // Tap to continue on swirl screen
   if (swirlContent) {
@@ -330,6 +372,21 @@ const setupSwirlEventHandlers = () => {
       shareBtnContainer.style.pointerEvents = '';
     }
   });
+};
+
+// Update mute icon based on mute state and experience state (swirl page)
+const updateSwirlMuteIcon = (iconElement, muted, swirlScreen) => {
+  if (!iconElement) return;
+  
+  // Determine icon color based on experience state
+  const isExperienceActive = swirlScreen && swirlScreen.classList.contains('experience-active');
+  const iconPath = isExperienceActive 
+    ? './images/assets/no-sound-white.png'
+    : './images/assets/no-sound-black.png';
+  
+  iconElement.src = iconPath;
+  // Optionally add visual indicator for muted state
+  iconElement.style.opacity = muted ? '0.5' : '1';
 };
 
 

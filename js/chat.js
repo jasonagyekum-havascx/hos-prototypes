@@ -1,4 +1,5 @@
 import { state, wait } from './common.js';
+import { initAudio, toggleMute, isMuted, playAudio } from './audio.js';
 
 // Chat conversation flow
 const chatFlow = {
@@ -782,6 +783,36 @@ const initializeChatElements = (chatScreen) => {
   drinkName = document.getElementById('drinkName');
   drinkDescription = document.getElementById('drinkDescription');
 
+  // Initialize audio and continue playing if not muted
+  initAudio();
+  if (!isMuted()) {
+    playAudio();
+  }
+
+  // Initialize mute button
+  const muteBtn = document.querySelector('.header-mute');
+  if (muteBtn) {
+    const muteIcon = muteBtn.querySelector('.mute-icon');
+    
+    // Set initial icon state
+    updateMuteIcon(muteIcon, isMuted());
+    
+    // Handle mute button click
+    muteBtn.addEventListener('click', () => {
+      const muted = toggleMute();
+      updateMuteIcon(muteIcon, muted);
+    });
+    
+    // Handle keyboard navigation
+    muteBtn.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        const muted = toggleMute();
+        updateMuteIcon(muteIcon, muted);
+      }
+    });
+  }
+
   // Chat input events
   if (sendBtn) {
     sendBtn.addEventListener('click', handleSendMessage);
@@ -819,6 +850,15 @@ const initializeChatElements = (chatScreen) => {
   } catch (e) {
     console.warn('Could not load state from localStorage:', e);
   }
+};
+
+// Update mute icon based on mute state (chat page always uses white icon)
+const updateMuteIcon = (iconElement, muted) => {
+  if (!iconElement) return;
+  // Chat page always uses white icon
+  iconElement.src = './images/assets/no-sound-white.png';
+  // Optionally add visual indicator for muted state (opacity or different icon)
+  iconElement.style.opacity = muted ? '0.5' : '1';
 };
 
 

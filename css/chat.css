@@ -68,6 +68,36 @@
   text-align: center;
 }
 
+.header-mute {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(255, 255, 255, 0.6);
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: var(--transition-smooth);
+  margin-right: 12px;
+  padding: 0;
+}
+
+.header-mute:hover {
+  border-color: var(--color-gold);
+}
+
+.header-mute:focus-visible {
+  outline: 2px solid var(--color-gold);
+  outline-offset: 2px;
+}
+
+.header-mute .mute-icon {
+  width: 10px;
+  height: 10px;
+  object-fit: contain;
+}
+
 .header-profile {
   width: 14px;
   height: 14px;

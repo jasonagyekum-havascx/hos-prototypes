@@ -94,11 +94,12 @@
 .landing-footer {
   position: relative;
   z-index: 1;
+  bottom: 100px;
 }
 
 .landing-footer-bottom {
   position: absolute;
-  bottom: 0;
+  bottom: 60px;
   left: 0;
   right: 0;
   text-align: center;
@@ -106,15 +107,30 @@
 }
 
 .landing-footer-bottom-text {
-  font-size: 14px;
-  color: var(--color-text-light);
-  opacity: 0.9;
+  color: #FFF;
+  text-align: center;
+  font-family: "Futura PT";
+  font-size: 18px;
+  font-style: normal;
+  font-weight: 400;
+  line-height: normal;
+  letter-spacing: 0.9px;
+  text-transform: capitalize;
+  opacity: 0.5;
+  font-style: italic;
+  margin-top: 10px;
 }
 
 .landing-footer-bottom-location {
-  font-size: 14px;
+  font-size: 15px;
   color: var(--color-text-light);
   opacity: 0.9;
+  text-decoration: underline;
+  font-style: normal;
+  font-weight: 500;
+  line-height: normal;
+  letter-spacing: 0.75px;
+  text-transform: uppercase;
 }
 
 .location-row {
