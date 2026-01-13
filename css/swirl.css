@@ -28,6 +28,12 @@
   transition: filter 0.4s ease;
 }
 
+.toki-logo {
+  width: 230px;
+  position: relative;
+  top: -100px;
+}
+
 /* White logo when 3D experience is active */
 .swirl-screen.experience-active .swirl-header .header-logo-img {
   filter: brightness(0) invert(1); /* White logo */
@@ -89,16 +95,17 @@
 }
 
 .swirl-instruction {
-  font-family: var(--font-sans);
-  font-size: 14px;
+  font-size: 16px;
   font-weight: 500;
-  letter-spacing: 3px;
+  letter-spacing: 0.8px;
   text-transform: uppercase;
   color: #000000;
   margin-bottom: 16px;
   flex-shrink: 0;
   opacity: 0;
   animation: fadeInUp 0.8s ease forwards 0.3s;
+  position: relative;
+  top: 60px;
 }
 
 .swirl-drink-image {
