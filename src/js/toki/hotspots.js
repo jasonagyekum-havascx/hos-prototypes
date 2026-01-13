@@ -9,6 +9,10 @@ let scene, camera, renderer, raycaster, mouse;
 let hotspotLabel, hotspotOverlay;
 let onPanelCloseCallback = null;
 let ensoSketch = null;
+// Track which hotspots have been opened
+const openedHotspots = new Set();
+// All hotspot panel IDs
+const ALL_HOTSPOT_PANELS = ['panelVideo', 'panelIce', 'panelHowToMake', 'panelEnso'];
 
 // Texture loader
 const textureLoader = new THREE.TextureLoader();
@@ -326,6 +330,11 @@ function openPanel(panelId) {
 
 	const panel = document.getElementById(panelId);
 	if (panel) {
+		// Track that this hotspot has been opened
+		if (ALL_HOTSPOT_PANELS.includes(panelId)) {
+			openedHotspots.add(panelId);
+		}
+
 		activePanel = panel;
 		panel.classList.add('active');
 		hotspotOverlay.classList.add('active');
@@ -390,6 +399,13 @@ export function closePanel() {
 	if (wasOpen && onPanelCloseCallback) {
 		onPanelCloseCallback();
 	}
+
+	// Check if all hotspots are opened - if so, show map slider 2 seconds after this panel closes
+	if (wasOpen && areAllHotspotsOpened()) {
+		setTimeout(() => {
+			showMapSlider();
+		}, 2000); // 2 seconds delay
+	}
 }
 
 // Export for use in controls.js
@@ -404,5 +420,112 @@ export function getHotspotOverlay() {
 // Get all hotspot groups for external access (e.g., for AR grouping)
 export function getHotspots() {
 	return hotspots;
+}
+
+// Check if all hotspots have been opened
+export function areAllHotspotsOpened() {
+	return ALL_HOTSPOT_PANELS.every(panelId => openedHotspots.has(panelId));
+}
+
+// Map slider state
+let mapSlider = null;
+let mapSliderCloseBtn = null;
+let isMapSliderOpen = false;
+
+// Initialize map slider
+function initMapSlider() {
+	mapSlider = document.getElementById('mapSlider');
+	if (!mapSlider) return;
+
+	mapSliderCloseBtn = mapSlider.querySelector('.map-slider-close');
+	
+	// Close button handler
+	if (mapSliderCloseBtn) {
+		const handleClose = () => {
+			closeMapSlider();
+		};
+		mapSliderCloseBtn.addEventListener('click', handleClose);
+		mapSliderCloseBtn.addEventListener('keydown', (e) => {
+			if (e.key === 'Enter' || e.key === ' ') {
+				e.preventDefault();
+				handleClose();
+			}
+		});
+	}
+
+	// Click on peek area to open - clicking anywhere on the visible peek portion opens it
+	const handlePeekClick = (e) => {
+		if (mapSlider.classList.contains('peek') && !isMapSliderOpen) {
+			// Don't open if clicking the close button (though it's hidden in peek)
+			if (e.target === mapSliderCloseBtn || e.target.closest('.map-slider-close')) {
+				return;
+			}
+			// Open if clicking anywhere on the visible peek area
+			openMapSlider();
+		}
+	};
+	mapSlider.addEventListener('click', handlePeekClick);
+
+	// ESC key to close
+	document.addEventListener('keydown', (e) => {
+		if (e.key === 'Escape' && isMapSliderOpen && mapSlider && mapSlider.classList.contains('open')) {
+			closeMapSlider();
+		}
+	});
+}
+
+// Show map slider (make it visible in peek state, then slide up smoothly)
+export function showMapSlider() {
+	if (!mapSlider) {
+		initMapSlider();
+	}
+	if (!mapSlider) return;
+
+	// First make it visible in peek state
+	mapSlider.classList.add('visible', 'peek');
+	mapSlider.classList.remove('open');
+	isMapSliderOpen = false;
+
+	// Then after a brief moment, slide it up smoothly to fully open
+	setTimeout(() => {
+		if (mapSlider) {
+			mapSlider.classList.remove('peek');
+			mapSlider.classList.add('open');
+			isMapSliderOpen = true;
+			document.body.classList.add('map-slider-open');
+
+			// Focus trap - focus on close button
+			if (mapSliderCloseBtn) {
+				setTimeout(() => {
+					mapSliderCloseBtn.focus();
+				}, 100);
+			}
+		}
+	}, 100); // Small delay to ensure peek state is rendered first
+}
+
+// Open map slider (fully expand)
+export function openMapSlider() {
+	if (!mapSlider) return;
+	
+	mapSlider.classList.remove('peek');
+	mapSlider.classList.add('open');
+	isMapSliderOpen = true;
+	document.body.classList.add('map-slider-open');
+
+	// Focus trap - focus on close button
+	if (mapSliderCloseBtn) {
+		mapSliderCloseBtn.focus();
+	}
+}
+
+// Close map slider (back to peek state)
+export function closeMapSlider() {
+	if (!mapSlider) return;
+	
+	mapSlider.classList.remove('open');
+	mapSlider.classList.add('peek');
+	isMapSliderOpen = false;
+	document.body.classList.remove('map-slider-open');
 }
 

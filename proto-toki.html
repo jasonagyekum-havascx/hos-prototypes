@@ -520,6 +520,198 @@
 		display: none !important;
 	}
 
+	/* Map Slider Styles */
+	.map-slider {
+		position: fixed;
+		bottom: 0;
+		left: 0;
+		right: 0;
+		width: 100%;
+		background: #3D2E1F;
+		border-radius: 20px 20px 0 0;
+		z-index: 250;
+		max-height: 90vh;
+		transform: translateY(calc(100% - 50px)); /* Start in peek state */
+		transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+		box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
+		display: none; /* Hidden until all hotspots are opened */
+	}
+
+	.map-slider.visible {
+		display: block;
+	}
+
+	.map-slider.open {
+		transform: translateY(0); /* Fully open */
+		transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+	}
+
+	.map-slider.peek {
+		transform: translateY(calc(100% - 50px)); /* Peek state - 50px visible */
+		cursor: pointer;
+		transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+	}
+
+	.map-slider.peek .map-slider-content {
+		pointer-events: none; /* Disable interactions in peek state */
+	}
+
+	.map-slider.peek .map-slider-header {
+		pointer-events: auto; /* But allow header interactions */
+	}
+
+	.map-slider.open .map-slider-content {
+		pointer-events: auto; /* Re-enable interactions when open */
+	}
+
+	.map-slider-header {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		position: relative;
+		padding: 12px 20px;
+		border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+	}
+
+	.map-slider-handle {
+		width: 40px;
+		height: 4px;
+		background: rgba(255, 255, 255, 0.3);
+		border-radius: 2px;
+		margin: 0 auto;
+		flex-shrink: 0;
+	}
+
+	.map-slider-close {
+		background: transparent;
+		border: none;
+		color: #ffffff;
+		font-size: 24px;
+		width: 32px;
+		height: 32px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		cursor: pointer;
+		border-radius: 50%;
+		transition: all 0.2s ease;
+		flex-shrink: 0;
+		padding: 0;
+		position: absolute;
+		right: 20px;
+		opacity: 0;
+		pointer-events: none;
+	}
+
+	.map-slider.open .map-slider-close {
+		opacity: 1;
+		pointer-events: auto;
+	}
+
+	.map-slider-close:hover {
+		background: rgba(255, 255, 255, 0.1);
+		transform: scale(1.1);
+	}
+
+	.map-slider-close:focus-visible {
+		outline: 2px solid #ffffff;
+		outline-offset: 2px;
+	}
+
+	.map-slider-content {
+		padding: 20px;
+		overflow-y: auto;
+		max-height: calc(90vh - 60px);
+	}
+
+	.map-slider-title {
+		color: #ffffff;
+		font-family: "futura-pt", sans-serif;
+		font-size: 18px;
+		font-weight: 500;
+		letter-spacing: 1px;
+		text-transform: uppercase;
+		margin: 0 0 20px 0;
+		text-align: left;
+	}
+
+	.map-slider-map-container {
+		width: 100%;
+		margin-bottom: 20px;
+		border-radius: 8px;
+		overflow: hidden;
+	}
+
+	.map-slider-map {
+		width: 100%;
+		height: auto;
+		display: block;
+	}
+
+	.map-slider-buttons {
+		display: flex;
+		flex-direction: column;
+		gap: 12px;
+		margin-bottom: 20px;
+	}
+
+	.map-slider-btn {
+		width: 100%;
+		padding: 16px 24px;
+		background: #5A4A3A;
+		border: none;
+		border-radius: 8px;
+		color: #ffffff;
+		font-family: "futura-pt", sans-serif;
+		font-size: 14px;
+		font-weight: 500;
+		letter-spacing: 1px;
+		text-transform: uppercase;
+		cursor: pointer;
+		transition: all 0.2s ease;
+	}
+
+	.map-slider-btn:hover {
+		background: #6B5A4A;
+		transform: translateY(-2px);
+	}
+
+	.map-slider-btn:active {
+		transform: translateY(0);
+	}
+
+	.map-slider-btn:focus-visible {
+		outline: 2px solid #ffffff;
+		outline-offset: 2px;
+	}
+
+	.map-slider-footer {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 8px;
+		padding-top: 12px;
+		border-top: 1px solid rgba(255, 255, 255, 0.1);
+	}
+
+	.map-slider-info-icon {
+		color: #ffffff;
+		font-size: 16px;
+		opacity: 0.7;
+	}
+
+	.map-slider-learn-more {
+		color: #ffffff;
+		font-family: "futura-pt", sans-serif;
+		font-size: 12px;
+		opacity: 0.7;
+	}
+
+	/* Prevent body scroll when slider is open */
+	body.map-slider-open {
+		overflow: hidden;
+	}
+
 	</style>
 	</head>
 	<body>
@@ -631,6 +823,28 @@
 
 		<!-- Hotspot Label Tooltip -->
 		<div id="hotspotLabel" class="hotspot-label"></div>
+
+		<!-- Map Slider Drawer -->
+		<div id="mapSlider" class="map-slider" role="dialog" aria-labelledby="mapSliderTitle" aria-modal="true">
+			<div class="map-slider-header">
+				<div class="map-slider-handle"></div>
+				<button class="map-slider-close" aria-label="Close map slider" tabindex="0">×</button>
+			</div>
+			<div class="map-slider-content">
+				<h2 id="mapSliderTitle" class="map-slider-title">GET A HIGHBALL AT A BAR NEAR YOU</h2>
+				<div class="map-slider-map-container">
+					<img src="./images/assets/map.jpg" alt="Map showing nearby bars" class="map-slider-map" />
+				</div>
+				<div class="map-slider-buttons">
+					<button class="map-slider-btn map-slider-btn-google" tabindex="0">OPEN IN GOOGLE MAPS</button>
+					<button class="map-slider-btn map-slider-btn-apple" tabindex="0">OPEN IN APPLE MAPS</button>
+				</div>
+				<div class="map-slider-footer">
+					<span class="map-slider-info-icon">ℹ</span>
+					<span class="map-slider-learn-more">Learn more</span>
+				</div>
+			</div>
+		</div>
 
 		<script type="importmap">
 			{
