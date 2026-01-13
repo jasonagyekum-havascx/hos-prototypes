@@ -278,6 +278,36 @@
 			border: 0.852px solid #CD2A1E;
 		}
 
+		.hotspot-panel .bento-top-split .enso-left {
+			width: 50%;
+			border-right: 0.852px solid #CD2A1E;
+		}
+		.hotspot-panel .bento-top-split .enso-left h3 {
+			color: #000;
+			font-size: 19.078px;
+			font-style: normal;
+			font-weight: 450;
+			line-height: normal;
+			letter-spacing: 1.717px;
+			text-transform: uppercase;
+			margin: 35px 0px;
+			text-align: center;
+		}
+		.hotspot-panel .bento-top-split .enso-right {
+			width: 50%;
+		}
+		.hotspot-panel .bento-top-split .enso-right h4 {
+			color: #CD2A1E;
+			text-align: center;
+			font-family: "futura-pt", sans-serif;
+			font-size: 12px;
+			font-style: normal;
+			font-weight: 400;
+			line-height: normal;
+			letter-spacing: 0.36px;
+			text-transform: uppercase;
+		}
+
 		.hotspot-panel .bento-top-split .left {
 			border-right: 0.852px solid #CD2A1E;
 			width: 60%;
@@ -291,6 +321,7 @@
 			letter-spacing: 1.717px;
 			text-transform: uppercase;
 			margin: 35px 0px;
+			text-align: center;
 		}
 		.hotspot-panel .bento-top-split .right {
 			width: 40%;
@@ -322,6 +353,34 @@
 			font-weight: 400;
 			line-height: 12.492px; /* 137.5% */
 			letter-spacing: 0.182px;
+		}
+
+		.hotspot-panel .bento-bottom .enso-left {
+			width: 40%;
+			border-right: 0.852px solid #CD2A1E;
+		}
+		.hotspot-panel .bento-bottom .enso-left h4 {
+			color: #CD2A1E;
+			font-family: "futura-pt", sans-serif;
+			font-size: 12px;
+			font-style: normal;
+			font-weight: 400;
+			line-height: normal;
+			letter-spacing: 0.36px;
+			text-transform: uppercase;
+			margin: 40px 20px;
+		}
+		.hotspot-panel .bento-bottom .enso-right {
+			width: 60%;
+		}
+		.hotspot-panel .bento-bottom .enso-right p {
+			color: #231815;
+			font-size: 9.085px;
+			font-style: normal;
+			font-weight: 400;
+			line-height: 12.492px; /* 137.5% */
+			letter-spacing: 0.182px;
+			margin: 20px 10px;
 		}
 
 		#panelVideo h3 {
@@ -378,6 +437,22 @@
 		.hotspot-label.visible {
 			opacity: 1;
 			transform: translateY(0);
+		}
+
+		#ensoCanvasContainer {
+			margin: 0 !important;
+		}
+
+		#ensoCanvasContainer canvas {
+			border: 0.852px solid #CD2A1E;
+		}
+
+		#ensoProgress {
+			position: absolute;
+			bottom: 150px;
+			width: 250px;
+			left: 70px;
+			margin: 0 auto;
 		}
 
 		/* lil-gui styling */
@@ -464,20 +539,6 @@
 			</div>
 		</div>
 
-		<div id="panelGlass" class="hotspot-panel" role="dialog" aria-labelledby="panelGlassTitle" aria-modal="true">
-			<div class="hotspot-panel-header">
-				<button class="hotspot-panel-close" aria-label="Close panel" tabindex="0">×</button>
-			</div>
-			<p>
-				Toki is a whisky blended for crafting highballs. 
-				<br><br>
-The House of Suntory crafted Toki using a bolder grain whisky from the Chita Distillery, with more flavor than is typical in blended whiskies. 
-				<br><br>
-				The Chita whisky’s chocolatey aromas and creamy profile complement citrus notes from Hakushu Malt and a long finish from Yamazaki Spanish Oak. A perfect blend of depth and lightness for a satisfying highball.
-				<br><br>
-			</p>
-		</div>
-
 		<div id="panelVideo" class="hotspot-panel" role="dialog" aria-labelledby="panelVideoTitle" aria-modal="true">
 			<div class="hotspot-panel-header">
 				<button class="hotspot-panel-close" aria-label="Close panel" tabindex="0">×</button>
@@ -495,7 +556,7 @@ The House of Suntory crafted Toki using a bolder grain whisky from the Chita Dis
 				Your browser does not support the video tag.
 			</video>
 			<div class="bento-bottom">
-				<div class="bento-bottom-left">
+				<div class="bento-bottom-left" style="background: rgba(242, 238, 230, 1);">
 					<img src="./images/assets/suntory-box-logo.png" alt="Suntory Box Logo" />
 				</div>
 				<div class="bento-bottom-right">
@@ -513,17 +574,32 @@ The House of Suntory crafted Toki using a bolder grain whisky from the Chita Dis
 			<div class="hotspot-panel-header">
 				<button class="hotspot-panel-close" aria-label="Close panel" tabindex="0">×</button>
 			</div>
-			<h2 id="panelEnsoTitle">Enso</h2>
-			<p class="highlight">The Art of the Strokes</p>
-			<p>
-				Trace the enso circle, a symbol of enlightenment and the beauty of imperfection in Japanese culture.
-			</p>
+			<div class="bento-top-split">
+				<div class="enso-left">
+					<h3>TOKI</h3>
+				</div>
+				<div class="enso-right">
+					<h4>The Art of Calligraphy</h4>
+				</div>
+			</div>
 			<div id="ensoCanvasContainer" style="width: 100%; height: 300px; margin: 16px 0; background: #F5F0E8; border-radius: 4px;"></div>
 			<div id="ensoProgress" style="margin-top: 12px;">
 				<div style="width: 100%; height: 4px; background: rgba(74, 63, 53, 0.2); border-radius: 2px; overflow: hidden; margin-bottom: 8px;">
-					<div id="ensoProgressFill" style="height: 100%; background: #8B7355; border-radius: 2px; width: 0%; transition: width 0.3s ease;"></div>
+					<div id="ensoProgressFill" style="height: 100%; background: #CD2A1E; border-radius: 2px; width: 0%; transition: width 0.3s ease;"></div>
 				</div>
-				<div id="ensoProgressText" style="font-size: 11px; text-align: center; color: #4A3F35; text-transform: uppercase; letter-spacing: 1px;">Trace the circle</div>
+				<div id="ensoProgressText" style="font-size: 11px; text-align: center; color: #CD2A1E; text-transform: uppercase; letter-spacing: 1px;">Trace the path</div>
+			</div>
+			<div class="bento-bottom">
+				<div class="enso-left">
+					<h4>WRITE THE KANJI</h4>
+				</div>
+				<div class="enso-right">
+					<p>
+						Follow the stroke order to write the character. 
+						Toki means 'time' in Japanese, a reference to 
+						the way Toki balances tradition and innovation.
+					</p>
+				</div>
 			</div>
 		</div>
 
