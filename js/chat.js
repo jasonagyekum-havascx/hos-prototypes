@@ -64,13 +64,37 @@ let chatMessages, chatInput, sendBtn, bartenderContainer, bartenderImages, chatI
 
 // Drink data
 const drinksData = {
+  'toki-sour': {
+    name: 'Toki Sour',
+    description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.'
+  },
+  'haku-yuza': {
+    name: 'Haku Yuza',
+    description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.'
+  },
+  'toki-black': {
+    name: 'Toki Black',
+    description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.'
+  },
+  'roku-gin': {
+    name: 'Roku Gin',
+    description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.'
+  },
   toki: {
     name: 'Toki Highball',
     description: 'A whisky blended for crafting highballs. The House of Suntory crafted Toki using a bolder grain whisky from the Chita Distillery, with more flavor than is typical in blended whiskies.'
   },
-  haku: {
-    name: 'Haku Vodka',
-    description: 'A premium Japanese vodka crafted with precision. Haku Vodka is made from 100% Japanese white rice and filtered through bamboo charcoal for a smooth, clean finish.'
+  'haku-espresso': {
+    name: 'Haku Espresso',
+    description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.'
+  },
+  'roku-gin-2': {
+    name: 'Roku Gin',
+    description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.'
+  },
+  'roku-negroni': {
+    name: 'Roku Negroni',
+    description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.'
   }
 };
 
@@ -188,8 +212,8 @@ let tapState = {
   tapTimeout: null
 };
 
-const TOTAL_DRINKS = 5;
-const CENTER_INDEX = 2; // Toki is in the middle (index 2 of 5)
+const TOTAL_DRINKS = 8;
+const CENTER_INDEX = 4; // Toki Highball is in the middle (index 4 of 8)
 
 const getAvailableDrinks = () => {
   const bottles = drinkCounter.querySelectorAll('.drink-bottle:not([style*="display: none"])');
@@ -215,8 +239,8 @@ const updateCarouselPositions = (centerIndex) => {
     const bottleIndex = parseInt(bottle.getAttribute('data-index'));
     const position = bottleIndex - centerIndex;
     
-    // Only show drinks within visible range (positions -2 to +2)
-    if (Math.abs(position) <= 2) {
+    // Only show drinks within visible range (positions -3 to +3 for 8 drinks)
+    if (Math.abs(position) <= 3) {
       // Show the bottle if it was hidden
       const currentDisplay = window.getComputedStyle(bottle).display;
       if (currentDisplay === 'none' || bottle.style.display === 'none') {
@@ -233,9 +257,13 @@ const updateCarouselPositions = (centerIndex) => {
         bottle.style.transform = 'scale(0.8)';
         bottle.style.opacity = '0.7';
         bottle.classList.remove('selected');
+      } else if (Math.abs(position) === 2) {
+        bottle.style.transform = 'scale(0.65)';
+        bottle.style.opacity = '0.55';
+        bottle.classList.remove('selected');
       } else {
-        bottle.style.transform = 'scale(0.6)';
-        bottle.style.opacity = '0.5';
+        bottle.style.transform = 'scale(0.5)';
+        bottle.style.opacity = '0.4';
         bottle.classList.remove('selected');
       }
     } else {

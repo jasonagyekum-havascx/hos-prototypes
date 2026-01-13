@@ -327,9 +327,9 @@ line-height: normal;
   justify-content: center;
   align-items: flex-end;
   width: 100%;
-  overflow: hidden;
+  overflow: visible;
   position: relative;
-  height: 320px;
+  height: 350px;
 }
 
 .drink-bottles-carousel {
@@ -380,6 +380,9 @@ line-height: normal;
   opacity: 1;
   flex-shrink: 0;
   transform-origin: center bottom;
+  display: flex;
+  align-items: flex-end;
+  overflow: visible;
 }
 
 /* Initial fade in only on first load */
@@ -406,6 +409,18 @@ line-height: normal;
 
 .drink-counter.visible .drink-bottle:nth-child(5) {
   animation-delay: 0.5s;
+}
+
+.drink-counter.visible .drink-bottle:nth-child(6) {
+  animation-delay: 0.6s;
+}
+
+.drink-counter.visible .drink-bottle:nth-child(7) {
+  animation-delay: 0.7s;
+}
+
+.drink-counter.visible .drink-bottle:nth-child(8) {
+  animation-delay: 0.8s;
 }
 
 .drink-bottle .roku {
@@ -438,21 +453,100 @@ line-height: normal;
 
 /* Scaling based on position - center drink is largest */
 /* Styles are set inline via JS, these are fallbacks */
-.drink-bottle[data-position="0"],
-.drink-bottle[data-position="4"] {
-  transform: scale(0.6);
-  opacity: 0.5;
+.drink-bottle[data-position="-3"],
+.drink-bottle[data-position="3"] {
+  transform: scale(0.5);
+  opacity: 0.4;
 }
 
-.drink-bottle[data-position="1"],
-.drink-bottle[data-position="3"] {
+.drink-bottle[data-position="-2"],
+.drink-bottle[data-position="2"] {
+  transform: scale(0.65);
+  opacity: 0.55;
+}
+
+.drink-bottle[data-position="-1"],
+.drink-bottle[data-position="1"] {
   transform: scale(0.8);
   opacity: 0.7;
 }
 
-.drink-bottle[data-position="2"] {
+.drink-bottle[data-position="0"] {
   transform: scale(1.15);
   opacity: 1;
+}
+
+/* Custom positioning classes for individual drink adjustments */
+/* These classes are available for future positioning adjustments */
+.drink-bottle--toki-sour {
+  /* Position adjustments for Toki Sour */
+  position: relative;
+  top: -35px;
+  width: 146px;
+  height: 194px;
+  aspect-ratio: 73/97;
+}
+
+.drink-bottle--haku-yuza {
+  /* Position adjustments for Haku Yuza */
+  position: relative;
+  top: -23px;
+  width: 97px;
+  height: 204px;
+  aspect-ratio: 97/204;
+}
+
+.drink-bottle--toki-black {
+  /* Position adjustments for Toki Black */
+  position: relative;
+  top: -22px;
+  width: 93px;
+  height: 129px;
+  aspect-ratio: 31/43;
+}
+
+.drink-bottle--roku-gin {
+  /* Position adjustments for Roku Gin */
+  position: relative;
+  top: -15px;
+  width: 65px;
+  height: 212px;
+  aspect-ratio: 65/212;
+}
+
+.drink-bottle--toki-selected {
+  /* Position adjustments for Toki Highball (selected) */
+  position: relative;
+  width: 150px;
+  height: 303px;
+  top: 30px
+}
+
+.drink-bottle--haku-espresso {
+  /* Position adjustments for Haku Espresso */
+  position: relative;
+  top: -22px;
+  width: 99px;
+  height: 201px;
+  aspect-ratio: 33/67;
+}
+
+.drink-bottle--roku-gin-2 {
+  /* Position adjustments for Roku Gin (second) */
+  position: relative;
+  top: -22px;
+  width: 71px;
+  height: 212px;
+  aspect-ratio: 71/212;
+}
+
+.drink-bottle--roku-negroni {
+  /* Position adjustments for Roku Negroni */
+  position: relative;
+  left: -20px;
+  width: 183px;
+  height: 244px;
+  aspect-ratio: 3/4;
 }
 
 .drink-bottle.selected {
@@ -461,8 +555,10 @@ line-height: normal;
 
 .drink-bottle img {
   display: block;
-  height: 280px;
-  width: auto;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: bottom;
   filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.3));
   transition: filter 0.3s ease;
 }

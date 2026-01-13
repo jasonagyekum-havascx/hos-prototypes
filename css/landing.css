@@ -102,6 +102,27 @@
   z-index: 1;
 }
 
+.landing-footer-bottom {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  text-align: center;
+  z-index: 1;
+}
+
+.landing-footer-bottom-text {
+  font-size: 14px;
+  color: var(--color-text-light);
+  opacity: 0.9;
+}
+
+.landing-footer-bottom-location {
+  font-size: 14px;
+  color: var(--color-text-light);
+  opacity: 0.9;
+}
+
 .location-row {
   display: flex;
   align-items: center;
