@@ -261,10 +261,9 @@ background: rgba(35, 24, 21, 0.80);
 
 /* Counter title */
 .drink-counter-title {
-  font-family: var(--font-sans);
+  font-family: "futura-pt", sans-serif;
   color: #FFF;
 text-align: center;
-font-family: Futura;
 font-size: 15px;
 font-style: normal;
 font-weight: 500;
@@ -287,10 +286,9 @@ text-transform: uppercase;
 }
 
 .drink-name {
-  font-family: var(--font-serif);
+  font-family: "futura-pt", sans-serif;
   color: #FFF;
 text-align: center;
-font-family: "SUNTORY Sabon";
 font-size: 26px;
 font-style: normal;
 font-weight: 700;
@@ -300,10 +298,9 @@ text-transform: uppercase;
 }
 
 .drink-description {
-  font-family: var(--font-sans);
+  font-family: "futura-pt", sans-serif;
   color: #FFF;
 text-align: center;
-/* font-family: "Futura PT"; */
 font-size: 18px;
 font-style: normal;
 font-weight: 400;

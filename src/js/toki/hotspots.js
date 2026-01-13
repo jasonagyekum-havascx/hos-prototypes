@@ -68,27 +68,19 @@ export function initHotspots(sceneRef, cameraRef, rendererRef, raycasterRef, mou
 		'../images/assets/play-sign.png'
 	);
 
-	// Glass hotspot - plus button upper area
-	createHotspot(
-		new THREE.Vector3(1.1, 2.4, -0.8),
-		'Highball Glass',
-		'panelGlass',
-		'../images/assets/plus-sign.png'
-	);
-
 	// Ice hotspot - plus button middle (ice level)
 	createHotspot(
 		new THREE.Vector3(-1.0, 1.8, 0.9),
-		'The Perfect Ice',
+		'Ice Carving Game',
 		'panelIce',
 		'../images/assets/plus-sign.png'
 	);
 
-	// Whisky hotspot - plus button lower (liquid level)
+	// How to Make hotspot - plus button lower (liquid level)
 	createHotspot(
-		new THREE.Vector3(1.2, 1.2, 0.6),
-		'About Toki Whisky',
-		'panelWhisky',
+		new THREE.Vector3(1.2, 2.4, -0.8),
+		'How to Make',
+		'panelHowToMake',
 		'../images/assets/plus-sign.png'
 	);
 
@@ -97,8 +89,9 @@ export function initHotspots(sceneRef, cameraRef, rendererRef, raycasterRef, mou
 		new THREE.Vector3(-1.1, 2.8, 0.5),
 		'Trace the Enso',
 		'panelEnso',
-		'../images/enso.png'
+		'../images/assets/plus-sign.png'
 	);
+
 }
 
 // Update hotspots animation

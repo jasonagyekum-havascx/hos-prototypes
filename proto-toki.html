@@ -5,6 +5,8 @@
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 		<link type="text/css" rel="stylesheet" href="./examples/example.css">
+		<!-- Adobe Fonts - Futura PT -->
+		<link rel="stylesheet" href="https://use.typekit.net/rfm8mfq.css">
 		<style>
 			@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500&family=Cormorant+Garamond:wght@400;500&display=swap');
 
@@ -17,7 +19,9 @@
 			}
 
 			body {
-				font-family: 'Noto Sans JP', sans-serif;
+				font-family: "futura-pt", sans-serif;
+				font-weight: 400;
+				font-style: normal;
 				background: #0a0a0a url('./images/mr-background.jpg') center center / cover no-repeat;
 			}
 
@@ -153,10 +157,12 @@
 				left: 50%;
 				transform: translate(-50%, -50%) scale(0.9);
 				background: rgba(242, 238, 230, 0.9);
-				border-radius: 20px;
+				border-radius: 0px;
 				padding: 32px 40px;
 				color: #000000;
-				font-family: 'Noto Sans JP', sans-serif;
+				font-family: "futura-pt", sans-serif;
+				font-weight: 400;
+				font-style: normal;
 				backdrop-filter: blur(16px);
 				z-index: 200;
 				max-width: 420px;
@@ -230,7 +236,7 @@
 			.hotspot-panel video {
 				width: 100%;
 				border-radius: 0px;
-				margin-top: 16px;
+				border: 0.852px solid #CD2A1E;
 				background: #000;
 			}
 
@@ -259,9 +265,69 @@
 			color: rgba(255, 255, 255, 0.5);
 		}
 
+		.hotspot-panel .bento-top {
+			padding: 25px 35px;
+			border: 0.852px solid #CD2A1E;
+		}
+
+		.hotspot-panel .bento-top-split {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			padding: 0px 15px;
+			border: 0.852px solid #CD2A1E;
+		}
+
+		.hotspot-panel .bento-top-split .left {
+			border-right: 0.852px solid #CD2A1E;
+			width: 60%;
+		}
+		.hotspot-panel .bento-top-split .left h3 {
+			color: #000;
+			font-size: 19.078px;
+			font-style: normal;
+			font-weight: 450;
+			line-height: normal;
+			letter-spacing: 1.717px;
+			text-transform: uppercase;
+			margin: 35px 0px;
+		}
+		.hotspot-panel .bento-top-split .right {
+			width: 40%;
+		}
+		.hotspot-panel .bento-top-split .right p {
+			color: #231815;
+			font-size: 9.085px;
+			font-style: normal;
+			font-weight: 400;
+			line-height: 12.492px; /* 137.5% */
+			letter-spacing: 0.182px;
+			padding-left: 18px;
+		}
+
+		.hotspot-panel .bento-bottom {
+			display: flex;
+			justify-content: space-between;
+			align-items: center;
+			border: 0.852px solid #CD2A1E;
+			gap: 12px;
+		}
+		.hotspot-panel .bento-bottom-left {
+			border-right: 0.852px solid #CD2A1E;
+		}
+		.hotspot-panel .bento-bottom-right p {
+			color: #231815;
+			font-size: 9.085px;
+			font-style: normal;
+			font-weight: 400;
+			line-height: 12.492px; /* 137.5% */
+			letter-spacing: 0.182px;
+		}
+
 		#panelVideo h3 {
-			font-family: Futura, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+			font-family: "futura-pt", sans-serif;
 			font-weight: 500;
+			font-style: normal;
 			font-size: 15px;
 			leading-trim: none;
 			line-height: 100%;
@@ -296,9 +362,10 @@
 				border-radius: 8px;
 				padding: 8px 14px;
 				color: #7ec8e8;
-				font-family: 'Noto Sans JP', sans-serif;
+				font-family: "futura-pt", sans-serif;
 				font-size: 12px;
 				font-weight: 500;
+				font-style: normal;
 				pointer-events: none;
 				z-index: 120;
 				opacity: 0;
@@ -324,7 +391,7 @@
 			--string-color: #7ec8e8;
 			--font-size: 12px;
 			--input-font-size: 12px;
-			--font-family: 'Noto Sans JP', sans-serif;
+			--font-family: "futura-pt", sans-serif;
 			--padding: 8px;
 			--spacing: 6px;
 			--title-height: 32px;
@@ -361,77 +428,40 @@
 	</head>
 	<body>
 
-		<div id="info">
-			<a href="https://threejs.org/" target="_blank" rel="noopener" class="logo-link"></a>
-
-			<div class="title-wrapper">
-				<a href="https://threejs.org/" target="_blank" rel="noopener">three.js</a>
-				<span>Toki Japanese Highball</span>
-			</div>
-
-			<small>
-				Tap hotspots to learn more. Drag to orbit.
-			</small>
-		</div>
-
-		<div id="drinkControls" role="region" aria-label="Drink controls">
-			<h3>Highball Settings</h3>
-			<div class="control-row">
-				<label for="fizzSlider">Carbonation</label>
-				<div class="controls">
-					<input type="range" id="fizzSlider" class="slider-control" min="0" max="300" step="10" value="300" aria-label="Fizz intensity">
-					<span id="fizzValue">300%</span>
-				</div>
-			</div>
-			<div class="control-row">
-				<label id="sliceLabel">Orange Peel</label>
-				<div class="controls">
-					<button id="sliceToggle" aria-pressed="false" aria-describedby="sliceLabel">Hidden</button>
-				</div>
-			</div>
-		</div>
-
-	<!-- Keyboard Shortcuts Hint -->
-	<div id="keyboardHints">
-		<h4>⌨️ Keyboard Shortcuts</h4>
-		<div><kbd>G</kbd> Toggle Glass</div>
-		<div><kbd>H</kbd> Toggle Light Helpers</div>
-		<div><kbd>T</kbd> Translate Gizmo</div>
-		<div><kbd>R</kbd> Rotate Gizmo</div>
-		<div><kbd>S</kbd> Scale Gizmo</div>
-		<div><kbd>D</kbd> Detach Gizmo</div>
-	</div>
-
 	<!-- Hotspot Overlay -->
 		<div id="hotspotOverlay" class="hotspot-overlay" role="presentation"></div>
 
 		<!-- Hotspot Info Panels -->
-		<div id="panelWhisky" class="hotspot-panel" role="dialog" aria-labelledby="panelWhiskyTitle" aria-modal="true">
+		<div id="panelHowToMake" class="hotspot-panel" role="dialog" aria-labelledby="panelHowToMake" aria-modal="true">
 			<div class="hotspot-panel-header">
 				<button class="hotspot-panel-close" aria-label="Close panel" tabindex="0">×</button>
 			</div>
-			<p>
-				Toki is a whisky blended for crafting highballs. 
-				<br><br>
-The House of Suntory crafted Toki using a bolder grain whisky from the Chita Distillery, with more flavor than is typical in blended whiskies. 
-				<br><br>
-				The Chita whisky’s chocolatey aromas and creamy profile complement citrus notes from Hakushu Malt and a long finish from Yamazaki Spanish Oak. A perfect blend of depth and lightness for a satisfying highball.
-				<br><br>
-			</p>
+			<div class="bento-top-split">
+				<div class="left">
+					<h3>MAKE YOUR<br>OWN HIGHBALL</h3>
+				</div>
+				<div class="right">
+					<p>
+						Follow the steps to craft the perfect highball the Japanese way.
+					</p>
+				</div>
+			</div>
+			<img src="./images/assets/makeyourown.jpg" alt="Make Your Own Highball" width="100%" height="auto" />
 		</div>
 
 		<div id="panelIce" class="hotspot-panel" role="dialog" aria-labelledby="panelIceTitle" aria-modal="true">
 			<div class="hotspot-panel-header">
 				<button class="hotspot-panel-close" aria-label="Close panel" tabindex="0">×</button>
 			</div>
-			<p>
-				Toki is a whisky blended for crafting highballs. 
-				<br><br>
-The House of Suntory crafted Toki using a bolder grain whisky from the Chita Distillery, with more flavor than is typical in blended whiskies. 
-				<br><br>
-				The Chita whisky’s chocolatey aromas and creamy profile complement citrus notes from Hakushu Malt and a long finish from Yamazaki Spanish Oak. A perfect blend of depth and lightness for a satisfying highball.
-				<br><br>
-			</p>
+			<img src="./images/assets/icecarving.jpg" alt="About Toki" width="100%" height="auto" />
+			<div class="bento-bottom">
+				<div class="bento-bottom-left">
+					<h3>ICE<br>CARVING<br>GAME</h3>
+				</div>
+				<div class="bento-bottom-right">
+					<p>Try the Japanese art of ice carving for an effervescent Toki Highball. </p>
+				</div>
+			</div>
 		</div>
 
 		<div id="panelGlass" class="hotspot-panel" role="dialog" aria-labelledby="panelGlassTitle" aria-modal="true">
@@ -452,6 +482,9 @@ The House of Suntory crafted Toki using a bolder grain whisky from the Chita Dis
 			<div class="hotspot-panel-header">
 				<button class="hotspot-panel-close" aria-label="Close panel" tabindex="0">×</button>
 			</div>
+			<div class="bento-top">
+				<h3>MAKING A<br>TOKI HIGHBALL</h3>
+			</div>
 			<video 
 				id="perfectServeVideo"
 				src="./images/perfect-serve.mp4"
@@ -461,7 +494,19 @@ The House of Suntory crafted Toki using a bolder grain whisky from the Chita Dis
 			>
 				Your browser does not support the video tag.
 			</video>
-			<h3>TOKI HIGHBALL RECIPE</h3>
+			<div class="bento-bottom">
+				<div class="bento-bottom-left">
+					<img src="./images/assets/suntory-box-logo.png" alt="Suntory Box Logo" />
+				</div>
+				<div class="bento-bottom-right">
+					<p>
+						Toki presents a unique balance of subtle sweetness, citrusy freshness, 
+						and a hint of spice. Its delightful aromas of green apple, along with 
+						a nuanced pepper and ginger finish, make it the ideal 
+						whisky for a refreshing highball.
+					</p>
+				</div>
+			</div>
 		</div>
 
 		<div id="panelEnso" class="hotspot-panel hotspot-panel--enso" role="dialog" aria-labelledby="panelEnsoTitle" aria-modal="true">

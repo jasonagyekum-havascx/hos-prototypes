@@ -9,7 +9,7 @@
   --color-bubble-ai: rgba(45, 35, 28, 0.92);
   --color-bubble-user: #8B7355;
   --font-serif: 'Cormorant Garamond', Georgia, serif;
-  --font-sans: 'futura-pt', 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-sans: "futura-pt", sans-serif;
   --transition-smooth: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -20,13 +20,22 @@
   padding: 0;
 }
 
+/* Global Font Defaults */
+* {
+  font-family: "futura-pt", sans-serif;
+  font-weight: 400;
+  font-style: normal;
+}
+
 html, body {
   height: 100%;
   overflow: hidden;
 }
 
 body {
-  font-family: var(--font-sans);
+  font-family: "futura-pt", sans-serif;
+  font-weight: 400;
+  font-style: normal;
   background-color: var(--color-dark);
   color: var(--color-text-light);
   -webkit-font-smoothing: antialiased;
