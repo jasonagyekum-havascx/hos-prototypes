@@ -19,6 +19,10 @@ const swirlState = {
 let experienceOverlay, swirlContent, shareBtnContainer, shareBtn, mixAnotherBtn;
 let arBtn, iosArBtn, experienceIframe, arModelViewer;
 let arSupported = false;
+// Track modal and slider state
+let isModalOpen = false;
+let isSliderOpen = false;
+let isRecipeModalOpen = false;
 
 // Check if device supports motion
 const supportsDeviceMotion = () => {
@@ -354,22 +358,65 @@ const setupSwirlEventHandlers = () => {
     });
   }
 
+  // Helper function to show/hide AR buttons based on modal and slider state
+  const updateARButtonsVisibility = () => {
+    const shouldHide = isModalOpen || isSliderOpen || isRecipeModalOpen;
+    if (shouldHide) {
+      // Hide AR buttons when modal, slider, or recipe modal is open
+      if (arBtn) arBtn.style.display = 'none';
+      if (iosArBtn) iosArBtn.style.display = 'none';
+    } else {
+      // Show AR buttons when all modals and slider are closed (if they were previously shown)
+      if (arSupported && arBtn) {
+        arBtn.style.display = 'block';
+      }
+      if (isIOS() && iosArBtn) {
+        iosArBtn.style.display = 'block';
+      }
+    }
+  };
+
+  // Watch for recipe modal state changes
+  const recipeModal = document.getElementById('recipeModal');
+  if (recipeModal) {
+    const recipeModalObserver = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+          isRecipeModalOpen = recipeModal.classList.contains('active');
+          updateARButtonsVisibility();
+        }
+      });
+    });
+    recipeModalObserver.observe(recipeModal, {
+      attributes: true,
+      attributeFilter: ['class']
+    });
+  }
+
   // Listen for messages from iframe (proto-toki.html) for hotspot panel visibility and map slider
   window.addEventListener('message', (event) => {
     if (!shareBtnContainer) return;
     
     if (event.data?.type === 'hotspotPanelOpen') {
+      isModalOpen = true;
       shareBtnContainer.style.opacity = '0';
       shareBtnContainer.style.pointerEvents = 'none';
+      updateARButtonsVisibility();
     } else if (event.data?.type === 'hotspotPanelClose') {
+      isModalOpen = false;
       shareBtnContainer.style.opacity = '';
       shareBtnContainer.style.pointerEvents = '';
+      updateARButtonsVisibility();
     } else if (event.data?.type === 'mapSliderOpen') {
+      isSliderOpen = true;
       shareBtnContainer.style.opacity = '0';
       shareBtnContainer.style.pointerEvents = 'none';
+      updateARButtonsVisibility();
     } else if (event.data?.type === 'mapSliderClose') {
+      isSliderOpen = false;
       shareBtnContainer.style.opacity = '';
       shareBtnContainer.style.pointerEvents = '';
+      updateARButtonsVisibility();
     }
   });
 };

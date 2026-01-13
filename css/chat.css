@@ -145,7 +145,7 @@
 /* Bartender container - Positioned above counter */
 .bartender-container {
   position: absolute;
-  top: 9%;
+  top: 6.5%;
   left: 50%;
   transform: translateX(-50%);
   width: 317px;
@@ -191,7 +191,7 @@
   overflow-y: auto;
   overflow-x: hidden;
   padding: 20px;
-  /* padding-bottom: 100px; Extra padding at bottom for input area */
+  padding-bottom: 70px; /* Extra padding at bottom for input area */
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
@@ -294,13 +294,15 @@ background: rgba(35, 24, 21, 0.80);
 .drink-counter-title {
   font-family: "futura-pt", sans-serif;
   color: #FFF;
-text-align: center;
-font-size: 15px;
-font-style: normal;
-font-weight: 500;
-line-height: normal;
-letter-spacing: 0.75px;
-text-transform: uppercase;
+  text-align: center;
+  font-size: 15px;
+  font-style: normal;
+  font-weight: 600;
+  line-height: normal;
+  letter-spacing: 0.75px;
+  text-transform: uppercase;
+  position: relative;
+  top: 33px;
 }
 
 /* Drink info section */
@@ -370,7 +372,7 @@ line-height: normal;
   max-width: 500px;
   margin: 0 auto;
   position: relative;
-  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  /* No transition - instant updates during swipe */
 }
 
 .drink-counter.visible {
@@ -405,7 +407,6 @@ line-height: normal;
   border: none;
   padding: 0;
   cursor: pointer;
-  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease;
   position: relative;
   opacity: 1;
   flex-shrink: 0;
@@ -413,6 +414,8 @@ line-height: normal;
   display: flex;
   align-items: flex-end;
   overflow: visible;
+  /* No transition on transform/opacity - instant updates during swipe */
+  transition: none;
 }
 
 /* Initial fade in only on first load */
@@ -473,23 +476,7 @@ line-height: normal;
   }
 }
 
-.drink-bottle[data-position="-1"]:hover,
-.drink-bottle[data-position="1"]:hover {
-  transform: scale(0.7) translateY(-8px) !important;
-}
-
-.drink-bottle.selected:hover {
-  transform: scale(1.2) translateY(-8px) !important;
-}
-
-.drink-bottle[data-position="-1"]:active,
-.drink-bottle[data-position="1"]:active {
-  transform: scale(0.7) translateY(-4px) scale(0.98) !important;
-}
-
-.drink-bottle.selected:active {
-  transform: scale(1.2) translateY(-4px) scale(0.98) !important;
-}
+/* Hover/active states removed for mobile */
 
 /* Scaling based on position - center drink is largest */
 /* Styles are set inline via JS, these are fallbacks */
@@ -615,22 +602,16 @@ line-height: normal;
   object-fit: contain;
   object-position: bottom;
   filter: drop-shadow(0 8px 16px rgba(0, 0, 0, 0.3));
-  transition: filter 0.3s ease;
-}
-
-.drink-bottle:hover img {
-  filter: drop-shadow(0 12px 24px rgba(0, 0, 0, 0.4));
+  /* No transition needed for mobile */
 }
 
 .drink-bottle.selected img {
   filter: drop-shadow(0 16px 32px rgba(139, 115, 85, 0.6)) brightness(1.15);
-  transition: filter 0.3s ease;
 }
 
 .drink-bottle[data-position="-1"] img,
 .drink-bottle[data-position="1"] img {
   filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
-  transition: filter 0.3s ease;
 }
 
 /* Cocktail Cards - Hidden when drink counter is visible */
@@ -701,10 +682,12 @@ line-height: normal;
 
 /* Chat Input */
 .chat-input-container {
-  position: relative;
+  position: absolute;
+  width: 100%;
+  bottom: 0;
   z-index: 10;
   padding: 12px 20px 20px;
-  background: rgba(26, 21, 18, 1);
+  /* background: rgba(26, 21, 18, 1); */
   flex-shrink: 0;
   opacity: 1;
   transition: opacity 0.4s ease;

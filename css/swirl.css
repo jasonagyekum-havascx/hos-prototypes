@@ -31,7 +31,7 @@
 .toki-logo {
   width: 230px;
   position: relative;
-  top: -100px;
+  top: -50px;
 }
 
 /* White logo when 3D experience is active */
@@ -145,7 +145,7 @@
   opacity: 0;
   animation: fadeInUp 0.8s ease forwards 0.3s;
   position: relative;
-  top: 60px;
+  top: 20px;
 }
 
 .swirl-drink-image {
