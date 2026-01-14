@@ -180,9 +180,19 @@ function createEnsoSketch(onComplete = null) {
 		let circleProgress = 0;
 		let targetCircleRadius = 80;
 		let ensoImage;
+		let prevTouchX = 0;
+		let prevTouchY = 0;
 
 		p.preload = function() {
-			ensoImage = p.loadImage('../images/enso.png');
+			// Path relative to HTML document location (proto-toki.html at root)
+			ensoImage = p.loadImage('./images/enso.png', 
+				() => {
+					console.log('Enso image loaded successfully');
+				},
+				(error) => {
+					console.error('Error loading enso image:', error);
+				}
+			);
 		};
 
 		p.setup = function() {
@@ -192,6 +202,18 @@ function createEnsoSketch(onComplete = null) {
 			
 			canvas = p.createCanvas(containerWidth, containerHeight);
 			canvas.parent('ensoCanvasContainer');
+			
+			// Set CSS properties on canvas for iOS compatibility
+			if (canvas.elt) {
+				canvas.elt.style.touchAction = 'none';
+				canvas.elt.style.webkitTouchCallout = 'none';
+				canvas.elt.style.webkitUserSelect = 'none';
+				canvas.elt.style.userSelect = 'none';
+				canvas.elt.style.display = 'block';
+				canvas.elt.style.position = 'relative';
+				canvas.elt.style.zIndex = '1';
+			}
+			
 			p.stroke('#8B7355');
 			p.strokeWeight(p.random(6, 12));
 			p.noFill();
@@ -210,14 +232,17 @@ function createEnsoSketch(onComplete = null) {
 		};
 
 		p.draw = function() {
+			// Always redraw the target circle guide
 			drawTargetCircle();
 			
+			// Track mouse drawing (for desktop)
 			if (isDrawing) {
 				if (p.mouseIsPressed && p.mouseX >= 0 && p.mouseX <= p.width && p.mouseY >= 0 && p.mouseY <= p.height) {
 					strokePoints.push({x: p.mouseX, y: p.mouseY});
 				}
 			}
 
+			// Check completion periodically
 			if (p.frameCount % 10 === 0 && strokePoints.length > 50) {
 				checkCircleCompletion();
 			}
@@ -249,6 +274,51 @@ function createEnsoSketch(onComplete = null) {
 			if (isDrawing) {
 				isDrawing = false;
 			}
+		};
+
+		// Touch event handlers for iOS compatibility
+		p.touchStarted = function() {
+			if (p.touches.length > 0) {
+				const touch = p.touches[0];
+				if (touch.x >= 0 && touch.x <= p.width && touch.y >= 0 && touch.y <= p.height) {
+					isDrawing = true;
+					strokePoints = [{x: touch.x, y: touch.y}];
+					prevTouchX = touch.x;
+					prevTouchY = touch.y;
+					// Prevent default touch behavior
+					return false;
+				}
+			}
+		};
+
+		p.touchMoved = function() {
+			if (isDrawing && p.touches.length > 0) {
+				const touch = p.touches[0];
+				if (touch.x >= 0 && touch.x <= p.width && touch.y >= 0 && touch.y <= p.height) {
+					p.strokeWeight(p.random(4, 10));
+					p.stroke(p.color(139, 115, 85, p.random(180, 255)));
+
+					for (let i = 0; i < 3; i++) {
+						let offsetX = p.random(-2, 2);
+						let offsetY = p.random(-2, 2);
+						p.line(prevTouchX + offsetX, prevTouchY + offsetY, touch.x + offsetX, touch.y + offsetY);
+					}
+
+					strokePoints.push({x: touch.x, y: touch.y});
+					prevTouchX = touch.x;
+					prevTouchY = touch.y;
+					// Prevent default touch behavior
+					return false;
+				}
+			}
+		};
+
+		p.touchEnded = function() {
+			if (isDrawing) {
+				isDrawing = false;
+			}
+			// Prevent default touch behavior
+			return false;
 		};
 
 		const checkCircleCompletion = () => {
@@ -338,6 +408,7 @@ function openPanel(panelId) {
 		activePanel = panel;
 		panel.classList.add('active');
 		hotspotOverlay.classList.add('active');
+		document.body.classList.add('hotspot-panel-open'); // Add class to hide gradient
 
 		// Notify parent window that modal is open (for z-index handling)
 		if (window.parent !== window) {
@@ -389,6 +460,7 @@ export function closePanel() {
 	}
 
 	hotspotOverlay.classList.remove('active');
+	document.body.classList.remove('hotspot-panel-open'); // Remove class to show gradient
 	
 	// Notify parent window that modal is closed (for z-index handling)
 	if (wasOpen && window.parent !== window) {
@@ -401,9 +473,11 @@ export function closePanel() {
 	}
 
 	// Check if all hotspots are opened - if so, show map slider 2 seconds after this panel closes
-	if (wasOpen && areAllHotspotsOpened()) {
+	// But only do this once - after that, slider should only open manually
+	if (wasOpen && areAllHotspotsOpened() && !hasMapSliderBeenShown) {
 		setTimeout(() => {
 			showMapSlider();
+			hasMapSliderBeenShown = true; // Mark as shown so it won't auto-open again
 		}, 2000); // 2 seconds delay
 	}
 }
@@ -431,6 +505,7 @@ export function areAllHotspotsOpened() {
 let mapSlider = null;
 let mapSliderCloseBtn = null;
 let isMapSliderOpen = false;
+let hasMapSliderBeenShown = false; // Track if slider has been automatically shown once
 
 // Initialize map slider
 function initMapSlider() {
@@ -485,6 +560,7 @@ export function showMapSlider() {
 	mapSlider.classList.add('visible', 'peek');
 	mapSlider.classList.remove('open');
 	isMapSliderOpen = false;
+	document.body.classList.add('map-slider-visible'); // Add class to hide gradient
 
 	// Don't hide buttons in peek state - they should be visible above the 50px peek
 
@@ -519,6 +595,10 @@ export function openMapSlider() {
 	mapSlider.classList.add('open');
 	isMapSliderOpen = true;
 	document.body.classList.add('map-slider-open');
+	// Add map-slider-visible if slider is visible
+	if (mapSlider.classList.contains('visible')) {
+		document.body.classList.add('map-slider-visible');
+	}
 
 	// Notify parent window that map slider is open (for z-index handling)
 	if (window.parent !== window) {
@@ -539,6 +619,11 @@ export function closeMapSlider() {
 	mapSlider.classList.add('peek');
 	isMapSliderOpen = false;
 	document.body.classList.remove('map-slider-open');
+	// Keep map-slider-visible class when slider is still visible (in peek state)
+	// Only remove it if slider is fully hidden
+	if (!mapSlider.classList.contains('visible')) {
+		document.body.classList.remove('map-slider-visible');
+	}
 
 	// Notify parent window that map slider is closed to peek state (show buttons again)
 	if (window.parent !== window) {

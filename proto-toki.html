@@ -462,10 +462,21 @@
 
 		#ensoCanvasContainer {
 			margin: 0 !important;
+			touch-action: none;
+			-webkit-touch-callout: none;
+			-webkit-user-select: none;
+			user-select: none;
+			position: relative;
+			display: block;
+			overflow: visible;
 		}
 
 		#ensoCanvasContainer canvas {
 			border: 0.852px solid #CD2A1E;
+			touch-action: none;
+			-webkit-touch-callout: none;
+			-webkit-user-select: none;
+			user-select: none;
 		}
 
 		#ensoProgress {
@@ -659,7 +670,7 @@
 	.map-slider-btn {
 		width: 253px;
 		height: 57px;
-		padding: 16px 24px;
+		padding: 16px 18px;
 		background: #966937;
 		border: none;
 		border-radius: 0px;
@@ -698,6 +709,42 @@
 	/* Prevent body scroll when slider is open */
 	body.map-slider-open {
 		overflow: hidden;
+	}
+
+	/* Hide black gradient at bottom when modal or slider is open */
+	/* Target common gradient overlay patterns */
+	body::after,
+	canvas::after,
+	#canvas::after,
+	.gradient-overlay,
+	.bottom-gradient,
+	[class*="gradient"]:not(.hotspot-panel):not(.map-slider) {
+		transition: opacity 0.3s ease, visibility 0.3s ease;
+	}
+
+	/* Hide gradient when hotspot panel is open */
+	body.hotspot-panel-open::after,
+	body.hotspot-panel-open canvas::after,
+	body.hotspot-panel-open #canvas::after,
+	body.hotspot-panel-open .gradient-overlay,
+	body.hotspot-panel-open .bottom-gradient {
+		opacity: 0 !important;
+		visibility: hidden !important;
+	}
+
+	/* Hide gradient when map slider is open or visible */
+	body.map-slider-open::after,
+	body.map-slider-visible::after,
+	body.map-slider-open canvas::after,
+	body.map-slider-visible canvas::after,
+	body.map-slider-open #canvas::after,
+	body.map-slider-visible #canvas::after,
+	body.map-slider-open .gradient-overlay,
+	body.map-slider-visible .gradient-overlay,
+	body.map-slider-open .bottom-gradient,
+	body.map-slider-visible .bottom-gradient {
+		opacity: 0 !important;
+		visibility: hidden !important;
 	}
 
 	</style>

@@ -10,15 +10,16 @@ const chatFlow = {
         text: "Hi, I'm Kenji, your personal AI mixologist. What are you in the mood for today?"
       }
     ],
-    showCocktails: true
+    waitForUserInput: true
   },
-  userSelection: {
+  userResponse: {
     messages: [
       {
-        type: 'user',
-        text: "I'd like a highball"
+        type: 'ai',
+        text: "Great idea, we have some very refreshing cocktails on the menu."
       }
-    ]
+    ],
+    showCocktails: true
   },
   story: {
     messages: [
@@ -360,6 +361,15 @@ const showDrinkCounter = () => {
   // Set default to Toki Highball (center position)
   selectDrinkByIndex(CENTER_INDEX);
   
+  // Hide bartender when drink counter appears
+  if (bartenderContainer) {
+    bartenderContainer.classList.remove('visible');
+    const chatScreen = document.getElementById('chatScreen');
+    if (chatScreen) {
+      chatScreen.classList.remove('bartender-visible');
+    }
+  }
+  
   // Show the drink counter on the bar
   drinkCounter.classList.add('visible');
   
@@ -440,10 +450,6 @@ const handleBottleSelect = async (bottleEl) => {
     // Start bartender shaking animation
     startBartenderShaking();
   }
-  
-  // Show user selection message
-  await playChatSequence('userSelection');
-  await wait(500);
   
   // Continue to story
   await playChatSequence('story');
@@ -534,6 +540,12 @@ const playChatSequence = async (flowKey) => {
     await wait(400);
   }
 
+  if (flow.waitForUserInput) {
+    // Set flag to indicate we're waiting for user input
+    state.waitingForUserInput = true;
+    return; // Stop here and wait for user input
+  }
+
   if (flow.showMemberButton) {
     await wait(600);
     addMemberButton();
@@ -601,6 +613,23 @@ const startChatFlow = async () => {
   await playVideoIntro();
   
   await wait(800);
+  
+  // Show bartender before first message
+  if (bartenderContainer) {
+    bartenderContainer.classList.add('visible');
+    // Ensure first bartender image is active
+    if (bartenderImages.length > 0) {
+      bartenderImages.forEach(img => img.classList.remove('active'));
+      bartenderImages[0].classList.add('active');
+    }
+    
+    // Add class to chat screen to adjust layout
+    const chatScreen = document.getElementById('chatScreen');
+    if (chatScreen) {
+      chatScreen.classList.add('bartender-visible');
+    }
+  }
+  
   await playChatSequence('greeting');
   // Flow continues when user selects a drink
 };
@@ -659,6 +688,17 @@ const handleSendMessage = async () => {
   if (!text) return;
 
   chatInput.value = '';
+  
+  // If we're waiting for the first user input, show the user message and continue flow
+  if (state.waitingForUserInput) {
+    state.waitingForUserInput = false;
+    // Add the user's message (we'll use the predefined one from the flow)
+    await addMessage('user', "I'm not sure but I want something refreshing.", 0);
+    await wait(500);
+    // Continue with the userResponse flow
+    await playChatSequence('userResponse');
+    return;
+  }
   
   // For future interactivity - currently not used in main flow
   // User selects drinks via bottle tap instead

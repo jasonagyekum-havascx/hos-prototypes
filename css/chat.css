@@ -191,7 +191,7 @@
   overflow-y: auto;
   overflow-x: hidden;
   padding: 20px;
-  padding-bottom: 70px; /* Extra padding at bottom for input area */
+  padding-bottom: calc(110px + env(safe-area-inset-bottom)); /* Extra padding at bottom for input area + safe-area */
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
@@ -275,17 +275,19 @@ background: rgba(35, 24, 21, 0.80);
 /* Drink Counter - Positioned on bar */
 .drink-counter {
   position: absolute;
-  top: 40%;
+  top: 0;
   left: 50%;
-  transform: translateX(-50%) translateY(-50%);
+  transform: translateX(-50%);
   width: 100%;
   max-width: 400px;
+  height: 100%;
   z-index: 15;
   display: none;
   flex-direction: column;
   align-items: center;
-  gap: 20px;
-  padding: 0 20px;
+  justify-content: flex-start;
+  gap: 16px;
+  padding: calc(24px + env(safe-area-inset-top)) 20px calc(24px + env(safe-area-inset-bottom));
   opacity: 0;
   transition: opacity 0.4s ease, transform 0.4s ease;
 }
@@ -301,8 +303,7 @@ background: rgba(35, 24, 21, 0.80);
   line-height: normal;
   letter-spacing: 0.75px;
   text-transform: uppercase;
-  position: relative;
-  top: 33px;
+  margin-top: 6px;
 }
 
 /* Drink info section */
@@ -311,8 +312,7 @@ background: rgba(35, 24, 21, 0.80);
   flex-direction: column;
   align-items: center;
   gap: 12px;
-  position: relative;
-  top: 50px;
+  margin-top: 6px;
   text-align: center;
   opacity: 0;
   animation: fadeInUp 0.6s ease forwards 0.4s;
@@ -359,7 +359,7 @@ line-height: normal;
   width: 100%;
   overflow: hidden;
   position: relative;
-  height: 350px;
+  height: clamp(240px, 44vh, 350px);
 }
 
 .drink-bottles-carousel {
@@ -394,11 +394,11 @@ line-height: normal;
 @keyframes bottlesAppear {
   0% {
     opacity: 0;
-    transform: translateX(-50%) translateY(-50%) translateY(30px);
+    transform: translateX(-50%) translateY(30px);
   }
   100% {
     opacity: 1;
-    transform: translateX(-50%) translateY(-50%);
+    transform: translateX(-50%);
   }
 }
 
@@ -682,11 +682,14 @@ line-height: normal;
 
 /* Chat Input */
 .chat-input-container {
-  position: absolute;
+  position: fixed;
   width: 100%;
+  left: 50%;
+  transform: translateX(-50%);
   bottom: 0;
+  max-width: 430px;
   z-index: 10;
-  padding: 12px 20px 20px;
+  padding: 12px 20px calc(20px + env(safe-area-inset-bottom));
   /* background: rgba(26, 21, 18, 1); */
   flex-shrink: 0;
   opacity: 1;
