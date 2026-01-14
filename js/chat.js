@@ -55,7 +55,7 @@ const chatFlow = {
       },
       {
         type: 'ai',
-        text: "For more The House of Suntory stories,"
+        text: "If you want more stories from The House of Suntory, become a member."
       }
     ],
     showMemberButton: true,
@@ -209,12 +209,6 @@ let swipeState = {
   isSwiping: false
 };
 
-// Double tap detection state
-let tapState = {
-  lastTap: 0,
-  tapTimeout: null
-};
-
 const TOTAL_DRINKS = 8;
 const CENTER_INDEX = 4; // Toki Highball is in the middle (index 4 of 8)
 
@@ -303,8 +297,6 @@ const handleSwipeMove = (e) => {
 
 const handleSwipeEnd = (e) => {
   if (!swipeState.isSwiping) {
-    // Check for double tap if it wasn't a swipe
-    handleDoubleTap(e);
     return;
   }
   
@@ -326,30 +318,9 @@ const handleSwipeEnd = (e) => {
       const nextIndex = currentIndex < TOTAL_DRINKS - 1 ? currentIndex + 1 : 0;
       selectDrinkByIndex(nextIndex);
     }
-  } else {
-    // Not a swipe, check for double tap
-    handleDoubleTap(e);
   }
   
   swipeState.isSwiping = false;
-};
-
-const handleDoubleTap = (e) => {
-  const currentTime = Date.now();
-  const tapLength = currentTime - tapState.lastTap;
-  
-  if (tapLength < 400 && tapLength > 0) {
-    // Double tap detected - proceed to next screen
-    e.preventDefault();
-    e.stopPropagation();
-    const selectedBottle = drinkCounter.querySelector('.drink-bottle.selected');
-    if (selectedBottle) {
-      handleBottleSelect(selectedBottle);
-    }
-    tapState.lastTap = 0; // Reset to prevent triple tap
-  } else {
-    tapState.lastTap = currentTime;
-  }
 };
 
 const showDrinkCounter = () => {
@@ -379,17 +350,31 @@ const showDrinkCounter = () => {
   drinkCounter.addEventListener('touchmove', handleSwipeMove, { passive: false });
   drinkCounter.addEventListener('touchend', handleSwipeEnd, { passive: false });
   
-  // Set up bottle selection handlers (single tap still works for selection)
+  // Set up bottle selection handlers (single tap proceeds with selection)
   const bottles = drinkCounter.querySelectorAll('.drink-bottle');
   bottles.forEach(bottle => {
-    bottle.addEventListener('click', () => {
+    const handleBottleTap = (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      // First center the selected bottle
       const index = parseInt(bottle.getAttribute('data-index'));
       selectDrinkByIndex(index);
-    });
+      // Then proceed with selection after a brief delay to allow centering
+      setTimeout(() => {
+        handleBottleSelect(bottle);
+      }, 100);
+    };
+    
+    bottle.addEventListener('click', handleBottleTap);
+    bottle.addEventListener('touchend', handleBottleTap);
     bottle.addEventListener('keydown', (e) => {
       if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
-        handleBottleSelect(bottle);
+        const index = parseInt(bottle.getAttribute('data-index'));
+        selectDrinkByIndex(index);
+        setTimeout(() => {
+          handleBottleSelect(bottle);
+        }, 100);
       }
     });
   });
@@ -456,6 +441,32 @@ const handleBottleSelect = async (bottleEl) => {
   await playChatSequence('story');
 };
 
+const openIcePanel = () => {
+  const panel = document.getElementById('panelIce');
+  const overlay = document.getElementById('hotspotOverlay');
+  
+  if (panel && overlay) {
+    panel.classList.add('active');
+    overlay.classList.add('active');
+    document.body.classList.add('hotspot-panel-open');
+    
+    // Focus trap for accessibility
+    const closeBtn = panel.querySelector('.hotspot-panel-close');
+    if (closeBtn) closeBtn.focus();
+  }
+};
+
+const closeIcePanel = () => {
+  const panel = document.getElementById('panelIce');
+  const overlay = document.getElementById('hotspotOverlay');
+  
+  if (panel && overlay) {
+    panel.classList.remove('active');
+    overlay.classList.remove('active');
+    document.body.classList.remove('hotspot-panel-open');
+  }
+};
+
 const addIceCarvingCTA = () => {
   const cta = document.createElement('button');
   cta.className = 'experience-cta';
@@ -470,14 +481,13 @@ const addIceCarvingCTA = () => {
   `;
   
   cta.addEventListener('click', () => {
-    // Navigate to proto-toki page for ice carving experience
-    window.location.href = './proto-toki.html';
+    openIcePanel();
   });
   
   cta.addEventListener('keydown', (e) => {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault();
-      window.location.href = './proto-toki.html';
+      openIcePanel();
     }
   });
 
@@ -528,9 +538,9 @@ const addMemberButton = () => {
   const memberBtn = document.createElement('button');
   memberBtn.className = 'experience-cta';
   memberBtn.setAttribute('tabindex', '0');
-  memberBtn.setAttribute('aria-label', 'Become a member');
+  memberBtn.setAttribute('aria-label', 'Sign up');
   memberBtn.innerHTML = `
-    BECOME A MEMBER
+    SIGN UP
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
       <line x1="5" y1="12" x2="19" y2="12"/>
       <polyline points="12 5 19 12 12 19"/>
@@ -893,6 +903,25 @@ const initializeChatElements = (chatScreen) => {
   }
   if (chatInput) {
     chatInput.addEventListener('keydown', handleKeyDown);
+  }
+  
+  // Initialize ice panel close handlers
+  const icePanel = document.getElementById('panelIce');
+  const iceOverlay = document.getElementById('hotspotOverlay');
+  const iceCloseBtn = icePanel?.querySelector('.hotspot-panel-close');
+  
+  if (iceCloseBtn) {
+    iceCloseBtn.addEventListener('click', closeIcePanel);
+    iceCloseBtn.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        closeIcePanel();
+      }
+    });
+  }
+  
+  if (iceOverlay) {
+    iceOverlay.addEventListener('click', closeIcePanel);
   }
   
   // Load state from localStorage if available (for page navigation)

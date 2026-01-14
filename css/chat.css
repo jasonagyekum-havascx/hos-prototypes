@@ -1082,3 +1082,132 @@ line-height: normal;
   z-index: 11;
 }
 
+/* ==================== */
+/* ICE CARVING PANEL */
+/* ==================== */
+.hotspot-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 150;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.35s ease;
+}
+
+.hotspot-overlay.active {
+  opacity: 0.8;
+  visibility: visible;
+}
+
+.hotspot-panel {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0.9);
+  background: rgba(242, 238, 230, 0.9);
+  border-radius: 0px;
+  padding: 0 30px 40px;
+  color: #000000;
+  font-family: "futura-pt", sans-serif;
+  font-weight: 400;
+  font-style: normal;
+  backdrop-filter: blur(16px);
+  z-index: 200;
+  max-width: 420px;
+  width: 65%;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.4);
+}
+
+.hotspot-panel.active {
+  opacity: 0.9;
+  visibility: visible;
+  transform: translate(-50%, -50%) scale(1);
+}
+
+.hotspot-panel-header {
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-start;
+  margin: 10px 0;
+}
+
+.hotspot-panel-close {
+  color: #000000;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+  margin-left: 16px;
+  background: transparent;
+  border: none;
+}
+
+.hotspot-panel-close:hover {
+  opacity: 0.7;
+  transform: scale(1.1);
+}
+
+.hotspot-panel-close:focus-visible {
+  outline: 2px solid var(--color-gold);
+  outline-offset: 2px;
+}
+
+.hotspot-panel img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.hotspot-panel .bento-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: 0.852px solid #CD2A1E;
+  gap: 12px;
+}
+
+.hotspot-panel .bento-bottom-left {
+  border-right: 0.852px solid #CD2A1E;
+}
+
+.hotspot-panel .bento-bottom-left.icg-left {
+  width: 50%;
+}
+
+.hotspot-panel .bento-bottom-left.icg-left h3 {
+  color: #000;
+  font-size: 19.078px;
+  font-style: normal;
+  font-weight: 450;
+  line-height: normal;
+  letter-spacing: 1.717px;
+  margin: 20px 30px;
+  text-transform: uppercase;
+}
+
+.hotspot-panel .bento-bottom-right.icg-right {
+  width: 50%;
+}
+
+.hotspot-panel .bento-bottom-right.icg-right p {
+  color: #231815;
+  font-size: 9.085px;
+  font-style: normal;
+  line-height: 12.492px;
+  letter-spacing: 0.182px;
+  margin: 20px 10px;
+}
+
