@@ -386,10 +386,7 @@ line-height: normal;
   pointer-events: none;
 }
 
-.chat-screen:has(.drink-counter.visible) .chat-input-container {
-  opacity: 0;
-  pointer-events: none;
-}
+/* Keep chat input always available, even when drink counter is visible, to avoid iOS layout issues */
 
 @keyframes bottlesAppear {
   0% {
