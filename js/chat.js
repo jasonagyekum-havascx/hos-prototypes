@@ -29,7 +29,7 @@ const chatFlow = {
       },
       {
         type: 'ai',
-        text: "Here's how to make the perfect highball."
+        text: "I'll show you how to make the perfect highball."
       },
       {
         type: 'ai',
@@ -44,6 +44,7 @@ const chatFlow = {
         text: "Here's your highball"
       }
     ],
+    showIceCarvingCTA: true,
     showCTA: true
   },
   repeatability: {
@@ -455,6 +456,38 @@ const handleBottleSelect = async (bottleEl) => {
   await playChatSequence('story');
 };
 
+const addIceCarvingCTA = () => {
+  const cta = document.createElement('button');
+  cta.className = 'experience-cta';
+  cta.setAttribute('tabindex', '0');
+  cta.setAttribute('aria-label', 'Carve your own ice');
+  cta.innerHTML = `
+    CARVE YOUR OWN ICE
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <line x1="5" y1="12" x2="19" y2="12"/>
+      <polyline points="12 5 19 12 12 19"/>
+    </svg>
+  `;
+  
+  cta.addEventListener('click', () => {
+    // Navigate to proto-toki page for ice carving experience
+    window.location.href = './proto-toki.html';
+  });
+  
+  cta.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      window.location.href = './proto-toki.html';
+    }
+  });
+
+  const ctaContainer = document.createElement('div');
+  ctaContainer.style.cssText = 'display: flex; justify-content: flex-start; padding: 8px 0;';
+  ctaContainer.appendChild(cta);
+  chatMessages.appendChild(ctaContainer);
+  scrollToBottom();
+};
+
 const addExperienceCTA = () => {
   // Stop bartender shaking animation when drink is ready
   stopBartenderShaking();
@@ -538,6 +571,13 @@ const playChatSequence = async (flowKey) => {
     
     await addMessage(msg.type, msg.text, 100);
     await wait(400);
+    
+    // Show ice carving CTA after "Try it yourself" message (4th message, index 3)
+    if (flow.showIceCarvingCTA && i === 3) {
+      await wait(600);
+      addIceCarvingCTA();
+      await wait(400);
+    }
   }
 
   if (flow.waitForUserInput) {

@@ -64,9 +64,9 @@ export function initHotspots(sceneRef, cameraRef, rendererRef, raycasterRef, mou
 	hotspotLabel = document.getElementById('hotspotLabel');
 	hotspotOverlay = document.getElementById('hotspotOverlay');
 
-	// Video hotspot - play button at the top (rim level)
+	// Video hotspot - play button at the middle (below rim level)
 	createHotspot(
-		new THREE.Vector3(0.0, 3.0, 1.0),
+		new THREE.Vector3(0.0, 2.0, 1.0),
 		'Watch the Perfect Serve',
 		'panelVideo',
 		'../images/assets/play-sign.png'
@@ -74,7 +74,7 @@ export function initHotspots(sceneRef, cameraRef, rendererRef, raycasterRef, mou
 
 	// Ice hotspot - plus button middle (ice level)
 	createHotspot(
-		new THREE.Vector3(-1.0, 1.8, 0.9),
+		new THREE.Vector3(-1.0, 0.8, 0.2),
 		'Ice Carving Game',
 		'panelIce',
 		'../images/assets/plus-sign.png'
@@ -403,6 +403,15 @@ function openPanel(panelId) {
 		// Track that this hotspot has been opened
 		if (ALL_HOTSPOT_PANELS.includes(panelId)) {
 			openedHotspots.add(panelId);
+			
+			// Reduce opacity of the clicked hotspot by 50%
+			const clickedHotspot = hotspots.find(hotspot => hotspot.userData.panelId === panelId);
+			if (clickedHotspot && clickedHotspot.userData.sprite) {
+				const spriteMaterial = clickedHotspot.userData.sprite.material;
+				if (spriteMaterial) {
+					spriteMaterial.opacity = 0.5;
+				}
+			}
 		}
 
 		activePanel = panel;
