@@ -145,7 +145,7 @@
 /* Bartender container - Positioned above counter */
 .bartender-container {
   position: absolute;
-  top: 6.5%;
+  top: 10.5%;
   left: 50%;
   transform: translateX(-50%);
   width: 317px;
@@ -191,7 +191,7 @@
   overflow-y: auto;
   overflow-x: hidden;
   padding: 20px;
-  padding-bottom: calc(110px + env(safe-area-inset-bottom)); /* Extra padding at bottom for input area + safe-area */
+  padding-bottom: calc(150px + env(safe-area-inset-bottom)); /* Extra padding at bottom for input area + safe-area */
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
@@ -303,7 +303,7 @@ background: rgba(35, 24, 21, 0.80);
   line-height: normal;
   letter-spacing: 0.75px;
   text-transform: uppercase;
-  margin-top: 6px;
+  margin-top: 25px;
 }
 
 /* Drink info section */

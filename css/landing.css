@@ -94,12 +94,12 @@
 .landing-footer {
   position: relative;
   z-index: 1;
-  bottom: 100px;
+  bottom: 140px;
 }
 
 .landing-footer-bottom {
   position: absolute;
-  bottom: 60px;
+  bottom: 110px;
   left: 0;
   right: 0;
   text-align: center;

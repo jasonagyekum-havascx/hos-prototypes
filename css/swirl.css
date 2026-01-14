@@ -31,7 +31,7 @@
 .toki-logo {
   width: 230px;
   position: relative;
-  top: -50px;
+  top: -80px;
 }
 
 /* White logo when 3D experience is active */
@@ -208,6 +208,8 @@
   overflow: hidden;
 }
 
+
+
 /* Black gradient overlay at bottom */
 .experience-overlay::after {
   content: '';
@@ -216,15 +218,20 @@
   left: 0;
   width: 100%;
   height: 15%; /* Adjust height to control gradient coverage */
-  background: linear-gradient(to bottom, transparent 0%, rgba(65, 65, 65, 0.3) 30%, rgba(0, 0, 0, 0.8) 70%, #000000 100%);
+  background: linear-gradient(to bottom, transparent 0%, rgba(65, 65, 65, 0.3) 30%, rgba(0, 0, 0, 0.5) 50%, #00000079 70%);
   pointer-events: none; /* Allow interactions through the gradient */
   z-index: 500; /* Above experience overlay (100) but below modals (1000-2000) */
+}
+
+#experienceIframe {
+  position: relative;
+  top: -40px;
 }
 
 /* Share Button */
 .share-btn-container {
   position: absolute;
-  bottom: 80px;
+  bottom: 125px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 150;
@@ -288,7 +295,7 @@
   color: #FFF;
   cursor: pointer;
   transition: var(--transition-smooth);
-  margin-top: 20px;
+  margin-top: 15px;
   padding: 8px 0;
 }
 
