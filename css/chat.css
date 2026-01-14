@@ -686,10 +686,10 @@ line-height: normal;
   width: 100%;
   left: 50%;
   transform: translateX(-50%);
-  bottom: 0;
+  bottom: env(safe-area-inset-bottom);
   max-width: 430px;
   z-index: 10;
-  padding: 12px 20px calc(20px + env(safe-area-inset-bottom));
+  padding: 12px 20px 20px;
   /* background: rgba(26, 21, 18, 1); */
   flex-shrink: 0;
   opacity: 1;
