@@ -1222,3 +1222,56 @@ background: rgba(35, 24, 21, 0.80);
   margin: 20px 10px;
 }
 
+/* ==================== */
+/* RESPONSIVE ADJUSTMENTS FOR IPHONE 16 (SMALLER SCREENS) */
+/* ==================== */
+@media (max-width: 410px) {
+  /* Adjust bartender container positioning for smaller screens */
+  .bartender-container {
+    top: 12.5%;
+    width: 280px;
+    height: 330px;
+  }
+
+  /* Adjust background image positioning for better alignment */
+  .bartender-bg {
+    background-position: center 45%;
+  }
+
+  /* Adjust chat messages positioning when bartender is visible */
+  .chat-screen.bartender-visible .chat-messages {
+    top: 52%;
+  }
+
+  /* Adjust drink counter spacing and positioning */
+  .drink-counter {
+    padding-top: calc(49px + env(safe-area-inset-top));
+  }
+
+  .drink-counter-title {
+    margin-top: 20px;
+    font-size: 14px;
+  }
+
+  /* Adjust drink bottles container height for smaller screens */
+  .drink-bottles-container {
+    height: clamp(220px, 40vh, 320px);
+  }
+
+  /* Adjust drink bottles carousel gap for smaller screens */
+  .drink-bottles-carousel {
+    gap: 50px;
+    max-width: 450px;
+  }
+
+  /* Adjust drink info text sizes for better fit */
+  .drink-name {
+    font-size: 24px;
+  }
+
+  .drink-description {
+    font-size: 16px;
+    padding: 0 16px;
+  }
+}
+
