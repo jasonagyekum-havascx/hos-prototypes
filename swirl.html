@@ -10,6 +10,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
   <!-- Adobe Fonts - Futura PT -->
+  <link rel="preconnect" href="https://use.typekit.net" crossorigin>
+  <link rel="preconnect" href="https://p.typekit.net" crossorigin>
   <link rel="stylesheet" href="https://use.typekit.net/rfm8mfq.css">
   
   <!-- CSS Files -->
@@ -152,6 +154,27 @@
       </div>
     </section>
   </div>
+
+  <!-- Ensure fonts load on iOS -->
+  <script>
+    // Wait for fonts to load, especially important for iOS Safari
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(() => {
+        // Fonts are loaded
+        document.documentElement.classList.add('fonts-loaded');
+      }).catch(() => {
+        // Fallback: assume fonts loaded after a delay
+        setTimeout(() => {
+          document.documentElement.classList.add('fonts-loaded');
+        }, 1000);
+      });
+    } else {
+      // Fallback for browsers without Font Loading API
+      setTimeout(() => {
+        document.documentElement.classList.add('fonts-loaded');
+      }, 500);
+    }
+  </script>
 
   <script type="module">
     import { initSwirlScreen } from './js/swirl.js';

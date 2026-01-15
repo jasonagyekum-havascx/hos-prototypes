@@ -69,35 +69,35 @@ let chatMessages, chatInput, sendBtn, bartenderContainer, bartenderImages, chatI
 const drinksData = {
   'toki-sour': {
     name: 'Toki Sour',
-    description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.'
+    description: 'The vibrant citrus notes and subtle spiciness of Toki Whisky put an elegant twist on this classic cocktail.'
   },
   'haku-yuza': {
     name: 'Haku Yuza',
-    description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.'
+    description: 'A playful take on a classic cocktail, the use of Haku Yuzu adds complexity, creating a pleasingly tart and zesty drink.'
   },
   'toki-black': {
     name: 'Toki Black',
-    description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.'
+    description: 'The subtly smoky and rich character of Toki Black balances bittersweetness with citrus and umami notes.'
   },
   'roku-gin': {
     name: 'Roku Gin',
-    description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.'
+    description: 'A gin mule with a Japanese twist, the Roku Minori Gin Mule adds shiso leaf for a vibrant touch, with ginger beer adding a delicate spice.'
   },
   toki: {
     name: 'Toki Highball',
-    description: 'A whisky blended for crafting highballs. The House of Suntory crafted Toki using a bolder grain whisky from the Chita Distillery, with more flavor than is typical in blended whiskies.'
+    description: 'A bonafide Japanese classic, the highball beautifully highlights the character of Toki Whisky and offers unbeatable refreshment.'
   },
   'haku-espresso': {
     name: 'Haku Espresso',
-    description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.'
+    description: 'Add a smooth and silky dimension to the Espresso Martini with the use of bamboo charcoal-filtered Haku Vodka.'
   },
   'roku-gin-2': {
     name: 'Roku Gin',
-    description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.'
+    description: 'Roku Minori offers a fruity base for the elegant peach notes and delicate effervescence in this take on the Venetian 75.'
   },
   'roku-negroni': {
     name: 'Roku Negroni',
-    description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris.'
+    description: 'The citrus, floral and spicy notes of Roku Gin harmonize the bittersweet character of the Negroni, bringing it close to perfection. '
   }
 };
 
@@ -247,13 +247,13 @@ const updateCarouselPositions = (centerIndex) => {
       
       // Update scaling and opacity based on position (inline styles override CSS)
       if (position === 0) {
-        // Center drink - largest and fully visible
-        bottle.style.transform = 'scale(1.2)';
+        // Center drink - same size but fully visible
+        bottle.style.transform = 'scale(1)';
         bottle.style.opacity = '1';
         bottle.classList.add('selected');
       } else {
-        // Side drinks - smaller and slightly faded
-        bottle.style.transform = 'scale(0.7)';
+        // Side drinks - same size but slightly faded
+        bottle.style.transform = 'scale(1)';
         bottle.style.opacity = '0.5';
         bottle.classList.remove('selected');
       }

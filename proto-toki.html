@@ -6,6 +6,8 @@
 		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
 		<link type="text/css" rel="stylesheet" href="./examples/example.css">
 		<!-- Adobe Fonts - Futura PT -->
+		<link rel="preconnect" href="https://use.typekit.net" crossorigin>
+		<link rel="preconnect" href="https://p.typekit.net" crossorigin>
 		<link rel="stylesheet" href="https://use.typekit.net/rfm8mfq.css">
 		<style>
 			@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500&family=Cormorant+Garamond:wght@400;500&display=swap');
@@ -236,7 +238,7 @@
 			.hotspot-panel video {
 				width: 100%;
 				border-radius: 0px;
-				border: 0.852px solid #CD2A1E;
+				outline: 0.852px solid #CD2A1E;
 				background: #000;
 			}
 
@@ -267,7 +269,7 @@
 
 		.hotspot-panel .bento-top {
 			padding: 25px 35px;
-			border: 0.852px solid #CD2A1E;
+			outline: 0.852px solid #CD2A1E;
 		}
 
 		.hotspot-panel .bento-top-split {
@@ -275,7 +277,7 @@
 			justify-content: space-between;
 			align-items: center;
 			padding: 0px 15px;
-			border: 0.852px solid #CD2A1E;
+			outline: 0.852px solid #CD2A1E;
 		}
 
 		.hotspot-panel .bento-top-split .enso-left {
@@ -342,8 +344,10 @@
 			display: flex;
 			justify-content: space-between;
 			align-items: center;
-			border: 0.852px solid #CD2A1E;
+			outline: 0.852px solid #CD2A1E;
 			gap: 12px;
+			position: relative;
+			bottom: 4px;
 		}
 		.hotspot-panel .bento-bottom-left {
 			border-right: 0.852px solid #CD2A1E;
@@ -474,7 +478,7 @@
 		}
 
 		#ensoCanvasContainer canvas {
-			border: 0.852px solid #CD2A1E;
+			outline: 0.852px solid #CD2A1E;
 			touch-action: none;
 			-webkit-touch-callout: none;
 			-webkit-user-select: none;
@@ -879,6 +883,27 @@
 			
 			</div>
 		</div>
+
+		<!-- Ensure fonts load on iOS -->
+		<script>
+			// Wait for fonts to load, especially important for iOS Safari
+			if (document.fonts && document.fonts.ready) {
+				document.fonts.ready.then(() => {
+					// Fonts are loaded
+					document.documentElement.classList.add('fonts-loaded');
+				}).catch(() => {
+					// Fallback: assume fonts loaded after a delay
+					setTimeout(() => {
+						document.documentElement.classList.add('fonts-loaded');
+					}, 1000);
+				});
+			} else {
+				// Fallback for browsers without Font Loading API
+				setTimeout(() => {
+					document.documentElement.classList.add('fonts-loaded');
+				}, 500);
+			}
+		</script>
 
 		<script type="importmap">
 			{

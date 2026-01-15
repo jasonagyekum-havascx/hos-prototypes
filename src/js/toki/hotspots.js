@@ -90,7 +90,7 @@ export function initHotspots(sceneRef, cameraRef, rendererRef, raycasterRef, mou
 
 	// Enso hotspot - positioned on the left side near garnish
 	createHotspot(
-		new THREE.Vector3(-1.1, 2.8, 0.5),
+		new THREE.Vector3(1.1, 2.8, 0.5),
 		'Trace the Enso',
 		'panelEnso',
 		'../images/assets/plus-sign.png'
