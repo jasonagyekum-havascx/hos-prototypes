@@ -182,6 +182,7 @@ function createEnsoSketch(onComplete = null) {
 		let ensoImage;
 		let prevTouchX = 0;
 		let prevTouchY = 0;
+		let userStrokes = []; // Store all user-drawn strokes to redraw each frame
 
 		p.preload = function() {
 			// Path relative to HTML document location (proto-toki.html at root)
@@ -221,19 +222,39 @@ function createEnsoSketch(onComplete = null) {
 		};
 
 		const drawTargetCircle = () => {
-			if (ensoImage) {
+			if (ensoImage && ensoImage.width > 0) {
 				p.push();
 				p.imageMode(p.CENTER);
 				const centerX = p.width / 2;
 				const centerY = p.height / 2;
+				p.tint(255, 255, 255, 180); // Make guide semi-transparent so it doesn't obscure user drawing
 				p.image(ensoImage, centerX, centerY, targetCircleRadius * 2, targetCircleRadius * 2);
+				p.noTint(); // Reset tint after drawing
 				p.pop();
 			}
 		};
 
+		const redrawUserStrokes = () => {
+			// Redraw all user strokes
+			for (let stroke of userStrokes) {
+				p.strokeWeight(stroke.weight);
+				p.stroke(stroke.color);
+				for (let i = 0; i < stroke.lines.length; i++) {
+					const line = stroke.lines[i];
+					p.line(line.x1, line.y1, line.x2, line.y2);
+				}
+			}
+		};
+
 		p.draw = function() {
-			// Always redraw the target circle guide
+			// Redraw background each frame to ensure the guide is always visible
+			p.background(245, 240, 232);
+			
+			// Always redraw the target circle guide first (behind user strokes)
 			drawTargetCircle();
+			
+			// Redraw all user strokes on top
+			redrawUserStrokes();
 			
 			// Track mouse drawing (for desktop)
 			if (isDrawing) {
@@ -257,14 +278,29 @@ function createEnsoSketch(onComplete = null) {
 
 		p.mouseDragged = function() {
 			if (isDrawing && p.mouseX >= 0 && p.mouseX <= p.width && p.mouseY >= 0 && p.mouseY <= p.height) {
-				p.strokeWeight(p.random(4, 10));
-				p.stroke(p.color(139, 115, 85, p.random(180, 255)));
+				const strokeWeight = p.random(4, 10);
+				const strokeColor = p.color(139, 115, 85, p.random(180, 255));
+				p.strokeWeight(strokeWeight);
+				p.stroke(strokeColor);
 
+				const lines = [];
 				for (let i = 0; i < 3; i++) {
 					let offsetX = p.random(-2, 2);
 					let offsetY = p.random(-2, 2);
-					p.line(p.pmouseX + offsetX, p.pmouseY + offsetY, p.mouseX + offsetX, p.mouseY + offsetY);
+					const x1 = p.pmouseX + offsetX;
+					const y1 = p.pmouseY + offsetY;
+					const x2 = p.mouseX + offsetX;
+					const y2 = p.mouseY + offsetY;
+					p.line(x1, y1, x2, y2);
+					lines.push({x1, y1, x2, y2});
 				}
+
+				// Store the stroke for redrawing
+				userStrokes.push({
+					weight: strokeWeight,
+					color: strokeColor,
+					lines: lines
+				});
 
 				strokePoints.push({x: p.mouseX, y: p.mouseY});
 			}
@@ -295,14 +331,29 @@ function createEnsoSketch(onComplete = null) {
 			if (isDrawing && p.touches.length > 0) {
 				const touch = p.touches[0];
 				if (touch.x >= 0 && touch.x <= p.width && touch.y >= 0 && touch.y <= p.height) {
-					p.strokeWeight(p.random(4, 10));
-					p.stroke(p.color(139, 115, 85, p.random(180, 255)));
+					const strokeWeight = p.random(4, 10);
+					const strokeColor = p.color(139, 115, 85, p.random(180, 255));
+					p.strokeWeight(strokeWeight);
+					p.stroke(strokeColor);
 
+					const lines = [];
 					for (let i = 0; i < 3; i++) {
 						let offsetX = p.random(-2, 2);
 						let offsetY = p.random(-2, 2);
-						p.line(prevTouchX + offsetX, prevTouchY + offsetY, touch.x + offsetX, touch.y + offsetY);
+						const x1 = prevTouchX + offsetX;
+						const y1 = prevTouchY + offsetY;
+						const x2 = touch.x + offsetX;
+						const y2 = touch.y + offsetY;
+						p.line(x1, y1, x2, y2);
+						lines.push({x1, y1, x2, y2});
 					}
+
+					// Store the stroke for redrawing
+					userStrokes.push({
+						weight: strokeWeight,
+						color: strokeColor,
+						lines: lines
+					});
 
 					strokePoints.push({x: touch.x, y: touch.y});
 					prevTouchX = touch.x;
